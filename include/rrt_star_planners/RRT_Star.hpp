@@ -149,7 +149,8 @@ public:
 
   	~RRTStar();
   
-  	virtual double computeTree();      
+  	virtual double computeTreeCoupled();      
+  	virtual double computeTreesIndependent();      
 
   	float getYawFromQuat(Quaternion quat);
 
@@ -173,6 +174,8 @@ public:
 			@return false if is outside the workspace
 		**/
 	bool setInitialPosition(DiscretePosition p_);
+	bool setInitialPositionUGV(DiscretePosition p_);
+	bool setInitialPositionUAV(DiscretePosition p_);
 	bool setInitialPosition(Vector3 p);
 
 	/**
@@ -189,30 +192,83 @@ public:
 		   @param [x,y,z] discrete or continuous position
 		   @return true if is a valid initial/final position and has been set correctly
 		**/
-	inline bool setValidInitialPosition(DiscretePosition p)
+	// inline bool setValidInitialPosition(DiscretePosition p)
+	// {
+	// 	if (setInitialPosition(p))
+	// 	{
+	// 		if (!isInitialPositionOccupied())
+	// 		{
+	// 			ROS_INFO("ThetaStar: Initial discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
+	// 			return true;
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		ROS_WARN("ThetaStar: Initial position outside the workspace attempt!!");
+	// 	}
+
+	// 	return false;
+	// }
+
+	inline bool setValidInitialPositionMarsupial(DiscretePosition p1, DiscretePosition p2)
 	{
-		if (setInitialPosition(p))
-		{
-			if (!isInitialPositionOccupied())
+		if (is_coupled){
+			if (setInitialPositionUGV(p1))
 			{
-				ROS_INFO("ThetaStar: Initial discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
-				return true;
+				if (!isInitialPositionOccupiedUGV())
+				{
+					ROS_INFO("RRTStar: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", p1.x, p1.y, p1.z);
+					return true;
+				}
 			}
-		}
-		else
-		{
-			ROS_WARN("RRTStar: Initial position outside the workspace attempt!!");
-		}
+			else
+			{
+				ROS_WARN("RRTStar: Initial position UGV Coupled outside the workspace attempt!!");
+			}
 
-		return false;
+			return false;
+		}
+		else{
+			if (setInitialPositionUGV(p1)) 
+			{
+				if(setInitialPositionUGV(p2))
+				{
+					if (!isInitialPositionOccupiedUGV() && !isInitialPositionOccupiedUAV())
+					{
+						ROS_INFO("RRTStar: Initial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+						return true;
+					}
+				}
+				else
+					ROS_WARN("RRTStar: Initial position UAV independent outside of the workspace attempt!!");
+			}
+			else
+				ROS_WARN("RRTStar: Initial position UGV independent outside of the workspace attempt!!");
+
+
+			return false;
+		}
 	}
-	inline bool setValidInitialPosition(Vector3 p)
+
+	
+
+	// inline bool setValidInitialPosition(Vector3 p)
+	// {
+
+	// 	DiscretePosition pp = discretizePosition(p);
+
+	// 	return setValidInitialPosition(pp);
+	// }
+
+	inline bool setValidInitialPositionMarsupial(Vector3 p1,Vector3 p2)
 	{
 
-		DiscretePosition pp = discretizePosition(p);
+		DiscretePosition pp1 = discretizePosition(p1);
+		DiscretePosition pp2 = discretizePosition(p2);
 
-		return setValidInitialPosition(pp);
+		return setValidInitialPositionMarsupial(pp1,pp2);
 	}
+
 	inline bool setValidFinalPosition(DiscretePosition p)
 	{
 		if (setFinalPosition(p))
@@ -332,16 +388,16 @@ public:
 protected:
 	
 	RRTNode getRandomNode(bool is_coupled_); 
-	bool extendGraph(const RRTNode &q_rand_);
-	RRTNode* getNearestNode(const RRTNode &q_rand_);
+	bool extendGraph(const RRTNode q_rand_);
+	RRTNode* getNearestNode(const RRTNode q_rand_);
   	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
 	bool obstacleFree(const RRTNode &q_nearest, const RRTNode &q_new);
 	std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_);
-	bool checkPointFeasibility(RRTNode pf_);
+	bool checkPointFeasibility(const RRTNode pf_);
 	bool checkCatenary(RRTNode &q_init_, const RRTNode &q_final_);
 	RRTNode getReelNode(const RRTNode &node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
-	void updateKdtree(RRTNode &ukT_);
+	void updateKdtree(const RRTNode ukT_);
 	void getParamsNode(RRTNode &node_, bool is_init_= false);
 	void saveNode(RRTNode* sn_, bool is_init_=false);
 	void saveTakeOffNode(RRTNode* sn_);
@@ -370,7 +426,7 @@ protected:
 	{
 		return isInside(n_.point.x, n_.point.y, n_.point.z);
 	}
-	inline bool isInside(int &x, int &y, int &z)
+	inline bool isInside(int x, int y, int z)
 	{
 		return (x < (ws_x_max - 1) && x > (ws_x_min + 1)) &&
 			   (y < (ws_y_max - 1) && y > (ws_y_min + 1)) &&
@@ -380,6 +436,8 @@ protected:
 	DiscretePosition discretizePosition(Vector3 p);
 
 	bool isInitialPositionOccupied();
+	bool isInitialPositionOccupiedUGV();
+	bool isInitialPositionOccupiedUAV();
 	bool isFinalPositionOccupied();
 
 		/** 
@@ -505,8 +563,9 @@ protected:
   	visualization_msgs::MarkerArray pointTreeMarker;
   	visualization_msgs::MarkerArray pointTakeOffMarker, lines_marker_;
 
-	Vector3 initial_position, final_position;   // Continuous
-	RRTNode *disc_initial, *disc_final; // Discretes
+	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
+	// RRTNode *disc_initial, *disc_final; // Discretes
+	RRTNode *disc_initial_ugv, *disc_initial_uav, *disc_final; // Discretes
 	double goal_gap_m;
 
 	// Max time to get path

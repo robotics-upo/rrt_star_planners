@@ -586,63 +586,126 @@ bool RRTStarGlobalPlanner::calculatePath()
 
     if (isMarsupialCoupled())
     {
-        if (setGoal() && setStartUGV())
-        {
-            //Print succes start and goal points
-            ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal and start successfull set");
-            
-            // Path calculation
-            ftime(&start);
-
-            number_of_points = rrtstar.computeTree();
-
-            ftime(&finish);
-
-            seconds = finish.time - start.time - 1;
-            milliseconds = (1000 - start.millitm) + finish.millitm;
-
-            if (write_data_for_analysis){
-                std::ofstream ofs;
-                std::string output_file = path + "time_compute_initial_planner.txt";
-                ofs.open(output_file.c_str(), std::ofstream::app);
-                if (ofs.is_open()) {
-                    std::cout << "Saving time initial planning data in output file: " << output_file << std::endl;
-                    ofs << (milliseconds + seconds * 1000.0)/1000.0 <<std::endl;
-                } 
-                else {
-                    std::cout << "Couldn't be open the output data file for time initial planning" << std::endl;
-                }
-                ofs.close();
-            }
-
-            ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", milliseconds + seconds * 1000);
-            ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points: %d", number_of_points);
-
-            if (number_of_points > 0)
+        if (is_coupled){
+            if (setGoal() && setStartUGV())
             {
-                ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Publishing trajectory");
+                //Print succes start and goal points
+                ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal and start successfull set");
                 
-                publishTrajectory();
+                // Path calculation
+                ftime(&start);
 
-                if (pathLength < minPathLenght)
-                {
-                    execute_path_client_ptr->cancelAllGoals();
-                    make_plan_server_ptr->setSucceeded();
-                }
-                //Reset the counter of the number of times the planner tried to calculate a path without success
-                countImpossible = 0;
-                //If it was replanning before, reset flag
-                if (flg_replan_status.data)
-                {
-                    flg_replan_status.data = false;
-                    replan_status_pub.publish(flg_replan_status);
+                number_of_points = rrtstar.computeTreeCoupled();
+
+                ftime(&finish);
+
+                seconds = finish.time - start.time - 1;
+                milliseconds = (1000 - start.millitm) + finish.millitm;
+
+                if (write_data_for_analysis){
+                    std::ofstream ofs;
+                    std::string output_file = path + "time_compute_initial_planner.txt";
+                    ofs.open(output_file.c_str(), std::ofstream::app);
+                    if (ofs.is_open()) {
+                        std::cout << "Saving time initial planning data in output file: " << output_file << std::endl;
+                        ofs << (milliseconds + seconds * 1000.0)/1000.0 <<std::endl;
+                    } 
+                    else {
+                        std::cout << "Couldn't be open the output data file for time initial planning" << std::endl;
+                    }
+                    ofs.close();
                 }
 
-                ret = true;
+                ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", milliseconds + seconds * 1000);
+                ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points: %d", number_of_points);
+
+                if (number_of_points > 0)
+                {
+                    ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Publishing trajectory");
+                    
+                    publishTrajectory();
+
+                    if (pathLength < minPathLenght)
+                    {
+                        execute_path_client_ptr->cancelAllGoals();
+                        make_plan_server_ptr->setSucceeded();
+                    }
+                    //Reset the counter of the number of times the planner tried to calculate a path without success
+                    countImpossible = 0;
+                    //If it was replanning before, reset flag
+                    if (flg_replan_status.data)
+                    {
+                        flg_replan_status.data = false;
+                        replan_status_pub.publish(flg_replan_status);
+                    }
+
+                    ret = true;
+                }
+                else
+                {
+                    countImpossible++;
+                }
             }
-            else
+        }
+        else{
+            if (setGoal() && setStartUGV() && setStartUAV())
             {
-                countImpossible++;
+                //Print succes start and goal points
+                ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal, start UGV and start UAV successfull set");
+                
+                // Path calculation
+                ftime(&start);
+
+                number_of_points = rrtstar.computeTreesIndependent();
+
+                ftime(&finish);
+
+                seconds = finish.time - start.time - 1;
+                milliseconds = (1000 - start.millitm) + finish.millitm;
+
+                if (write_data_for_analysis){
+                    std::ofstream ofs;
+                    std::string output_file = path + "time_compute_initial_planner.txt";
+                    ofs.open(output_file.c_str(), std::ofstream::app);
+                    if (ofs.is_open()) {
+                        std::cout << "Saving time initial planning data in output file: " << output_file << std::endl;
+                        ofs << (milliseconds + seconds * 1000.0)/1000.0 <<std::endl;
+                    } 
+                    else {
+                        std::cout << "Couldn't be open the output data file for time initial planning" << std::endl;
+                    }
+                    ofs.close();
+                }
+
+                ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", milliseconds + seconds * 1000);
+                ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points: %d", number_of_points);
+
+                if (number_of_points > 0)
+                {
+                    ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Publishing trajectory");
+                    
+                    publishTrajectory();
+
+                    if (pathLength < minPathLenght)
+                    {
+                        execute_path_client_ptr->cancelAllGoals();
+                        make_plan_server_ptr->setSucceeded();
+                    }
+                    //Reset the counter of the number of times the planner tried to calculate a path without success
+                    countImpossible = 0;
+                    //If it was replanning before, reset flag
+                    if (flg_replan_status.data)
+                    {
+                        flg_replan_status.data = false;
+                        replan_status_pub.publish(flg_replan_status);
+                    }
+
+                    ret = true;
+                }
+                else
+                {
+                    countImpossible++;
+                }
             }
         }
     }
@@ -809,33 +872,37 @@ bool RRTStarGlobalPlanner::setGoal()
 
 bool RRTStarGlobalPlanner::setStartUGV()
 {
-    geometry_msgs::Vector3Stamped start_;
+    geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
     bool ret = false;
 
-    geometry_msgs::TransformStamped position_ugv_;
+    geometry_msgs::TransformStamped position_ugv_,position_uav_;
     position_ugv_ = getRobotPoseUGV();
+    position_uav_ = getRobotPoseUAV();
 
     double radius_wheel = 0.15;
-    start_.vector.x = position_ugv_.transform.translation.x;
-    start_.vector.y = position_ugv_.transform.translation.y;
-    start_.vector.z = position_ugv_.transform.translation.z + radius_wheel;
+    start_ugv_.vector.x = position_ugv_.transform.translation.x;
+    start_ugv_.vector.y = position_ugv_.transform.translation.y;
+    start_ugv_.vector.z = position_ugv_.transform.translation.z + radius_wheel;
+    start_uav_.vector.x = position_uav_.transform.translation.x;
+    start_uav_.vector.y = position_uav_.transform.translation.y;
+    start_uav_.vector.z = position_uav_.transform.translation.z;
 
-    if (start_.vector.z <= ws_z_min)
-        start_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
+    if (start_ugv_.vector.z <= ws_z_min)
+        start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
 
-    if (rrtstar.setValidInitialPosition(start_.vector))
+    if (rrtstar.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
     {
-        ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position): [%.2f, %.2f, %.2f]", start_.vector.x, start_.vector.y, start_.vector.z);
+        ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position): [%.2f, %.2f, %.2f]", start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z);
         ret = true;
     }
-    else if (rrtstar.searchInitialPosition3d(initialSearchAround))
-    {
-        ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position");
-        ret = true;
-    }
+    // else if (rrtstar.searchInitialPosition3d(initialSearchAround))
+    // {
+    //     ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position");
+    //     ret = true;
+    // }
     else
     {
-        ROS_ERROR("Global Planner 3D: Failed to set UGV initial global position(after search around): [%.2f, %.2f, %.2f]", start_.vector.x, start_.vector.y, start_.vector.z);
+        ROS_ERROR("Global Planner 3D: Failed to set UGV initial global position(after search around): [%.2f, %.2f, %.2f]", start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z);
     }
 
     return ret;
@@ -843,32 +910,37 @@ bool RRTStarGlobalPlanner::setStartUGV()
 
 bool RRTStarGlobalPlanner::setStartUAV()
 {
-    geometry_msgs::Vector3Stamped start_;
+    geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
     bool ret = false;
 
-    geometry_msgs::TransformStamped position_uav_;
+    geometry_msgs::TransformStamped position_ugv_,position_uav_;
+    position_ugv_ = getRobotPoseUGV();
     position_uav_ = getRobotPoseUAV();
 
-    start_.vector.x = position_uav_.transform.translation.x;
-    start_.vector.y = position_uav_.transform.translation.y;
-    start_.vector.z = position_uav_.transform.translation.z;
+    double radius_wheel = 0.15;
+    start_ugv_.vector.x = position_ugv_.transform.translation.x;
+    start_ugv_.vector.y = position_ugv_.transform.translation.y;
+    start_ugv_.vector.z = position_ugv_.transform.translation.z + radius_wheel;
+    start_uav_.vector.x = position_uav_.transform.translation.x;
+    start_uav_.vector.y = position_uav_.transform.translation.y;
+    start_uav_.vector.z = position_uav_.transform.translation.z;
 
-    if (start_.vector.z <= ws_z_min)
-        start_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
+    if (start_uav_.vector.z <= ws_z_min)
+        start_uav_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
 
-    if (rrtstar.setValidInitialPosition(start_.vector))
+    if (rrtstar.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
     {
-        ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position): [%.2f, %.2f, %.2f]", start_.vector.x, start_.vector.y, start_.vector.z);
+        ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
         ret = true;
     }
-    else if (rrtstar.searchInitialPosition3d(initialSearchAround))
-    {
-        ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position");
-        ret = true;
-    }
+    // else if (rrtstar.searchInitialPosition3d(initialSearchAround))
+    // {
+    //     ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position");
+    //     ret = true;
+    // }
     else
     {
-        ROS_ERROR("Global Planner 3D: Failed to set UAV initial global position(after search around): [%.2f, %.2f, %.2f]", start_.vector.x, start_.vector.y, start_.vector.z);
+        ROS_ERROR("Global Planner 3D: Failed to set UAV initial global position(after search around): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
     }
 
     return ret;

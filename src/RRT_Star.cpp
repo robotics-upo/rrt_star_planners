@@ -1,13 +1,12 @@
 #include "rrt_star_planners/RRT_Star.hpp"
 
-// Uncomment to set length catenary in nodes
-#define USE_CATENARY_COMPUTE
 
 namespace PathPlanners
 {
 //*****************************************************************
 // 				ThetaStar Algorithm Class Definitions
 //*****************************************************************
+
 // Default constructor
 RRTStar::RRTStar()
 {
@@ -28,7 +27,8 @@ void RRTStar::init(std::string plannerName, std::string frame_id_, float ws_x_ma
 	nh = nh_;
 
 	// Not target initially
-	disc_initial = NULL;
+	disc_initial_ugv = NULL;
+	disc_initial_uav = NULL;
 	disc_final = NULL;
 	minR=0;
 	// by default ~not timeout
@@ -86,55 +86,54 @@ RRTStar::~RRTStar()
   clearNodes(); 
 }
 
-double RRTStar::computeTree()
+double RRTStar::computeTreeCoupled()
 {
     std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
-	printf("RRTStar::computeTree -->  STARTING --> star_point[%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n",
-	initial_position.x, initial_position.y, initial_position.z, final_position.x, final_position.y, final_position.z);    
+	printf("RRTStar::computeTreeCoupled -->  STARTING --> star_point_ugv[%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n",
+	initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z, final_position.x, final_position.y, final_position.z);    
 
   	clearNodes(); // Incremental algorithm --> the graph is generated in each calculation
 	clearMarkers();
 	v_save_node_kdtree.clear();
 
-	saveNode(disc_initial,true);
+	saveNode(disc_initial_ugv,true);
 	getGraphMarker();
 	getTakeOffNodesMarker();
-	updateKdtree(*disc_initial);
+	updateKdtree(*disc_initial_ugv);
 
  	double ret_val = -1.0; 
     int count = 0; 
 	
-    while (count < n_iter) { // n_iter Max. number of nodes to expand for each round
-      	count++;
-		printf("__________________________________  RRTStar::computeTree: STARTING WHILE LOOP[%i]  _________________________________\n",count);
+    while (count < n_iter)  // n_iter Max. number of nodes to expand for each round
+    {
+	  	count++;
+		// printf("__________________________________  RRTStar::computeTreeCoupled: STARTING WHILE LOOP[%i]  _________________________________\n",count);
 		RRTNode q_rand = getRandomNode(is_coupled);
-		// printf("RRTstar::computeTree  q_rand=[%i %i %i]\n",q_rand.point.x,q_rand.point.y,q_rand.point.z);
+		// ROS_INFO("q_rand =[%f %f %f] ",q_rand.point.x*step, q_rand.point.y*step ,q_rand.point.z*step);
+
 		extendGraph(q_rand);
-		if (is_coupled && (take_off_nodes.size() > 0) && got_to_goal){
-			printf("RRTStar::computeTree -->  breaking while for in iteration=%i",count);    
+		if ((take_off_nodes.size() > 0) && got_to_goal){
+			printf("RRTStar::computeTreeCoupled -->  breaking while for in iteration=%i",count);    
 			break;
 		}
 	}
 
-	if (is_coupled){
-		if (take_off_nodes.size() > 0){
-			std::list<RRTNode*> path_;
-			path_ = getPath(); 
-			printf("RRTStar::computeTree -->  finded path for Coupled Marsupial Configuration-->  path size: %lu , number iteration: %i , take off nodes: %lu \n\n",
-			path_.size(), count + 1, take_off_nodes.size()); 
-			int i_=0;   
-			for (auto pt_: path_){
-				i_++;
-				printf("point_path[%i/%lu] : x=%f  y=%f  z=%f  cost=%f\n", i_, path_.size(),pt_->point.x*step, pt_->point.y*step, pt_->point.z*step,pt_->cost);
-			}
-			getPathMarker(path_);
-			ret_val = 0;
+	if (take_off_nodes.size() > 0){
+		std::list<RRTNode*> path_;
+		path_ = getPath(); 
+		printf("RRTStar::computeTreeCoupled -->  finded path for Coupled Marsupial Configuration-->  path size: %lu , number iteration: %i , take off nodes: %lu \n\n",
+		path_.size(), count + 1, take_off_nodes.size()); 
+		int i_=0;   
+		for (auto pt_: path_){
+			i_++;
+			printf("point_path[%i/%lu] : x=%f  y=%f  z=%f  cost=%f\n", i_, path_.size(),pt_->point.x*step, pt_->point.y*step, pt_->point.z*step,pt_->cost);
 		}
-		else
-			printf("RRTStar::computeTree -->  could't find path for Coupled Marsupial Configuration-->  number iteration: %lu \n\n", nodes_tree.size());    
+		getPathMarker(path_);
+		ret_val = 0;
 	}
-	else{
-	}
+	else
+		printf("RRTStar::computeTreeCoupled -->  could't find path for Coupled Marsupial Configuration-->  number iteration: %lu \n\n", nodes_tree.size());    
+
   	std::cout << "Explored Graph Nodes Numbers: " << nodes_tree.size() <<std::endl;
   	std::cout << "Explored Graph Nodes Numbers to Take Off: " << take_off_nodes.size() <<std::endl;
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
@@ -142,54 +141,108 @@ double RRTStar::computeTree()
   return ret_val; 
 }
 
+double RRTStar::computeTreesIndependent()
+{
+    std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
+	printf("RRTStar::computeTreesIndependent -->  STARTING --> star_point_ugv[%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n",
+	initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z, final_position.x, final_position.y, final_position.z);    
 
-bool RRTStar::extendGraph(const RRTNode &q_rand_)
+  	clearNodes(); // Incremental algorithm --> the graph is generated in each calculation
+	clearMarkers();
+	v_save_node_kdtree.clear();
+
+	saveNode(disc_initial_ugv,true);
+	getGraphMarker();
+	getTakeOffNodesMarker();
+	updateKdtree(*disc_initial_ugv);
+
+ 	double ret_val = -1.0; 
+    int count = 0; 
+	
+    while (count < n_iter) { // n_iter Max. number of nodes to expand for each round
+      	count++;
+		// printf("__________________________________  RRTStar::computeTreesIndependent: STARTING WHILE LOOP[%i]  _________________________________\n",count);
+		RRTNode q_rand = getRandomNode(is_coupled);
+		extendGraph(q_rand);
+		if ((take_off_nodes.size() > 0) && got_to_goal){
+			printf("RRTStar::computeTreesIndependent -->  breaking while for in iteration=%i",count);    
+			break;
+		}
+	}
+
+	if (take_off_nodes.size() > 0){
+		std::list<RRTNode*> path_;
+		path_ = getPath(); 
+		printf("RRTStar::computeTreesIndependent -->  finded path for Coupled Marsupial Configuration-->  path size: %lu , number iteration: %i , take off nodes: %lu \n\n",
+		path_.size(), count + 1, take_off_nodes.size()); 
+		int i_=0;   
+		for (auto pt_: path_){
+			i_++;
+			printf("point_path[%i/%lu] : x=%f  y=%f  z=%f  cost=%f\n", i_, path_.size(),pt_->point.x*step, pt_->point.y*step, pt_->point.z*step,pt_->cost);
+		}
+		getPathMarker(path_);
+		ret_val = 0;
+	}
+	else
+		printf("RRTStar::computeTreesIndependent -->  could't find path for Coupled Marsupial Configuration-->  number iteration: %lu \n\n", nodes_tree.size());    
+
+  	std::cout << "Explored Graph Nodes Numbers: " << nodes_tree.size() <<std::endl;
+  	std::cout << "Explored Graph Nodes Numbers to Take Off: " << take_off_nodes.size() <<std::endl;
+	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
+
+  return ret_val; 
+}
+
+bool RRTStar::extendGraph(const RRTNode q_rand_)
 { 
 	RRTNode* new_node = new RRTNode();
+	// printf("q_rand_ =[%f %f %f]\n",q_rand_.point.x*step, q_rand_.point.y*step ,q_rand_.point.z*step);
 
 	RRTNode* q_nearest = getNearestNode(q_rand_);  
-	printf("RRTstar::extendGraph q_nearest=[%f %f %f]\n",q_nearest->point.x*step,q_nearest->point.y*step,q_nearest->point.z*step);
+	// printf("RRTstar::extendGraph q_nearest=[%f %f %f]\n",q_nearest->point.x*step,q_nearest->point.y*step,q_nearest->point.z*step);
 	RRTNode q_new ;
     q_new = steering(*q_nearest, q_rand_, step_steer);
-	printf("RRTstar::extendGraph  q_new =[%f %f %f]\n",q_new.point.x*step,q_new.point.y*step,q_new.point.z*step);
+	// printf("q_rand_ =[%f %f %f]\n",q_rand_.point.x*step, q_rand_.point.y*step ,q_rand_.point.z*step);
+	
+	// printf("RRTstar::extendGraph  q_new =[%f %f %f]\n",q_new.point.x*step,q_new.point.y*step,q_new.point.z*step);
 	RRTNode *q_min;
-	// printf("RRTstar::extendGraph  q_min");
 	if (checkPointFeasibility(q_new)){
 		if (obstacleFree(*q_nearest, q_new)){
 			q_min = q_nearest;
 		}
-		else
+		else{
+			ROS_ERROR("RRTStar::extendGraph : Not Obstacle Free between q_new = [%f %f %f] and q_nearest =[%f %f %f]",
+			q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step);
 			return false;
+		}
 	}
-	else
+	else{
+		ROS_ERROR("RRTStar::extendGraph : Not Feasible to extend point q_new = [%f %f %f]",q_new.point.x*step, q_new.point.y*step, q_new.point.z*step);
 		return false;		
-	// printf("Before Test Node lower Cost !\n");		
+	}
+
 	std::vector<Eigen::Vector3d> v_near_nodes = getNearNodes(*q_nearest, q_new, radius_near_nodes) ;
 	updateKdtree(q_new); 
 	q_new.parentNode = q_min;
-	ROS_INFO("ANtes RRTstar::extendGraph  q_new.parentNode = q_min =[%f %f %f] , q_new.cost=[%f] q_new_.parentNode->cost=[%f]", 
-	q_new.parentNode->point.x*step ,q_new.parentNode->point.y*step ,q_new.parentNode->point.z*step, q_new.cost, q_new.parentNode->cost);
+	// ROS_INFO("ANtes RRTstar::extendGraph  q_new.parentNode = q_min =[%f %f %f] , q_new.cost=[%f] q_new_.parentNode->cost=[%f]", 
+	// q_new.parentNode->point.x*step ,q_new.parentNode->point.y*step ,q_new.parentNode->point.z*step, q_new.cost, q_new.parentNode->cost);
 	getParamsNode(q_new);
-	ROS_INFO(" Despues RRTstar::extendGraph  q_new.parentNode = q_min =[%f %f %f] , q_new.cost=[%f] q_new_.parentNode->cost=[%f]", 
-	q_new.parentNode->point.x*step ,q_new.parentNode->point.y*step ,q_new.parentNode->point.z*step, q_new.cost, q_new.parentNode->cost);
+	// ROS_INFO(" Despues RRTstar::extendGraph  q_new.parentNode = q_min =[%f %f %f] , q_new.cost=[%f] q_new_.parentNode->cost=[%f]", 
+	// q_new.parentNode->point.x*step ,q_new.parentNode->point.y*step ,q_new.parentNode->point.z*step, q_new.cost, q_new.parentNode->cost);
+	
 	// I . Open near nodes and connected with minimum accumulated
 	for (size_t i = 0 ; i < v_near_nodes.size(); i++){
 		int p_x_ = v_near_nodes[i].x() * step_inv;
 		int p_y_ = v_near_nodes[i].y() * step_inv;
 		int p_z_ = v_near_nodes[i].z() * step_inv;
 		int id_node_near_ = getWorldIndex(p_x_, p_y_, p_z_);
-		// int id_node_nearest_ = getWorldIndex(q_nearest->point.x,q_nearest->point.y, q_nearest->point.z);
 		for (auto nt_:nodes_tree) {
-			// if (nt_->id == id_node_near_ && id_node_nearest_ != id_node_near_){
 			if (nt_->id == id_node_near_){
-				// ROS_ERROR("RRTStar::extendGraph[%lu/%lu]   ---- Checking Near node p=[%f %f %f]",i,v_near_nodes.size(),nt_->point.x*step,nt_->point.y*step,nt_->point.z*step);
 				if (obstacleFree(*nt_, q_new)){
 					double C_ = nt_->cost + costBetweenNodes(*nt_,q_new);
 					if (C_ < q_new.cost){
 						q_min = nt_;
-						ROS_INFO("here");
-						std::cout << "   q_min -->  point : "<< q_min->point.x*step << "," <<q_min->point.y*step <<","<< q_min->point.z*step<< std::endl;
-
+						// std::cout << "   q_min -->  point : "<< q_min->point.x*step << "," <<q_min->point.y*step <<","<< q_min->point.z*step<< std::endl;
 					}
 				}
 				else{
@@ -202,8 +255,8 @@ bool RRTStar::extendGraph(const RRTNode &q_rand_)
 	getParamsNode(q_new);
 	double C_new_ = q_new.cost;
 	
-	printf("RRTstar::extendGraph  q_new.parentNode = q_min =[%f %f %f] , q_new.cost=[%f]    ,   parentNode : cost=[%f]  id=[%i]  length =[%f] \n", 
-	q_new.parentNode->point.x*step ,q_new.parentNode->point.y*step ,q_new.parentNode->point.z*step, q_new.cost, q_new.parentNode->cost, q_new.parentNode->id, q_new.parentNode->length_cat);
+	// printf("RRTstar::extendGraph  q_new.parentNode = q_min =[%f %f %f] , q_new.cost=[%f]    ,   parentNode : cost=[%f]  id=[%i]  length =[%f] \n", 
+	// q_new.parentNode->point.x*step ,q_new.parentNode->point.y*step ,q_new.parentNode->point.z*step, q_new.cost, q_new.parentNode->cost, q_new.parentNode->id, q_new.parentNode->length_cat);
 
 	// II . Rewire Proccess 
 	for (size_t i = 0 ; i < v_near_nodes.size(); i++){
@@ -211,36 +264,30 @@ bool RRTStar::extendGraph(const RRTNode &q_rand_)
 		int p_y_ = v_near_nodes[i].y() * step_inv;
 		int p_z_ = v_near_nodes[i].z() * step_inv;
 		int id_node_near_ = getWorldIndex(p_x_, p_y_, p_z_);
-		// int id_node_nearest_ = getWorldIndex(q_nearest->point.x,q_nearest->point.y, q_nearest->point.z);
 		for (auto nt_:nodes_tree) {
 			if (nt_->id == id_node_near_ && nt_->id != q_min->id ){
 				if (obstacleFree(*nt_, q_new)){
 					if( nt_->cost > (q_new.cost + costBetweenNodes(q_new, *nt_)) ){
-						ROS_ERROR( "RRTStar::extendGraph -> Rewire Proccess nt_=[%.2f %.2f %.2f]  nt_->parentNode =[%.2f %.2f %.2f] nt_->cost=[%f] , q_new.cost=[%f] ,costNodes(q_new,nt_)=[%f]",
-						nt_->point.x*step ,nt_->point.y*step ,nt_->point.z*step,nt_->parentNode->point.x*step ,nt_->parentNode->point.y*step ,nt_->parentNode->point.z*step,
-						nt_->cost, q_new.cost,costBetweenNodes(q_new, *nt_));
+						// ROS_ERROR( "RRTStar::extendGraph -> Rewire Proccess nt_=[%.2f %.2f %.2f]  nt_->parentNode =[%.2f %.2f %.2f] nt_->cost=[%f] , q_new.cost=[%f] ,costNodes(q_new,nt_)=[%f]",
+						// nt_->point.x*step ,nt_->point.y*step ,nt_->point.z*step,nt_->parentNode->point.x*step ,nt_->parentNode->point.y*step ,nt_->parentNode->point.z*step,
+						// nt_->cost, q_new.cost,costBetweenNodes(q_new, *nt_));
 
 						*nt_->parentNode = q_new;
-						// double _c_ = costNode(*nt_);
-						// nt_->cost = _c_;
 						nt_->cost = q_new.cost+costBetweenNodes(q_new, *nt_);
 
-						ROS_ERROR( "RRTStar::extendGraph -> Rewire Proccess nt_=[%.2f %.2f %.2f]  nt_->parentNode =[%.2f %.2f %.2f] nt_->cost=[%f] , nt_->parentNode->cost=[%f]",
-						nt_->point.x*step ,nt_->point.y*step ,nt_->point.z*step,nt_->parentNode->point.x*step ,nt_->parentNode->point.y*step ,nt_->parentNode->point.z*step,
-						nt_->cost, nt_->parentNode->cost);
-						// std::cout << "q_new--->   point : "<< q_new.point.x*step << "," <<q_new.point.y*step <<","<< q_new.point.z*step<< std::endl;
-						// if (nt_->id != disc_initial->id)
-							// std::cout << "After nt_->parentNode--->  point : "<< nt_->parentNode->point.x*step << "," <<nt_->parentNode->point.y*step <<","<< nt_->parentNode->point.z*step<< std::endl;
+						// ROS_ERROR( "RRTStar::extendGraph -> Rewire Proccess nt_=[%.2f %.2f %.2f]  nt_->parentNode =[%.2f %.2f %.2f] nt_->cost=[%f] , nt_->parentNode->cost=[%f]",
+						// nt_->point.x*step ,nt_->point.y*step ,nt_->point.z*step,nt_->parentNode->point.x*step ,nt_->parentNode->point.y*step ,nt_->parentNode->point.z*step,
+						// nt_->cost, nt_->parentNode->cost);
 					}
 				}
 			}
 		}
 	}
 
-	std::cout <<"Before save RRTstar::extendGraph  q_new =["<<q_new.point.x*step<<","<<q_new.point.y*step<<","<<q_new.point.z*step <<"] cost =[" << q_new.cost <<"] parentCost =[" << q_new.parentNode->cost <<"] q_new.parentNode --> "<<q_new.parentNode<< std::endl;
+	// std::cout <<"Before save RRTstar::extendGraph  q_new =["<<q_new.point.x*step<<","<<q_new.point.y*step<<","<<q_new.point.z*step <<"] cost =[" << q_new.cost <<"] parentCost =[" << q_new.parentNode->cost <<"] q_new.parentNode --> "<<q_new.parentNode<< std::endl;
 	*new_node = q_new;
 	saveNode(new_node);
-	std::cout <<"After save RRTstar::extendGraph  q_new =["<<q_new.point.x*step<<","<<q_new.point.y*step<<","<<q_new.point.z*step <<"] cost =[" << q_new.cost <<"] parentCost =[" << q_new.parentNode->cost <<"] q_new.parentNode --> "<<q_new.parentNode<< std::endl;
+	// std::cout <<"After save RRTstar::extendGraph  q_new =["<<q_new.point.x*step<<","<<q_new.point.y*step<<","<<q_new.point.z*step <<"] cost =[" << q_new.cost <<"] parentCost =[" << q_new.parentNode->cost <<"] q_new.parentNode --> "<<q_new.parentNode<< std::endl;
 	getGraphMarker();
 	getTakeOffNodesMarker();
 	isGoal(q_new);
@@ -258,15 +305,16 @@ RRTNode RRTStar::getRandomNode(bool is_coupled_)
   	
 	RRTNode randomState_;
 	bool finded_node = false;
+	float x_, y_, z_;
 
 	if (is_coupled_){
 		do{
-			float x_ = distr_x(eng)*step_inv;
-			float y_ = distr_y(eng)*step_inv;
-			float z_ = (pos_tf_ugv.z + 0.2)* step_inv;
-			randomState_.point.x = x_;
-			randomState_.point.y = y_;
-			randomState_.point.z = z_;
+			x_ = distr_x(eng);
+			y_ = distr_y(eng);
+			z_ = (pos_tf_ugv.z + 0.2);
+			randomState_.point.x = x_*step_inv;
+			randomState_.point.y = y_*step_inv;
+			randomState_.point.z = z_*step_inv;
 
 			finded_node = checkPointFeasibility(randomState_);
 
@@ -274,45 +322,50 @@ RRTNode RRTStar::getRandomNode(bool is_coupled_)
 	}
 	else{
 		do{
-			float x_ = distr_x(eng)*step_inv;
-			float y_ = distr_y(eng)*step_inv;
-			float z_ = distr_z(eng)*step_inv;;
-			randomState_.point.x = x_;
-			randomState_.point.y = y_;
-			randomState_.point.z = z_;
+			x_ = distr_x(eng);
+			y_ = distr_y(eng);
+			z_ = distr_z(eng);;
+			randomState_.point.x = x_*step_inv;
+			randomState_.point.y = y_*step_inv;
+			randomState_.point.z = z_*step_inv;
 
 			finded_node = checkPointFeasibility(randomState_);
 
 		}while(finded_node == false);
 	}
 	  
+	// ROS_INFO("RRTStar::steering : randomState =[%i %i %i] [%f %f %f] ",randomState_.point.x, randomState_.point.y ,randomState_.point.z, x_, y_, z_);
   	return randomState_;
 }
 
-RRTNode* RRTStar::getNearestNode(const RRTNode &q_rand_) 
+RRTNode* RRTStar::getNearestNode(const RRTNode q_rand_) 
 {
   	RRTNode q_nearest_; 
 	Eigen::Vector3d Vqn_, ret_;
 	int point_x_, point_y_, point_z_;
-	Vqn_.x() = q_rand_.point.x * step;
-	Vqn_.y() = q_rand_.point.y * step;
-	Vqn_.z() = q_rand_.point.z * step;
+	// Vqn_.x() = q_rand_.point.x * step;
+	// Vqn_.y() = q_rand_.point.y * step;
+	// Vqn_.z() = q_rand_.point.z * step;
+	Vqn_.x() = q_rand_.point.x;
+	Vqn_.y() = q_rand_.point.y;
+	Vqn_.z() = q_rand_.point.z;
 
   	ret_ = near_neighbor_nodes.nearestObstacleVertex(near_neighbor_nodes.kdtree, Vqn_ ,near_neighbor_nodes.obs_points);
 
-	point_x_ = ret_.x() * step_inv;  
-	point_y_ = ret_.y() * step_inv;  
-	point_z_ = ret_.z() * step_inv;  
+	// point_x_ = ret_.x() * step_inv;  
+	// point_y_ = ret_.y() * step_inv;  
+	// point_z_ = ret_.z() * step_inv;  
+	point_x_ = ret_.x();  
+	point_y_ = ret_.y();  
+	point_z_ = ret_.z();  
 
 	int id_node_near_ = getWorldIndex(point_x_, point_y_, point_z_);
 	for (auto nt_:nodes_tree) {
 		if (nt_->id == id_node_near_){
 			q_nearest_ = *nt_;
-			ROS_ERROR(" !!! We get NEAREST node: %f,%f,%f",q_nearest_.point.x*step, q_nearest_.point.y*step, q_nearest_.point.z*step);
 			break;
 		}
 	}
-
 
 	RRTNode *q_n_ = new RRTNode(q_nearest_); 
   	return q_n_;
@@ -322,32 +375,48 @@ RRTNode RRTStar::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 {
 	RRTNode q_n_;
 	
-	double x_, y_, z_, uni_x, uni_y, uni_z, dir_x, dir_y, dir_z, x_rand, y_rand, z_rand, x_nearest, y_nearest, z_nearest;
-	x_rand = q_rand_.point.x * step; y_rand = q_rand_.point.y * step; z_rand = q_rand_.point.z * step;
-	x_nearest = q_nearest_.point.x * step; y_nearest = q_nearest_.point.y * step; z_nearest = q_nearest_.point.z * step;
+	float x_rand, y_rand, z_rand, x_nearest, y_nearest, z_nearest;
+	float uni_x, uni_y, uni_z, dir_x, dir_y, dir_z; 
+	float x_, y_, z_;
+	
+	x_rand = q_rand_.point.x * step; 
+	y_rand = q_rand_.point.y * step; 
+	z_rand = q_rand_.point.z * step;
+	x_nearest = q_nearest_.point.x * step; 
+	y_nearest = q_nearest_.point.y * step; 
+	z_nearest = q_nearest_.point.z * step;
 	
 	//Get the unitary vector from nearest to rand direction
 	dir_x = x_rand - x_nearest;
 	dir_y = y_rand - y_nearest; 
 	dir_z = z_rand - z_nearest;
-	double dist_nearest_rand = sqrt(dir_x*dir_x + dir_y*dir_y + dir_z*dir_z);
+	float dist_nearest_rand = sqrt(dir_x*dir_x + dir_y*dir_y + dir_z*dir_z);
 	uni_x = dir_x/ dist_nearest_rand;
-	uni_y = dir_y/ dist_nearest_rand;
-	uni_z = dir_z/ dist_nearest_rand;
+		uni_y = dir_y/ dist_nearest_rand;
+		uni_z = dir_z/ dist_nearest_rand;
 
 	// Move in direction nearest to rand with magnitude proporcional to factor_steer_
-	x_ = (x_nearest + uni_x * factor_steer_)*step_inv; 
-	y_ = (y_nearest + uni_y * factor_steer_)*step_inv; 
-	z_ = (z_nearest + uni_z * factor_steer_)*step_inv; 
-	q_n_.point.x = x_ ; q_n_.point.y = y_ ; q_n_.point.z = z_ ;
-	// RRTNode q_new_ = new RRTNode(q_n_); 
+	x_ = (x_nearest + uni_x * factor_steer_); 
+	y_ = (y_nearest + uni_y * factor_steer_); 
+	z_ = (z_nearest + uni_z * factor_steer_); 
 
+	if ( (pow(x_-x_nearest,2)+pow(y_-y_nearest,2)+pow(z_-z_nearest,2)) > (pow(x_rand-x_nearest,2)+pow(y_rand-y_nearest,2)+pow(z_rand-z_nearest,2)) ){
+		q_n_.point.x = q_rand_.point.x ; 
+		q_n_.point.y = q_rand_.point.y ; 
+		q_n_.point.z = q_rand_.point.z;
+	}
+	else{
+		q_n_.point.x = x_ * step_inv; 
+		q_n_.point.y = y_ * step_inv; 
+		q_n_.point.z = z_ * step_inv;
+	}
+	// printf("RRTStar::steering : dist_nearest_rand =[%f] dir=[%f %f %f] nearest =[%.2f %.2f %.2f] rand =[%.2f %.2f %.2f] new=[%.2f %.2f %.2f]\n",
+	// dist_nearest_rand,dir_x,dir_y,dir_z,x_nearest, y_nearest, z_nearest,x_rand, y_rand, z_rand,x_, y_, z_);
 	return q_n_;
 }
 
 bool RRTStar::obstacleFree(const RRTNode &q_nearest_,const RRTNode &q_new_)
 {
-	// printf("ENTERING RRTStar::obstacleFree\n");
 	Eigen::Vector3d point_, point_nearest_ , point_new_;
 	double  uni_x, uni_y, uni_z, dir_x, dir_y, dir_z; 
 
@@ -370,14 +439,11 @@ bool RRTStar::obstacleFree(const RRTNode &q_nearest_,const RRTNode &q_new_)
 		point_.x() = point_nearest_.x() + uni_x * step * (double)i_; 
 		point_.y() = point_nearest_.y() + uni_y * step * (double)i_; 
 		point_.z() = point_nearest_.z() + uni_z * step * (double)i_; 
-		// printf("RRTStar::obstacleFree Loop while iter[%i] point_=[%f %f %f] nearest_=[%f %f %f] new_=[%f %f %f]\n",
-		// i_,point_.x(),point_.y(),point_.z(),point_nearest_.x(),point_nearest_.y(),point_nearest_.z(),point_new_.x(),point_new_.y(),point_new_.z());
 		
 		RRTNode check_point_;
 		check_point_.point.x = point_.x()*step_inv;
 		check_point_.point.y = point_.y()*step_inv;
 		check_point_.point.z = point_.z()*step_inv;	
-		// RRTNode *check_point_ = new RRTNode(sn_); 
 		if (!checkPointFeasibility(check_point_))
 			return false;
 	}
@@ -398,7 +464,6 @@ std::vector<Eigen::Vector3d> RRTStar::getNearNodes(const RRTNode &q_nearest_, co
 	Vqn_.z() = q_nearest_.point.z * step;
 
 	double dist_ = (Vnew_ - Vqn_).norm();
-	// double radius_ = dist_ * 1.5;
 	
   	v_q_near_ = near_neighbor_nodes.radiusNearNodes(near_neighbor_nodes.kdtree, Vnew_, radius_, near_neighbor_nodes.obs_points);
 
@@ -407,24 +472,14 @@ std::vector<Eigen::Vector3d> RRTStar::getNearNodes(const RRTNode &q_nearest_, co
 
 double RRTStar::costNode(const RRTNode q_new_)
 {
-	double k1_, k2_, F0_, F1_, F2_;
+	double k1_, k2_, F0_, F1_;
 	k1_ = 10.0;
-	k2_ = 1.0;
 	double r_security_ugv_ = 0.7;
 
-	// double p_x_ = q_new_.point.x * step;
-	// double p_y_ = q_new_.point.y * step;
-	// double p_z_ = q_new_.point.z * step;
-	// double p_p_x_ = q_new_.parentNode->point.x * step;
-	// double p_p_y_ = q_new_.parentNode->point.y * step;
-	// double p_p_z_ = q_new_.parentNode->point.z * step;
-	// double dist_node_parent =  sqrt(pow(p_p_x_ - p_x_,2) + pow(p_p_y_ - p_y_,2) + pow(p_p_z_ - p_z_,2));
-	
 	F0_ = q_new_.parentNode->cost;
-	printf("Inside RRTStar::costNode q_new_.parentNode->cost=[%f]\n",q_new_.parentNode->cost);
+	// printf("Inside RRTStar::costNode q_new_.parentNode->cost=[%f]\n",q_new_.parentNode->cost);
 	// F1_ = exp(r_security_ugv_ - 1.0*q_new_.min_dist_obs_ugv); 
 	F1_ = 0.0; 
-	// F2_ = dist_node_parent;
 
 	double cost_ = F0_ + k1_ * F1_ ;
 
@@ -449,11 +504,13 @@ double RRTStar::costBetweenNodes(const RRTNode &q_near_, const RRTNode &q_new_)
 	return cost_;
 }
 
-bool RRTStar::checkPointFeasibility(RRTNode pf_)
+bool RRTStar::checkPointFeasibility(const RRTNode pf_)
 {
 	bool ret;
+	// ROS_INFO("1 RRTStar::checkPointFeasibility pF_=[%f %f %f] ",pf_.point.x*step, pf_.point.y*step ,pf_.point.z*step);
 
 	if (isInside(pf_.point.x,pf_.point.y,pf_.point.z)){
+		// ROS_INFO("2 RRTStar::checkPointFeasibility pF_=[%f %f %f] ",pf_.point.x*step, pf_.point.y*step ,pf_.point.z*step);
 		if (isOccupied(pf_))
 			ret = false;
 		else
@@ -554,10 +611,9 @@ bool RRTStar::checkCatenary(RRTNode &q_init_, const RRTNode &q_final_)
 		q_init_.length_cat = -1.0;	
 		q_init_.min_dist_obs_cat = -1.0;
 	}
-
-	// printf("RRTStar::checkCatenary: State catenary[%s] length=[%f] p_init=[%f %f %f] p_final=[%f %f %f] length=[%f/%f] obs_cat=[%f]\n"
-	// ,founded_catenary ? "true" : "false", dist_init_final_* (1.001 + delta_),p_reel_.x, p_reel_.y, p_reel_.z,
-	// p_final_.x, p_final_.y, p_final_.z, q_init_.length_cat, length_tether_max, q_init_.min_dist_obs_cat);
+		// printf("RRTStar::checkCatenary: State catenary[%s] length=[%f] p_init=[%f %f %f] p_final=[%f %f %f] length=[%f/%f] obs_cat=[%f]\n"
+		// ,founded_catenary ? "true" : "false", dist_init_final_* (1.001 + delta_),p_reel_.x, p_reel_.y, p_reel_.z,
+		// p_final_.x, p_final_.y, p_final_.z, q_init_.length_cat, length_tether_max, q_init_.min_dist_obs_cat);
 
 	return founded_catenary;
 }
@@ -577,12 +633,15 @@ RRTNode RRTStar::getReelNode(const RRTNode &node_)
 	return reel_node;
 }
 
-void RRTStar::updateKdtree(RRTNode &ukT_)
+void RRTStar::updateKdtree(const RRTNode ukT_)
 {
 	Eigen::Vector3d Vsn_;
-	Vsn_.x() = ukT_.point.x * step;  
-	Vsn_.y() = ukT_.point.y * step;
-	Vsn_.z() = ukT_.point.z * step;
+	// Vsn_.x() = ukT_.point.x * step;  
+	// Vsn_.y() = ukT_.point.y * step;
+	// Vsn_.z() = ukT_.point.z * step;
+	Vsn_.x() = ukT_.point.x;  
+	Vsn_.y() = ukT_.point.y;
+	Vsn_.z() = ukT_.point.z;
 
 	v_save_node_kdtree.push_back(Vsn_);
 	near_neighbor_nodes.setInput(v_save_node_kdtree);
@@ -643,10 +702,10 @@ void RRTStar::getParamsNode(RRTNode &node_, bool is_init_)
 	else
 		node_.cost_takeoff = 0.0;
 
-	std::cout  << "node_ : " << &node_<< " , node_->parentNode : " << node_.parentNode << std::endl;
+	// std::cout  << "node_ : " << &node_<< " , node_->parentNode : " << node_.parentNode << std::endl;
 	if (!is_init_){
 		node_.cost = costNode(node_) + costBetweenNodes(node_, *node_.parentNode);
-		ROS_ERROR("RRTStar::getParamsNode : cost=[%f] , costNode=[%f] , costBetween=[%f]",node_.cost, costNode(node_), costBetweenNodes(node_, *node_.parentNode));
+		// ROS_ERROR("RRTStar::getParamsNode : cost=[%f] , costNode=[%f] , costBetween=[%f]",node_.cost, costNode(node_), costBetweenNodes(node_, *node_.parentNode));
 	}
 }
 
@@ -676,7 +735,7 @@ void RRTStar::getGraphMarker()
         pointTreeMarker.markers[count].id = nt_->id;
         pointTreeMarker.markers[count].action = visualization_msgs::Marker::ADD;
         pointTreeMarker.markers[count].type = visualization_msgs::Marker::SPHERE;
-        pointTreeMarker.markers[count].lifetime = ros::Duration(60);
+        pointTreeMarker.markers[count].lifetime = ros::Duration(20);
         pointTreeMarker.markers[count].pose.position.x = nt_->point.x * step; 
         pointTreeMarker.markers[count].pose.position.y = nt_->point.y * step; 
         pointTreeMarker.markers[count].pose.position.z = nt_->point.z * step;
@@ -708,7 +767,7 @@ void RRTStar::getTakeOffNodesMarker()
         pointTakeOffMarker.markers[count_].id = nt_->id;
         pointTakeOffMarker.markers[count_].action = visualization_msgs::Marker::ADD;
         pointTakeOffMarker.markers[count_].type = visualization_msgs::Marker::SPHERE;
-        pointTakeOffMarker.markers[count_].lifetime = ros::Duration(60);
+        pointTakeOffMarker.markers[count_].lifetime = ros::Duration(20);
         pointTakeOffMarker.markers[count_].pose.position.x = nt_->point.x * step; 
         pointTakeOffMarker.markers[count_].pose.position.y = nt_->point.y * step; 
         pointTakeOffMarker.markers[count_].pose.position.z = nt_->point.z * step;
@@ -745,7 +804,7 @@ void RRTStar::getPathMarker(std::list<RRTNode*> pt_)
 			lines_marker_.markers[i_-1].id = i_ + pt_.size();
 			lines_marker_.markers[i_-1].action = visualization_msgs::Marker::ADD;
 			lines_marker_.markers[i_-1].type = visualization_msgs::Marker::LINE_STRIP;
-			lines_marker_.markers[i_-1].lifetime = ros::Duration(60);
+			lines_marker_.markers[i_-1].lifetime = ros::Duration(20);
 			lines_marker_.markers[i_-1].points.push_back(_p1);
 			lines_marker_.markers[i_-1].points.push_back(_p2);
 			lines_marker_.markers[i_-1].pose.orientation.x = 0.0;
@@ -770,14 +829,24 @@ void RRTStar::getPathMarker(std::list<RRTNode*> pt_)
 
 void RRTStar::clearMarkers()
 {
+
+	// auto size_ = n_iter;
+
 	auto size_ = pointTreeMarker.markers.size();
+	pointTreeMarker.markers.clear();
+	pointTreeMarker.markers.resize(size_);
+	// auto size_ = pointTreeMarker.markers.size();
     for (auto i = 0 ; i < size_; i++){
         pointTreeMarker.markers[i].action = visualization_msgs::Marker::DELETEALL;
      
     }
     tree_rrt_star_pub_.publish(pointTreeMarker);
 
+
 	size_ = pointTakeOffMarker.markers.size();
+	pointTakeOffMarker.markers.clear();
+	pointTakeOffMarker.markers.resize(size_);
+	// size_ = pointTakeOffMarker.markers.size();
     for (auto i = 0 ; i < size_; i++){
         pointTakeOffMarker.markers[i].action = visualization_msgs::Marker::DELETEALL;
     }
@@ -840,17 +909,17 @@ std::list<RRTNode*> RRTStar::getPath()
 			if (ton_->cost_takeoff < cost_ && ton_->cost_takeoff > 0.1){
 				cost_ = ton_->cost_takeoff;
 				current_node = ton_;
-				ROS_INFO("current_node : %f,%f,%f",current_node->point.x*step,current_node->point.y*step,current_node->point.z*step);
+				// ROS_INFO("current_node : %f,%f,%f",current_node->point.x*step,current_node->point.y*step,current_node->point.z*step);
 			} 
-			std::cout << "RRTStar::getPath : while iter = " << count << " , cost_take = " << ton_->cost_takeoff << " , length = " << ton_->length_cat 
-			<<" , ton_->parentNode: "<< ton_->parentNode <<" , point : "<< ton_->point.x*step << "," <<ton_->point.y*step <<","<< ton_->point.z*step<< std::endl;
+			// std::cout << "RRTStar::getPath : while iter = " << count << " , cost_take = " << ton_->cost_takeoff << " , length = " << ton_->length_cat 
+			// <<" , ton_->parentNode: "<< ton_->parentNode <<" , point : "<< ton_->point.x*step << "," <<ton_->point.y*step <<","<< ton_->point.z*step<< std::endl;
 		}
 		path_.push_front(current_node);
 
 		count = 0;
 		while (current_node->parentNode != NULL){ 
-			ROS_INFO("Before change current_node : %f,%f,%f",current_node->point.x*step,current_node->point.y*step,current_node->point.z*step);
-			ROS_INFO("Before change current_node->parentNode : %f,%f,%f",current_node->parentNode->point.x*step,current_node->parentNode->point.y*step,current_node->parentNode->point.z*step);
+			// ROS_INFO("Before change current_node : %f,%f,%f",current_node->point.x*step,current_node->point.y*step,current_node->point.z*step);
+			// ROS_INFO("Before change current_node->parentNode : %f,%f,%f",current_node->parentNode->point.x*step,current_node->parentNode->point.y*step,current_node->parentNode->point.z*step);
 			current_node = current_node->parentNode;
 			// ROS_INFO("After change current_node->parentNode : %f,%f,%f",current_node->parentNode->point.x*step,current_node->parentNode->point.y*step,current_node->parentNode->point.z*step);
 			path_.push_front(current_node);
@@ -858,6 +927,7 @@ std::list<RRTNode*> RRTStar::getPath()
 		}
 	}
 
+	//Next lines just to display the nodes in case that one take off node is finded
 	count=0;
 	for(auto nt_:nodes_tree){
 		count++;
@@ -877,6 +947,111 @@ std::list<RRTNode*> RRTStar::getPath()
 	}
 	return path_;
 }
+
+
+bool RRTStar::setInitialPositionUGV(DiscretePosition p_)
+{
+	if (isInside(p_.x, p_.y, p_.z))
+	{
+		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(p_.x, p_.y, p_.z)];
+
+		if (initialNodeInWorld->node == NULL)
+		{
+			initialNodeInWorld->node = new RRTNode();
+			initialNodeInWorld->node->point.x = p_.x;
+			initialNodeInWorld->node->point.x = p_.y;
+			initialNodeInWorld->node->point.x = p_.z;
+
+			initialNodeInWorld->node->nodeInWorld = initialNodeInWorld;
+		}
+		disc_initial_ugv = initialNodeInWorld->node;
+
+		initial_position_ugv.x = p_.x * step;
+		initial_position_ugv.y = p_.y * step;
+		initial_position_ugv.z = p_.z * step;
+
+		disc_initial_ugv->point = p_;
+		disc_initial_ugv->parentNode = NULL;
+		disc_initial_ugv->cost = 0.0;
+		disc_initial_ugv->length_cat = -1.0;
+		disc_initial_ugv->min_dist_obs_cat = -1.0;
+		disc_initial_ugv->min_dist_obs_ugv = -1.0;
+		disc_initial_ugv->p_id= -1.0;
+
+		return true;
+	}
+	else
+	{
+		//~ std::cerr << "ThetaStar: Initial point ["<< p.x << ";"<< p.y <<";"<< p.z <<"] not valid." << std::endl;
+		disc_initial_ugv = NULL;
+		return false;
+	}
+}
+
+bool RRTStar::setInitialPositionUAV(DiscretePosition p_)
+{
+	if (isInside(p_.x, p_.y, p_.z))
+	{
+		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(p_.x, p_.y, p_.z)];
+
+		if (initialNodeInWorld->node == NULL)
+		{
+			initialNodeInWorld->node = new RRTNode();
+			initialNodeInWorld->node->point.x = p_.x;
+			initialNodeInWorld->node->point.x = p_.y;
+			initialNodeInWorld->node->point.x = p_.z;
+
+			initialNodeInWorld->node->nodeInWorld = initialNodeInWorld;
+		}
+		disc_initial_uav = initialNodeInWorld->node;
+
+		initial_position_uav.x = p_.x * step;
+		initial_position_uav.y = p_.y * step;
+		initial_position_uav.z = p_.z * step;
+
+		disc_initial_uav->point = p_;
+		disc_initial_uav->parentNode = NULL;
+		disc_initial_uav->cost = 0.0;
+		disc_initial_uav->length_cat = -1.0;
+		disc_initial_uav->min_dist_obs_cat = -1.0;
+		disc_initial_uav->min_dist_obs_ugv = -1.0;
+		disc_initial_uav->p_id= -1.0;
+
+		return true;
+	}
+	else
+	{
+		//~ std::cerr << "ThetaStar: Initial point ["<< p.x << ";"<< p.y <<";"<< p.z <<"] not valid." << std::endl;
+		disc_initial_uav = NULL;
+		return false;
+	}
+}
+
+bool RRTStar::isInitialPositionOccupiedUGV()
+{
+	if (isOccupied(*disc_initial_ugv))
+		return true;
+	else
+		return false;
+}
+
+bool RRTStar::isInitialPositionOccupiedUAV()
+{
+	if (isOccupied(*disc_initial_uav))
+		return true;
+	else
+		return false;
+}
+
+bool RRTStar::isFinalPositionOccupied()
+{
+	if (isOccupied(*disc_final))
+		return true;
+	else
+		return false;
+}
+
+
 
 
 
@@ -1334,48 +1509,43 @@ void RRTStar::publishOccupationMarkersMap()
 	occupancy_marker_pub_.publish(occupancy_marker);
 }
 
-bool RRTStar::setInitialPosition(DiscretePosition p_)
-{
-	if (isInside(p_.x, p_.y, p_.z))
-	{
-		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(p_.x, p_.y, p_.z)];
-
-		if (initialNodeInWorld->node == NULL)
-		{
-			initialNodeInWorld->node = new RRTNode();
-			initialNodeInWorld->node->point.x = p_.x;
-			initialNodeInWorld->node->point.x = p_.y;
-			initialNodeInWorld->node->point.x = p_.z;
-
-			initialNodeInWorld->node->nodeInWorld = initialNodeInWorld;
-		}
-		disc_initial = initialNodeInWorld->node;
-
-		initial_position.x = p_.x * step;
-		initial_position.y = p_.y * step;
-		initial_position.z = p_.z * step;
-
-		disc_initial->point = p_;
-		disc_initial->parentNode = NULL;
-		disc_initial->cost = 0.0;
-		disc_initial->length_cat = -1.0;
-		disc_initial->min_dist_obs_cat = -1.0;
-		disc_initial->min_dist_obs_ugv = -1.0;
-		disc_initial->p_id= -1.0;
-
-		return true;
-	}
-	else
-	{
-		//~ std::cerr << "ThetaStar: Initial point ["<< p.x << ";"<< p.y <<";"<< p.z <<"] not valid." << std::endl;
-		disc_initial = NULL;
-		return false;
-	}
-}
+// bool RRTStar::setInitialPosition(DiscretePosition p_)
+// {
+// 	if (isInside(p_.x, p_.y, p_.z))
+// 	{
+// 		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(p_.x, p_.y, p_.z)];
+// 		if (initialNodeInWorld->node == NULL)
+// 		{
+// 			initialNodeInWorld->node = new RRTNode();
+// 			initialNodeInWorld->node->point.x = p_.x;
+// 			initialNodeInWorld->node->point.x = p_.y;
+// 			initialNodeInWorld->node->point.x = p_.z;
+// 			initialNodeInWorld->node->nodeInWorld = initialNodeInWorld;
+// 		}
+// 		disc_initial = initialNodeInWorld->node;
+// 		initial_position.x = p_.x * step;
+// 		initial_position.y = p_.y * step;
+// 		initial_position.z = p_.z * step;
+// 		disc_initial->point = p_;
+// 		disc_initial->parentNode = NULL;
+// 		disc_initial->cost = 0.0;
+// 		disc_initial->length_cat = -1.0;
+// 		disc_initial->min_dist_obs_cat = -1.0;
+// 		disc_initial->min_dist_obs_ugv = -1.0;
+// 		disc_initial->p_id= -1.0;
+// 		return true;
+// 	}
+// 	else
+// 	{
+// 		//~ std::cerr << "ThetaStar: Initial point ["<< p.x << ";"<< p.y <<";"<< p.z <<"] not valid." << std::endl;
+// 		disc_initial = NULL;
+// 		return false;
+// 	}
+// }
 
 // bool RRTStar::setInitialPosition(Vector3 p)
 // {
-	// 	initial_position = p;
+	// 	initial_position_ugv = p;
 	// 	DiscretePosition p_ = discretizePosition(p);
 	// 	if (isInside(p_.x, p_.y, p_.z))
 	// 	{
@@ -1468,7 +1638,7 @@ bool RRTStar::setFinalPosition(DiscretePosition p_)
 
 Vector3 RRTStar::getInitialPosition()
 {
-	return initial_position;
+	return initial_position_ugv;
 }
 
 Vector3 RRTStar::getFinalPosition()
@@ -1487,49 +1657,45 @@ DiscretePosition RRTStar::discretizePosition(Vector3 p)
 	return res;
 }
 
-bool RRTStar::isInitialPositionOccupied()
-{
-	if (isOccupied(*disc_initial))
-		return true;
-	else
-		return false;
-}
+// bool RRTStar::isInitialPositionOccupied()
+// {
+// 	if (isOccupied(*disc_initial))
+// 		return true;
+// 	else
+// 		return false;
+// }
 
-bool RRTStar::isFinalPositionOccupied()
-{
-	if (isOccupied(*disc_final))
-		return true;
-	else
-		return false;
-}
+// bool RRTStar::isFinalPositionOccupied()
+// {
+// 	if (isOccupied(*disc_final))
+// 		return true;
+// 	else
+// 		return false;
+// }
 
 bool RRTStar::isOccupied(RRTNode n_)
 {
 	return !discrete_world[getWorldIndex(n_.point.x, n_.point.y, n_.point.z)].notOccupied;
 }
 
-bool RRTStar::searchInitialPosition3d(float maxDistance)
-{
-	DiscretePosition init_ = discretizePosition(initial_position); // Start coordinates
-
-	int maxDistance_ = maxDistance / step; // celdas mas lejanas a 1 metro
-
-	// Check init point, first if is inside the workspace and second if is occupied
-	if (setValidInitialPosition(init_))
-		return true;
-
-	// Check from z=0 to d from the near xy ring to the far xy ring
-	// for (int d = 1; d <= maxDistance_; d++)
-	// {
-	// 	for (int z = init_.z; z <= init_.z + d; z++)
-	// 	{
-	// 		if (searchInitialPositionInXyRing(init_.x, init_.y, z, d - (z - init_.z)))
-	// 			return true;
-	// 	}
-	// }
-
-	return false;
-}
+// bool RRTStar::searchInitialPosition3d(float maxDistance)
+// {
+// 	DiscretePosition init_ = discretizePosition(initial_position_ugv); // Start coordinates
+// 	int maxDistance_ = maxDistance / step; // celdas mas lejanas a 1 metro
+// 	// Check init point, first if is inside the workspace and second if is occupied
+// 	if (setValidInitialPosition(init_))
+// 		return true;
+// 	// Check from z=0 to d from the near xy ring to the far xy ring
+// 	// for (int d = 1; d <= maxDistance_; d++)
+// 	// {
+// 	// 	for (int z = init_.z; z <= init_.z + d; z++)
+// 	// 	{
+// 	// 		if (searchInitialPositionInXyRing(init_.x, init_.y, z, d - (z - init_.z)))
+// 	// 			return true;
+// 	// 	}
+// 	// }
+// 	return false;
+// }
 
 bool RRTStar::searchFinalPosition3d(float maxDistance)
 {

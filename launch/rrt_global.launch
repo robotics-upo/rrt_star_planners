@@ -19,7 +19,7 @@
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="num_goal"         default="0"/>
-    <arg name="n_iter_rrtstar"         default="30"/>
+    <arg name="n_iter_rrtstar"         default="60"/>
     <arg name="radius_near_nodes"         default="1.0"/>
     <arg name="step_steer"         default="0.5"/>
 
