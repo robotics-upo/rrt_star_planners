@@ -28,6 +28,9 @@
 
 // #include "rrt_star_planners/near_neighbor.hpp"
 #include "marsupial_g2o/near_neighbor.hpp"
+#include "rrt_star_planners/kdtree_test.hpp"
+
+// #include "marsupial_g2o/kdtree_test.hpp"
 #include "marsupial_g2o/catenary_solver_ceres.hpp"
 
 
@@ -85,11 +88,14 @@ class RRTNode
 public:
 	// NodeState st;
 	DiscretePosition point;
+	DiscretePosition point_uav;
 	int id;
-	bool catenary;
-	double length_cat;
-	double min_dist_obs_cat;
-	double min_dist_obs_ugv;
+	int id_uav;
+	bool catenary;	//Inform the feasibility to get a catenary in node
+	double length_cat;	//Length of node catenary
+	double min_dist_obs_cat;	//Minimun distance from node catenary to obstacle
+	double min_dist_obs_ugv;	//Minimun distance from UGV node to obstacle
+	double min_dist_obs_uav;	//Minimun distance from UAV node to obstacle
 	double cost;	// Refer to the cost in the node without consider the catenary
 	double cost_takeoff;	//refer to the cost only in the nodes which the drone can take off
 	// double h_cost;
@@ -156,6 +162,7 @@ public:
 
 
   	std::list<RRTNode *> nodes_tree; // TODO: single tree planners
+  	// std::list<RRTNode *> nodes_tree_ugv, nodes_tree_uav; // TODO: single tree planners
   	std::list<RRTNode *> take_off_nodes; // TODO: single 
   
   	virtual void getGraphMarker();
@@ -163,9 +170,9 @@ public:
 	virtual void getPathMarker(std::list<RRTNode*> pt_);
 	virtual void clearMarkers();
 
-  	virtual int getGraphSize() {
-    	return nodes_tree.size();
-  	}
+  	// virtual int getGraphSize() {
+    // 	return nodes_tree.size();
+  	// }
 
 	/**
 		  Set initial position of the path only check if 
@@ -174,8 +181,8 @@ public:
 			@return false if is outside the workspace
 		**/
 	bool setInitialPosition(DiscretePosition p_);
-	bool setInitialPositionUGV(DiscretePosition p_);
-	bool setInitialPositionUAV(DiscretePosition p_);
+	bool setInitialPositionCoupled(DiscretePosition p_);
+	bool setInitialPositionIndependent(DiscretePosition p1_, DiscretePosition p2_);
 	bool setInitialPosition(Vector3 p);
 
 	/**
@@ -213,9 +220,9 @@ public:
 	inline bool setValidInitialPositionMarsupial(DiscretePosition p1, DiscretePosition p2)
 	{
 		if (is_coupled){
-			if (setInitialPositionUGV(p1))
+			if (setInitialPositionCoupled(p1))
 			{
-				if (!isInitialPositionOccupiedUGV())
+				if (!isInitialPositionOccupied())
 				{
 					ROS_INFO("RRTStar: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", p1.x, p1.y, p1.z);
 					return true;
@@ -229,21 +236,18 @@ public:
 			return false;
 		}
 		else{
-			if (setInitialPositionUGV(p1)) 
-			{
-				if(setInitialPositionUGV(p2))
+				if(setInitialPositionIndependent(p1,p2))
 				{
-					if (!isInitialPositionOccupiedUGV() && !isInitialPositionOccupiedUAV())
+					if (!isInitialPositionOccupied() && !isInitialPositionOccupied(true))
 					{
-						ROS_INFO("RRTStar: Initial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+						ROS_INFO("RRTStar: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
 						return true;
 					}
-				}
+					else
+						ROS_WARN("RRTStar: Initial position Marsupial independent configuration outside of the workspace attempt!!");
+				}		
 				else
-					ROS_WARN("RRTStar: Initial position UAV independent outside of the workspace attempt!!");
-			}
-			else
-				ROS_WARN("RRTStar: Initial position UGV independent outside of the workspace attempt!!");
+					ROS_WARN("RRTStar: Initial position Marsupial independent configuration outside of the workspace attempt!!");
 
 
 			return false;
@@ -381,21 +385,24 @@ public:
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
 	double phi_min, phi_max, theta_min, theta_max ;
 
-	NearNeighbor near_neighbor_nodes;
+	NearNeighbor near_neighbor_nodes_ugv, near_neighbor_nodes_uav;
 	NearNeighbor near_neighbor_obstacles;
-	std::vector<Eigen::Vector3d> v_save_node_kdtree;
+	std::vector<Eigen::Vector3d> v_node_kdtree_ugv, v_node_kdtree_uav;
+
+	RRTNode *disc_initial, *disc_final; // Discretes
+
 
 protected:
 	
-	RRTNode getRandomNode(bool is_coupled_); 
+	RRTNode getRandomNode(); 
 	bool extendGraph(const RRTNode q_rand_);
 	RRTNode* getNearestNode(const RRTNode q_rand_);
   	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
 	bool obstacleFree(const RRTNode &q_nearest, const RRTNode &q_new);
-	std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_);
-	bool checkPointFeasibility(const RRTNode pf_);
+	std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_, bool check_uav_ =false);
+	bool checkPointFeasibility(const RRTNode pf_, bool check_uav_ = false);
 	bool checkCatenary(RRTNode &q_init_, const RRTNode &q_final_);
-	RRTNode getReelNode(const RRTNode &node_);
+	geometry_msgs::Point getReelNode(const RRTNode &node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtree(const RRTNode ukT_);
 	void getParamsNode(RRTNode &node_, bool is_init_= false);
@@ -435,9 +442,7 @@ protected:
   
 	DiscretePosition discretizePosition(Vector3 p);
 
-	bool isInitialPositionOccupied();
-	bool isInitialPositionOccupiedUGV();
-	bool isInitialPositionOccupiedUAV();
+	bool isInitialPositionOccupied(bool check_uav_ = false);
 	bool isFinalPositionOccupied();
 
 		/** 
@@ -445,7 +450,7 @@ protected:
 		   @param A RRTNode
 		   @return true if is occupied in the occupancy matrix
 		**/
-	bool isOccupied(RRTNode n_);
+	bool isOccupied(RRTNode n_, bool check_uav_ = false);
 
   
 
@@ -552,6 +557,9 @@ protected:
 	PointCloud occupancy_marker; // Occupancy Map as PointCloud markers
 	ros::Publisher occupancy_marker_pub_;
 
+	RVizMarker marker;	 // Explored nodes by ThetaStar
+
+
 	bool got_to_goal = false;
 	float goal_weight;   // Reduction of the initial position distance weight C(s) = factor * g(s) + h(s)
 	float z_weight_cost; // Weight for height changes
@@ -559,13 +567,12 @@ protected:
 	double minR;
 
 	octomap::OcTree *map;
-  	ros::Publisher tree_rrt_star_pub_, take_off_nodes_pub_,lines_marker_pub_;
-  	visualization_msgs::MarkerArray pointTreeMarker;
+  	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_marker_pub_;
+  	visualization_msgs::MarkerArray pointTreeMarkerUGV, pointTreeMarkerUAV;
   	visualization_msgs::MarkerArray pointTakeOffMarker, lines_marker_;
 
 	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	// RRTNode *disc_initial, *disc_final; // Discretes
-	RRTNode *disc_initial_ugv, *disc_initial_uav, *disc_final; // Discretes
 	double goal_gap_m;
 
 	// Max time to get path

@@ -8,6 +8,7 @@
     <arg name="use_catenary_planning" default="true"/>
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="marsupial"/>
+    <arg name="is_coupled"    default="true"/>
 
     <rosparam command="load" file="$(find marsupial_g2o)/cfg/stage_$(arg scenario_number).yaml" />
     <arg name="map_file" default="stage_$(arg scenario_number)"/>
@@ -31,7 +32,7 @@
 
     <!-- Launch Optimizer and Global Planner-->
     <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="planner_sim" output="screen" 
-    args="2 rrt_star_planners rrt_global.launch use_catenary_planning:=$(arg use_catenary_planning) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
+    args="2 rrt_star_planners rrt_global.launch use_catenary_planning:=$(arg use_catenary_planning) coupled:=$(arg is_coupled) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
         
     <!-- RViz -->
     <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_g2o)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/> -->

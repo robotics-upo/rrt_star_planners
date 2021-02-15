@@ -82,6 +82,7 @@ void RRTStarGlobalPlanner::configParams()
 
     nh->param("use_catenary", use_catenary, (bool)false);
     nh->param("use_search_pyramid", use_search_pyramid, (bool)false);
+    nh->param("coupled", coupled, (bool)true);
 
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
@@ -584,131 +585,71 @@ bool RRTStarGlobalPlanner::calculatePath()
     if (use3d && !mapRec)
         return ret;
 
-    if (isMarsupialCoupled())
-    {
-        if (is_coupled){
-            if (setGoal() && setStartUGV())
-            {
-                //Print succes start and goal points
-                ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal and start successfull set");
-                
-                // Path calculation
-                ftime(&start);
+    // if (isMarsupialCoupled())
 
+        if (setGoal() && setStart())
+        {
+            //Print succes start and goal points
+            ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal and start successfull set");
+                
+            // Path calculation
+            ftime(&start);
+           
+            if (coupled)
                 number_of_points = rrtstar.computeTreeCoupled();
-
-                ftime(&finish);
-
-                seconds = finish.time - start.time - 1;
-                milliseconds = (1000 - start.millitm) + finish.millitm;
-
-                if (write_data_for_analysis){
-                    std::ofstream ofs;
-                    std::string output_file = path + "time_compute_initial_planner.txt";
-                    ofs.open(output_file.c_str(), std::ofstream::app);
-                    if (ofs.is_open()) {
-                        std::cout << "Saving time initial planning data in output file: " << output_file << std::endl;
-                        ofs << (milliseconds + seconds * 1000.0)/1000.0 <<std::endl;
-                    } 
-                    else {
-                        std::cout << "Couldn't be open the output data file for time initial planning" << std::endl;
-                    }
-                    ofs.close();
-                }
-
-                ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", milliseconds + seconds * 1000);
-                ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points: %d", number_of_points);
-
-                if (number_of_points > 0)
-                {
-                    ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Publishing trajectory");
-                    
-                    publishTrajectory();
-
-                    if (pathLength < minPathLenght)
-                    {
-                        execute_path_client_ptr->cancelAllGoals();
-                        make_plan_server_ptr->setSucceeded();
-                    }
-                    //Reset the counter of the number of times the planner tried to calculate a path without success
-                    countImpossible = 0;
-                    //If it was replanning before, reset flag
-                    if (flg_replan_status.data)
-                    {
-                        flg_replan_status.data = false;
-                        replan_status_pub.publish(flg_replan_status);
-                    }
-
-                    ret = true;
-                }
-                else
-                {
-                    countImpossible++;
-                }
-            }
-        }
-        else{
-            if (setGoal() && setStartUGV() && setStartUAV())
-            {
-                //Print succes start and goal points
-                ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal, start UGV and start UAV successfull set");
-                
-                // Path calculation
-                ftime(&start);
-
+            else
                 number_of_points = rrtstar.computeTreesIndependent();
 
-                ftime(&finish);
+            ftime(&finish);
 
-                seconds = finish.time - start.time - 1;
-                milliseconds = (1000 - start.millitm) + finish.millitm;
+            seconds = finish.time - start.time - 1;
+            milliseconds = (1000 - start.millitm) + finish.millitm;
 
-                if (write_data_for_analysis){
-                    std::ofstream ofs;
-                    std::string output_file = path + "time_compute_initial_planner.txt";
-                    ofs.open(output_file.c_str(), std::ofstream::app);
-                    if (ofs.is_open()) {
-                        std::cout << "Saving time initial planning data in output file: " << output_file << std::endl;
-                        ofs << (milliseconds + seconds * 1000.0)/1000.0 <<std::endl;
-                    } 
-                    else {
-                        std::cout << "Couldn't be open the output data file for time initial planning" << std::endl;
-                    }
-                    ofs.close();
+            if (write_data_for_analysis){
+                std::ofstream ofs;
+                std::string output_file = path + "time_compute_initial_planner.txt";
+                ofs.open(output_file.c_str(), std::ofstream::app);
+                if (ofs.is_open()) {
+                    std::cout << "Saving time initial planning data in output file: " << output_file << std::endl;
+                    ofs << (milliseconds + seconds * 1000.0)/1000.0 <<std::endl;
+                } 
+                else {
+                    std::cout << "Couldn't be open the output data file for time initial planning" << std::endl;
                 }
+                ofs.close();
+            }
 
-                ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", milliseconds + seconds * 1000);
-                ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points: %d", number_of_points);
+            ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", milliseconds + seconds * 1000);
+            ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points: %d", number_of_points);
 
-                if (number_of_points > 0)
-                {
-                    ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Publishing trajectory");
+            if (number_of_points > 0)
+            {
+                ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Publishing trajectory");
                     
-                    publishTrajectory();
+                publishTrajectory();
 
-                    if (pathLength < minPathLenght)
-                    {
-                        execute_path_client_ptr->cancelAllGoals();
-                        make_plan_server_ptr->setSucceeded();
-                    }
-                    //Reset the counter of the number of times the planner tried to calculate a path without success
-                    countImpossible = 0;
-                    //If it was replanning before, reset flag
-                    if (flg_replan_status.data)
-                    {
-                        flg_replan_status.data = false;
-                        replan_status_pub.publish(flg_replan_status);
-                    }
-
-                    ret = true;
-                }
-                else
+                if (pathLength < minPathLenght)
                 {
-                    countImpossible++;
+                    execute_path_client_ptr->cancelAllGoals();
+                    make_plan_server_ptr->setSucceeded();
                 }
+                //Reset the counter of the number of times the planner tried to calculate a path without success
+                countImpossible = 0;
+                //If it was replanning before, reset flag
+                if (flg_replan_status.data)
+                {
+                    flg_replan_status.data = false;
+                    replan_status_pub.publish(flg_replan_status);
+                }
+                    ret = true;
+            }
+            else{
+                countImpossible++;
             }
         }
-    }
+
+    // }
+
     return ret;
 }
 
@@ -870,7 +811,7 @@ bool RRTStarGlobalPlanner::setGoal()
     return ret;
 }
 
-bool RRTStarGlobalPlanner::setStartUGV()
+bool RRTStarGlobalPlanner::setStart()
 {
     geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
     bool ret = false;
@@ -908,43 +849,43 @@ bool RRTStarGlobalPlanner::setStartUGV()
     return ret;
 }
 
-bool RRTStarGlobalPlanner::setStartUAV()
-{
-    geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
-    bool ret = false;
+// bool RRTStarGlobalPlanner::setStartUAV()
+// {
+//     geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
+//     bool ret = false;
 
-    geometry_msgs::TransformStamped position_ugv_,position_uav_;
-    position_ugv_ = getRobotPoseUGV();
-    position_uav_ = getRobotPoseUAV();
+//     geometry_msgs::TransformStamped position_ugv_,position_uav_;
+//     position_ugv_ = getRobotPoseUGV();
+//     position_uav_ = getRobotPoseUAV();
 
-    double radius_wheel = 0.15;
-    start_ugv_.vector.x = position_ugv_.transform.translation.x;
-    start_ugv_.vector.y = position_ugv_.transform.translation.y;
-    start_ugv_.vector.z = position_ugv_.transform.translation.z + radius_wheel;
-    start_uav_.vector.x = position_uav_.transform.translation.x;
-    start_uav_.vector.y = position_uav_.transform.translation.y;
-    start_uav_.vector.z = position_uav_.transform.translation.z;
+//     double radius_wheel = 0.15;
+//     start_ugv_.vector.x = position_ugv_.transform.translation.x;
+//     start_ugv_.vector.y = position_ugv_.transform.translation.y;
+//     start_ugv_.vector.z = position_ugv_.transform.translation.z + radius_wheel;
+//     start_uav_.vector.x = position_uav_.transform.translation.x;
+//     start_uav_.vector.y = position_uav_.transform.translation.y;
+//     start_uav_.vector.z = position_uav_.transform.translation.z;
 
-    if (start_uav_.vector.z <= ws_z_min)
-        start_uav_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
+//     if (start_uav_.vector.z <= ws_z_min)
+//         start_uav_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
 
-    if (rrtstar.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
-    {
-        ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
-        ret = true;
-    }
-    // else if (rrtstar.searchInitialPosition3d(initialSearchAround))
-    // {
-    //     ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position");
-    //     ret = true;
-    // }
-    else
-    {
-        ROS_ERROR("Global Planner 3D: Failed to set UAV initial global position(after search around): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
-    }
+//     if (rrtstar.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
+//     {
+//         ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
+//         ret = true;
+//     }
+//     // else if (rrtstar.searchInitialPosition3d(initialSearchAround))
+//     // {
+//     //     ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position");
+//     //     ret = true;
+//     // }
+//     else
+//     {
+//         ROS_ERROR("Global Planner 3D: Failed to set UAV initial global position(after search around): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
+//     }
 
-    return ret;
-}
+//     return ret;
+// }
 
 void RRTStarGlobalPlanner::configCatenary()
 {
@@ -956,7 +897,7 @@ void RRTStarGlobalPlanner::configCatenary()
     pos_reel_ugv.y = pos_reel_y;
     pos_reel_ugv.z = pos_reel_z;
     pos_ugv_ = getRobotPoseUGV().transform.translation;
-    bool coupled = isMarsupialCoupled();
+    // bool coupled = isMarsupialCoupled();
     rrtstar.configCatenaryCompute(use_catenary, use_search_pyramid, multiplicative_factor, length_tether_max, pos_reel_ugv ,pos_ugv_, coupled , n_iter, radius_near_nodes, step_steer);
 
    	printf("RRTStarGlobalPlanner::configCatenary :  use_catenary=[%s] VALUES=[multiplicative_factor: %f  length_tether_max: %f] !!\n",use_catenary ? "true" : "false", multiplicative_factor, length_tether_max);

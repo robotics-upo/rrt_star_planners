@@ -140,8 +140,9 @@ private:
             They return true if the points are not occupied
     */
     bool setGoal();
-    bool setStartUGV();
-    bool setStartUAV();
+    bool setStart();
+    // bool setStartUGV();
+    // bool setStartUAV();
 
 
     /*
@@ -265,6 +266,8 @@ private:
 	double multiplicative_factor, length_tether_max, radius_near_nodes, step_steer;
     int n_iter;
     double goal_gap_m;
+
+    bool coupled;
 
 }; //class RRTStarGlobalPlanner
 
