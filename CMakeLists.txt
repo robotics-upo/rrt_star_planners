@@ -19,8 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   dynamic_reconfigure
   upo_actions
-  marsupial_g2o
-
   costmap_2d
   trajectory_msgs
 )
@@ -149,7 +147,8 @@ include_directories(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include/
+include_directories(
+  
   ${catkin_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}
   ${Boost_INCLUDE_DIRS}
@@ -160,7 +159,7 @@ include_directories(include/
 #   src/${PROJECT_NAME}/rrt_star_planners.cpp
 # )
 
-add_executable(rrt_star_planner_node src/rrt_star_planner_node.cpp src/rrt_global_planner.cpp src/RRT_Star.cpp)
+add_executable(rrt_star_planner_node src/rrt_star_planner_node.cpp src/rrt_global_planner.cpp src/RRT_Star.cpp src/kdtree.cpp)
 target_link_libraries(rrt_star_planner_node  marsupial_g2o ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 add_dependencies(rrt_star_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 

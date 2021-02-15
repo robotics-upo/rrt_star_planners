@@ -19,7 +19,7 @@
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="num_goal"         default="0"/>
-    <arg name="n_iter_rrtstar"         default="100"/>
+    <arg name="n_iter_rrtstar"         default="400"/>
     <arg name="radius_near_nodes"         default="5.0"/> 
     <arg name="step_steer"         default="0.5"/>
     <arg name="coupled"         default="true"/>
@@ -35,7 +35,7 @@
         </node> -->
 
         <!-- Global Planner: Theta* -->
-        <node pkg="rrt_star_planners" type="rrt_star_planner_node" name="rrt_star_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
+        <node pkg="rrt_star_planners" type="rrt_star_planner_node" name="rrt_star_planner_node" output="screen" launch-prefix="gdb -ex run --args">
             <rosparam command="load" file="$(find marsupial_g2o)/cfg/3d_global_params.yaml"/>
             <param name="ugv_base_frame" value="ugv_base_link"/> 
             <param name="uav_base_frame" value="uav_base_link"/>

@@ -28,7 +28,7 @@
 
 // #include "rrt_star_planners/near_neighbor.hpp"
 #include "marsupial_g2o/near_neighbor.hpp"
-#include "rrt_star_planners/kdtree_test.hpp"
+#include "rrt_star_planners/kdtree.hpp"
 
 // #include "marsupial_g2o/kdtree_test.hpp"
 #include "marsupial_g2o/catenary_solver_ceres.hpp"
@@ -387,7 +387,9 @@ public:
 
 	NearNeighbor near_neighbor_nodes_ugv, near_neighbor_nodes_uav;
 	NearNeighbor near_neighbor_obstacles;
-	std::vector<Eigen::Vector3d> v_node_kdtree_ugv, v_node_kdtree_uav;
+	// std::vector<Eigen::Vector3d> v_node_kdtree_ugv, v_node_kdtree_uav;
+
+	pointVec v_node_kdtree;
 
 	RRTNode *disc_initial, *disc_final; // Discretes
 
@@ -399,9 +401,10 @@ protected:
 	RRTNode* getNearestNode(const RRTNode q_rand_);
   	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
 	bool obstacleFree(const RRTNode &q_nearest, const RRTNode &q_new);
-	std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_, bool check_uav_ =false);
+	// std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_, bool check_uav_ =false);
+	std::vector<std::vector<int>> getNearNodes(const RRTNode &q_new_, double radius_);
 	bool checkPointFeasibility(const RRTNode pf_, bool check_uav_ = false);
-	bool checkCatenary(RRTNode &q_init_, const RRTNode &q_final_);
+	bool checkCatenary(RRTNode &q_init_, int mode_);
 	geometry_msgs::Point getReelNode(const RRTNode &node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtree(const RRTNode ukT_);
