@@ -83,6 +83,7 @@ void RRTStarGlobalPlanner::configParams()
     nh->param("use_catenary", use_catenary, (bool)false);
     nh->param("use_search_pyramid", use_search_pyramid, (bool)false);
     nh->param("coupled", coupled, (bool)true);
+    nh->param("samp_goal_rate", samp_goal_rate, (int)10);
 
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
@@ -408,9 +409,10 @@ int RRTStarGlobalPlanner::getClosestWaypoint()
 
 void RRTStarGlobalPlanner::makePlanGoalCB()
 {
-    //Cancel previous executing plan
+   //Cancel previous executing plan
     execute_path_client_ptr->cancelAllGoals();
-    // clearMarkers();
+    clearMarkers();
+    // nbrRotationsExec = 0;
     countImpossible = 0;
     timesReplaned = 0;
     make_plan_res.replan_number.data = 0;
@@ -449,7 +451,7 @@ void RRTStarGlobalPlanner::makePlanPreemptCB()
     make_plan_server_ptr->setPreempted(make_plan_res, "Goal Preempted by User");
     ROS_INFO("Global Planner: Make plan preempt cb: cancelling");
     execute_path_client_ptr->cancelAllGoals();
-    // clearMarkers();
+    clearMarkers();
 }
 
 void RRTStarGlobalPlanner::clearMarkers()
@@ -585,7 +587,9 @@ bool RRTStarGlobalPlanner::calculatePath()
     if (use3d && !mapRec)
         return ret;
 
-    // if (isMarsupialCoupled())
+    rrtstar.clearNodes(); 
+	rrtstar.clearMarkers();
+    // if (isMarsupialCoupled()){ 
 
         if (setGoal() && setStart())
         {
@@ -715,37 +719,9 @@ void RRTStarGlobalPlanner::publishTrajectory()
 
     if (number_of_points > 1)
     {
-        // rrtstar.getTrajectoryYawInAdvance(trajectory, transform_robot_pose.transform);
-        // rrtstar.getTrajectoryYawFixed(trajectory, rrtstar.getYawFromQuat(transform_robot_pose.transform.rotation));
-
-        // if(use_catenary){
-		// 	double lengthToset;
-        //     rrtstar.length_catenary_aux.clear();
-		// 	for(size_t j=0 ; j < rrtstar.length_catenary.size(); j++){
-		// 		rrtstar.length_catenary_aux.push_back(rrtstar.length_catenary[j]) ;
-		// 	}
-		// 	rrtstar.length_catenary.clear();
-
-		// 	ThetaStarNode3D init_wp;
-		// 	init_wp.point.x= transform_robot_pose.transform.translation.x*rrtstar.step_inv;
-		// 	init_wp.point.y= transform_robot_pose.transform.translation.y*rrtstar.step_inv;
-		// 	init_wp.point.z= transform_robot_pose.transform.translation.z*rrtstar.step_inv;
-   
-		// 	if(rrtstar.feasibleCatenary(init_wp, rrtstar.tf_reel,transform_robot_pose.transform.translation))
-		// 		lengthToset = init_wp.lengthCatenary;
-            
-		// 	for (size_t j = 0 ; j < rrtstar.length_catenary_aux.size(); j++){
-		// 		if (j==0)
-		// 			rrtstar.length_catenary.push_back(lengthToset);
-		// 		rrtstar.length_catenary.push_back(rrtstar.length_catenary_aux[j]);
-		// 	}
-
-        //     for(size_t k= 0; k < rrtstar.length_catenary.size(); k++)
-        //         printf("rrtstar.length_catenary.size()=[%lu] length=[%f]\n",rrtstar.length_catenary.size(),rrtstar.length_catenary[k]);			
-        // }
-        
-
+        rrtstar.getTrajectory(trajectory);        
         printfTrajectory(trajectory, "After getting traj: ");
+   
     }
     else if (number_of_points == 1)
     {
@@ -820,13 +796,14 @@ bool RRTStarGlobalPlanner::setStart()
     position_ugv_ = getRobotPoseUGV();
     position_uav_ = getRobotPoseUAV();
 
-    double radius_wheel = 0.15;
     start_ugv_.vector.x = position_ugv_.transform.translation.x;
     start_ugv_.vector.y = position_ugv_.transform.translation.y;
-    start_ugv_.vector.z = position_ugv_.transform.translation.z + radius_wheel;
+    start_ugv_.vector.z = position_ugv_.transform.translation.z + map_v_inflaction + map_resolution; //Added to be consecuent with the line 809, the the displacement of UGV is always apply
     start_uav_.vector.x = position_uav_.transform.translation.x;
     start_uav_.vector.y = position_uav_.transform.translation.y;
     start_uav_.vector.z = position_uav_.transform.translation.z;
+    printf("setStart :  ugv[%f %f %f]  uav[%f %f %f]\n",start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z, start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
+
 
     if (start_ugv_.vector.z <= ws_z_min)
         start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
@@ -849,56 +826,22 @@ bool RRTStarGlobalPlanner::setStart()
     return ret;
 }
 
-// bool RRTStarGlobalPlanner::setStartUAV()
-// {
-//     geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
-//     bool ret = false;
-
-//     geometry_msgs::TransformStamped position_ugv_,position_uav_;
-//     position_ugv_ = getRobotPoseUGV();
-//     position_uav_ = getRobotPoseUAV();
-
-//     double radius_wheel = 0.15;
-//     start_ugv_.vector.x = position_ugv_.transform.translation.x;
-//     start_ugv_.vector.y = position_ugv_.transform.translation.y;
-//     start_ugv_.vector.z = position_ugv_.transform.translation.z + radius_wheel;
-//     start_uav_.vector.x = position_uav_.transform.translation.x;
-//     start_uav_.vector.y = position_uav_.transform.translation.y;
-//     start_uav_.vector.z = position_uav_.transform.translation.z;
-
-//     if (start_uav_.vector.z <= ws_z_min)
-//         start_uav_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
-
-//     if (rrtstar.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
-//     {
-//         ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
-//         ret = true;
-//     }
-//     // else if (rrtstar.searchInitialPosition3d(initialSearchAround))
-//     // {
-//     //     ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UAV position");
-//     //     ret = true;
-//     // }
-//     else
-//     {
-//         ROS_ERROR("Global Planner 3D: Failed to set UAV initial global position(after search around): [%.2f, %.2f, %.2f]", start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
-//     }
-
-//     return ret;
-// }
-
 void RRTStarGlobalPlanner::configCatenary()
 {
     nh->param("multiplicative_factor", multiplicative_factor, (double)1.001);
     nh->param("length_tether_max", length_tether_max, (double)10.0);
 
-    geometry_msgs::Vector3 pos_reel_ugv , pos_ugv_;
+    geometry_msgs::Vector3 pos_reel_ugv, pos_ugv_;
+    geometry_msgs::Quaternion rot_ugv_;
     pos_reel_ugv.x = pos_reel_x;
     pos_reel_ugv.y = pos_reel_y;
     pos_reel_ugv.z = pos_reel_z;
     pos_ugv_ = getRobotPoseUGV().transform.translation;
+    rot_ugv_ = getRobotPoseUGV().transform.rotation;
     // bool coupled = isMarsupialCoupled();
-    rrtstar.configCatenaryCompute(use_catenary, use_search_pyramid, multiplicative_factor, length_tether_max, pos_reel_ugv ,pos_ugv_, coupled , n_iter, radius_near_nodes, step_steer);
+    rrtstar.configCatenaryCompute(use_catenary, use_search_pyramid, multiplicative_factor, length_tether_max, 
+                                    pos_reel_ugv , pos_ugv_, rot_ugv_, 
+                                    coupled , n_iter, radius_near_nodes, step_steer, samp_goal_rate);
 
    	printf("RRTStarGlobalPlanner::configCatenary :  use_catenary=[%s] VALUES=[multiplicative_factor: %f  length_tether_max: %f] !!\n",use_catenary ? "true" : "false", multiplicative_factor, length_tether_max);
 	printf("RRTStarGlobalPlanner::configCatenary :  use_searching_pyramid=[%s] is_coupled=[%s]\n", use_search_pyramid ? "true" : "false", coupled? "true" : "false");

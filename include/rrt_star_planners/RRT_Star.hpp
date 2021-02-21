@@ -24,6 +24,18 @@
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
 
+#include <pcl/filters/random_sample.h>
+#include <pcl/common/transforms.h>
+#include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/PCLPointCloud2.h>
+#include <pcl/conversions.h>
+
+#include <pcl/filters/passthrough.h>
+
+#include <pcl/io/pcd_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+
 #include <Eigen/StdVector>
 
 // #include "rrt_star_planners/near_neighbor.hpp"
@@ -101,11 +113,10 @@ public:
 	// double h_cost;
 	RRTNode *parentNode;
 	RRTStarNodeLink3D *nodeInWorld; // pointer to link from this node to its parent
-	int p_id;
-	RRTNode()
-	{
-	  parentNode = NULL;
-	}
+	// RRTNode()
+	// {
+	//   parentNode = NULL;
+	// }
 
 	// // Comparator '!=' definition
 	// friend bool operator!=(const RRTNode &lhs, const RRTNode &rhs)
@@ -155,8 +166,8 @@ public:
 
   	~RRTStar();
   
-  	virtual double computeTreeCoupled();      
-  	virtual double computeTreesIndependent();      
+  	virtual int computeTreeCoupled();      
+  	virtual int computeTreesIndependent();      
 
   	float getYawFromQuat(Quaternion quat);
 
@@ -168,7 +179,15 @@ public:
   	virtual void getGraphMarker();
 	virtual void getTakeOffNodesMarker();
 	virtual void getPathMarker(std::list<RRTNode*> pt_);
+	virtual void getCatenaryMarker(std::vector<geometry_msgs::Point> points_catenary_);
+	virtual void getCatenaryPathMarker(std::list<RRTNode*> ct_);
+	virtual void getAllCatenaryMarker();
+	virtual void goalPointMarker();
+	void randPointMarker(RRTNode rn_);
+	void getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_);
 	virtual void clearMarkers();
+  	virtual void clearNodes();
+	bool getTrajectory(Trajectory &trajectory);
 
   	// virtual int getGraphSize() {
     // 	return nodes_tree.size();
@@ -222,7 +241,7 @@ public:
 		if (is_coupled){
 			if (setInitialPositionCoupled(p1))
 			{
-				if (!isInitialPositionOccupied())
+				if (!isInitialPositionOccupied(false))
 				{
 					ROS_INFO("RRTStar: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", p1.x, p1.y, p1.z);
 					return true;
@@ -238,17 +257,21 @@ public:
 		else{
 				if(setInitialPositionIndependent(p1,p2))
 				{
-					if (!isInitialPositionOccupied() && !isInitialPositionOccupied(true))
+					if (!isInitialPositionOccupied(false))
 					{
-						ROS_INFO("RRTStar: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
-						return true;
+						if(!isInitialPositionOccupied(true)){
+							ROS_INFO("RRTStar: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+							return true;
+						}
+						else{
+							ROS_WARN("RRTStar: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
+						}
 					}
 					else
-						ROS_WARN("RRTStar: Initial position Marsupial independent configuration outside of the workspace attempt!!");
+						ROS_WARN("RRTStar: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
 				}		
 				else
 					ROS_WARN("RRTStar: Initial position Marsupial independent configuration outside of the workspace attempt!!");
-
 
 			return false;
 		}
@@ -364,11 +387,14 @@ public:
 	/**
 		  Publish via topic the discrete map constructed
 		**/
-	void publishOccupationMarkersMap();
+	virtual void publishOccupationMarkersMap();
 	
-	void configCatenaryCompute(bool _u_c, bool _u_s_p, double _mf, double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, bool coupled_, int n_iter_ , double r_nn_, double s_s_);
+	void configCatenaryCompute(bool _u_c, bool _u_s_p, double _mf, double _l_m, 
+								geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
+							   	bool coupled_, int n_iter_ , double r_nn_, double s_s_, int s_g_r_);
 
 	void readPointCloudMap(const sensor_msgs::PointCloud2::ConstPtr& msg);
+
 
 
 	/** Variables **/
@@ -380,6 +406,7 @@ public:
 	std::vector<double> length_catenary;
 	std::vector<double> length_catenary_aux;
 	geometry_msgs::Vector3 pos_reel_ugv , pos_tf_ugv;
+	geometry_msgs::Quaternion rot_tf_ugv;
 	geometry_msgs::Vector3 new_start, new_goal;
 	Eigen::Matrix3f base_sp;
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
@@ -392,30 +419,33 @@ public:
 	pointVec v_node_kdtree;
 
 	RRTNode *disc_initial, *disc_final; // Discretes
+	RRTNode *disc_goal; // That node is fill it by the node  that approach the goal in Independent configuration
+
 
 
 protected:
 	
-	RRTNode getRandomNode(); 
+	RRTNode getRandomNode(bool go_to_goal_ = false); 
 	bool extendGraph(const RRTNode q_rand_);
 	RRTNode* getNearestNode(const RRTNode q_rand_);
   	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
-	bool obstacleFree(const RRTNode &q_nearest, const RRTNode &q_new);
+	bool obstacleFree(const RRTNode q_nearest, const RRTNode q_new);
 	// std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_, bool check_uav_ =false);
 	std::vector<std::vector<int>> getNearNodes(const RRTNode &q_new_, double radius_);
-	bool checkPointFeasibility(const RRTNode pf_, bool check_uav_ = false);
+	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
+	bool checkPointFeasibility(const RRTNode pf_ , bool check_uav_);
+	bool checkPointsCatenaryFeasibility(const geometry_msgs::Point pf_);
 	bool checkCatenary(RRTNode &q_init_, int mode_);
 	geometry_msgs::Point getReelNode(const RRTNode &node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtree(const RRTNode ukT_);
 	void getParamsNode(RRTNode &node_, bool is_init_= false);
-	void saveNode(RRTNode* sn_, bool is_init_=false);
+	bool saveNode(RRTNode* sn_, bool is_init_=false);
 	void saveTakeOffNode(RRTNode* sn_);
-  	void clearNodes();
 	double costNode(const RRTNode q_new_);
-	double costBetweenNodes(const RRTNode &q_near_, const RRTNode &q_new_);
+	double costBetweenNodes(const RRTNode q_near_, const RRTNode q_new_);
   	
-	void isGoal(const RRTNode &st_);
+	void isGoal(const RRTNode st_);
   	std::list<RRTNode*> getPath();
 
 	/**
@@ -445,7 +475,7 @@ protected:
   
 	DiscretePosition discretizePosition(Vector3 p);
 
-	bool isInitialPositionOccupied(bool check_uav_ = false);
+	bool isInitialPositionOccupied(bool check_uav_);
 	bool isFinalPositionOccupied();
 
 		/** 
@@ -560,7 +590,7 @@ protected:
 	PointCloud occupancy_marker; // Occupancy Map as PointCloud markers
 	ros::Publisher occupancy_marker_pub_;
 
-	RVizMarker marker;	 // Explored nodes by ThetaStar
+	RVizMarker markerRviz;	 // Explored nodes by ThetaStar
 
 
 	bool got_to_goal = false;
@@ -570,13 +600,17 @@ protected:
 	double minR;
 
 	octomap::OcTree *map;
-  	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_marker_pub_;
-  	visualization_msgs::MarkerArray pointTreeMarkerUGV, pointTreeMarkerUAV;
-  	visualization_msgs::MarkerArray pointTakeOffMarker, lines_marker_;
+	std::vector<geometry_msgs::Point> v_points_ws_ugv;
+  	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_ugv_marker_pub_, lines_uav_marker_pub_, catenary_marker_pub_, all_catenary_marker_pub_;
+  	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_;
+	visualization_msgs::MarkerArray pointTreeMarkerUGV, pointTreeMarkerUAV;
+  	visualization_msgs::MarkerArray pointTakeOffMarker, lines_ugv_marker_, lines_uav_marker_, catenaryMarker, allCatenaryMarker;
 
 	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	// RRTNode *disc_initial, *disc_final; // Discretes
 	double goal_gap_m;
+
+	std::list<RRTNode*> rrt_path;
 
 	// Max time to get path
 	int timeout;
@@ -597,6 +631,7 @@ protected:
 	bool debug, is_coupled;
 	bool use_catenary, use_search_pyramid;
 	double multiplicative_factor, length_tether_max, radius_near_nodes, step_steer;
+	int samp_goal_rate;
 };
 
 }

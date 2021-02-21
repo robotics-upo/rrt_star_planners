@@ -264,7 +264,7 @@ private:
     string path;
     bool use_catenary, write_data_for_analysis, use_search_pyramid;
 	double multiplicative_factor, length_tether_max, radius_near_nodes, step_steer;
-    int n_iter;
+    int n_iter, samp_goal_rate;
     double goal_gap_m;
 
     bool coupled;

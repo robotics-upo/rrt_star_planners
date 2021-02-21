@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 if($ENV{ROS_DISTRO} STREQUAL "melodic" )
 add_definitions(-DMELODIC)
 endif()
+find_package(PCL REQUIRED COMPONENTS)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
@@ -139,7 +140,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
 )
-
 
 ###########
 ## Build ##
