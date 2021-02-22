@@ -241,7 +241,7 @@ public:
 		if (is_coupled){
 			if (setInitialPositionCoupled(p1))
 			{
-				if (!isInitialPositionOccupied(false))
+				if (!isInitialPositionUGVOccupied())
 				{
 					ROS_INFO("RRTStar: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", p1.x, p1.y, p1.z);
 					return true;
@@ -257,9 +257,9 @@ public:
 		else{
 				if(setInitialPositionIndependent(p1,p2))
 				{
-					if (!isInitialPositionOccupied(false))
+					if (!isInitialPositionUGVOccupied())
 					{
-						if(!isInitialPositionOccupied(true)){
+						if(!isInitialPositionUAVOccupied()){
 							ROS_INFO("RRTStar: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
 							return true;
 						}
@@ -433,7 +433,7 @@ protected:
 	// std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_, bool check_uav_ =false);
 	std::vector<std::vector<int>> getNearNodes(const RRTNode &q_new_, double radius_);
 	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
-	bool checkPointFeasibility(const RRTNode pf_ , bool check_uav_);
+	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
 	bool checkPointsCatenaryFeasibility(const geometry_msgs::Point pf_);
 	bool checkCatenary(RRTNode &q_init_, int mode_);
 	geometry_msgs::Point getReelNode(const RRTNode &node_);
@@ -472,10 +472,20 @@ protected:
 			   (y < (ws_y_max - 1) && y > (ws_y_min + 1)) &&
 			   (z < (ws_z_max - 1) && z > (ws_z_min + 1));
 	}
+
+	inline bool isUGVInside(int x, int y, int z)
+	{
+		int z_ugv_ = z + (v_inflation + step_inv); 
+
+		return (x < (ws_x_max - 1) && x > (ws_x_min + 1)) &&
+			   (y < (ws_y_max - 1) && y > (ws_y_min + 1)) &&
+			   (z_ugv_ < (ws_z_max - 1) && z_ugv_ > (ws_z_min + 1));
+	}
   
 	DiscretePosition discretizePosition(Vector3 p);
 
-	bool isInitialPositionOccupied(bool check_uav_);
+	bool isInitialPositionUGVOccupied();
+	bool isInitialPositionUAVOccupied();
 	bool isFinalPositionOccupied();
 
 		/** 
@@ -485,7 +495,7 @@ protected:
 		**/
 	bool isOccupied(RRTNode n_, bool check_uav_ = false);
 
-  
+  	bool isUGVOccupied(RRTNode n_);
 
 	/**
 		  Inflate a occupied cells filling all cells around in the occupancy matrix

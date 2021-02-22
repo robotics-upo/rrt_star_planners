@@ -798,15 +798,16 @@ bool RRTStarGlobalPlanner::setStart()
 
     start_ugv_.vector.x = position_ugv_.transform.translation.x;
     start_ugv_.vector.y = position_ugv_.transform.translation.y;
-    start_ugv_.vector.z = position_ugv_.transform.translation.z + map_v_inflaction + map_resolution; //Added to be consecuent with the line 809, the the displacement of UGV is always apply
+    // start_ugv_.vector.z = position_ugv_.transform.translation.z + map_v_inflaction + map_resolution; //Added to be consecuent with the line 809, the the displacement of UGV is always apply
+    start_ugv_.vector.z = position_ugv_.transform.translation.z ; 
     start_uav_.vector.x = position_uav_.transform.translation.x;
     start_uav_.vector.y = position_uav_.transform.translation.y;
     start_uav_.vector.z = position_uav_.transform.translation.z;
     printf("setStart :  ugv[%f %f %f]  uav[%f %f %f]\n",start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z, start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
 
 
-    if (start_ugv_.vector.z <= ws_z_min)
-        start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
+    // if (start_ugv_.vector.z <= ws_z_min)
+    //     start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
 
     if (rrtstar.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
     {

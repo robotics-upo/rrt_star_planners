@@ -235,7 +235,7 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 		q_new = steering(*q_nearest, q_rand_, step_steer);
 		
 		RRTNode *q_min;
-		if (checkPointFeasibility(q_new,false)){
+		if (checkNodeFeasibility(q_new,false)){
 			if (obstacleFree(*q_nearest, q_new)){
 				q_min = q_nearest;
 			}
@@ -347,7 +347,7 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 
 
 		RRTNode *q_min;
-		if (checkPointFeasibility(q_new,false) && checkPointFeasibility(q_new,true)){
+		if (checkUGVFeasibility(q_new,false) && checkNodeFeasibility(q_new,true)){
 			if (obstacleFree(*q_nearest, q_new)){
 				q_min = q_nearest;
 			}
@@ -461,7 +461,7 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 // 			randomState_.point.x = distr_x_ugv(eng);
 // 			randomState_.point.y = distr_y_ugv(eng);
 // 			randomState_.point.z = (pos_tf_ugv.z + 0.2)*step_inv;
-// 			finded_node = checkPointFeasibility(randomState_,false);
+// 			finded_node = checkNodeFeasibility(randomState_,false);
 // 		}while(finded_node == false);
 // 	if (is_coupled){
 // 		return randomState_;
@@ -472,7 +472,7 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 // 				randomState_.point_uav.x = distr_x_uav(eng);
 // 				randomState_.point_uav.y = distr_y_uav(eng);
 // 				randomState_.point_uav.z = distr_z_uav(eng);
-// 				finded_node = checkPointFeasibility(randomState_,true);
+// 				finded_node = checkNodeFeasibility(randomState_,true);
 // 				randomState_.parentNode = disc_initial;
 // 				getParamsNode(randomState_,false);
 // 				catenary_state = randomState_.catenary;
@@ -483,7 +483,7 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 // 				randomState_.point_uav.x = disc_final->point.x;
 // 				randomState_.point_uav.y = disc_final->point.y;
 // 				randomState_.point_uav.z = disc_final->point.z;
-// 				finded_node = checkPointFeasibility(randomState_,true);
+// 				finded_node = checkNodeFeasibility(randomState_,true);
 // 				// randomState_.parentNode = disc_initial;
 // 				// getParamsNode(randomState_,false);
 // 				// catenary_state = randomState_.catenary;
@@ -542,7 +542,7 @@ RRTNode RRTStar::getRandomNode(bool go_to_goal_)
 				randomState_.point_uav.x = distr_x_uav(eng);
 				randomState_.point_uav.y = distr_y_uav(eng);
 				randomState_.point_uav.z = distr_z_uav(eng);
-				finded_node = checkPointFeasibility(randomState_,true);
+				finded_node = checkNodeFeasibility(randomState_,true);
 			}while(finded_node == false);
 		}
 		else{
@@ -550,7 +550,7 @@ RRTNode RRTStar::getRandomNode(bool go_to_goal_)
 				randomState_.point_uav.x = disc_final->point.x;
 				randomState_.point_uav.y = disc_final->point.y;
 				randomState_.point_uav.z = disc_final->point.z;
-				finded_node = checkPointFeasibility(randomState_,true);
+				finded_node = checkNodeFeasibility(randomState_,true);
 			}while(finded_node == false);
 		}
   	return randomState_;
@@ -828,13 +828,33 @@ RRTNode RRTStar::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 	x_ugv_ = (x_nearest_ugv + uni_ugv_x * factor_steer_); 
 	y_ugv_ = (y_nearest_ugv + uni_ugv_y * factor_steer_); 
 	// z_ugv_ = (z_nearest_ugv + uni_ugv_z * factor_steer_); 
-	// z_ugv_ = (0.0); 
 	z_ugv_ = (z_nearest_ugv); 
 	
-	if ( (pow(x_ugv_ - x_nearest_ugv,2)+pow(y_ugv_ - y_nearest_ugv,2)+pow(z_ugv_ - z_nearest_ugv,2)) > (pow(x_rand_ugv - x_nearest_ugv,2)+pow(y_rand_ugv - y_nearest_ugv,2)+pow(z_rand_ugv - z_nearest_ugv,2)) ){
+	//Check if the position for ugv is in the air, in case is true, we keep as ugv_point the q_nearest_ugv position and we only steer in q_new_uav
+	bool node_in_air_ = false;
+	if(z_ugv_ > 0.2 && isUGVInside(x_ugv_*step_inv, y_ugv_*step_inv, z_ugv_*step_inv)){
+		RRTNode n_air_;
+		n_air_.point.x = x_ugv_ * step_inv;
+		n_air_.point.y = y_ugv_ * step_inv;
+		n_air_.point.z = z_ugv_ * step_inv;
+		if(!isOccupied(n_air_))
+		{
+			node_in_air_ = true;
+			ROS_ERROR("new node steering to the air , the keeped the point q_nearest_ugv in q_new_ugv");
+		}
+
+	}
+
+	if ( (pow(x_ugv_ - x_nearest_ugv,2) + pow(y_ugv_ - y_nearest_ugv,2) + pow(z_ugv_ - z_nearest_ugv,2)) > 
+		 (pow(x_rand_ugv - x_nearest_ugv,2) + pow(y_rand_ugv - y_nearest_ugv,2) + pow(z_rand_ugv - z_nearest_ugv,2)) ){
 		q_new_.point.x = q_rand_.point.x ; 
 		q_new_.point.y = q_rand_.point.y ; 
 		q_new_.point.z = q_rand_.point.z;
+	}
+	else if(node_in_air_){
+		q_new_.point.x = q_nearest_.point.x ; 
+		q_new_.point.y = q_nearest_.point.y ; 
+		q_new_.point.z = q_nearest_.point.z;
 	}
 	else{
 		q_new_.point.x = x_ugv_ * step_inv; 
@@ -925,7 +945,7 @@ RRTNode RRTStar::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 // 			check_point_.point.x = point_.x*step_inv;
 // 			check_point_.point.y = point_.y*step_inv;
 // 			check_point_.point.z = point_.z*step_inv;	
-// 			if (!checkPointFeasibility(check_point_,false))
+// 			if (!checkNodeFeasibility(check_point_,false))
 // 				return false;
 // 			pos_ugv_between_nodes.push_back(point_);
 // 		}while ( ( pow(point_.x - point_new_.x,2) + pow(point_.y - point_new_.y,2) + pow(point_.z - point_new_.z,2)) > step*step);
@@ -964,7 +984,7 @@ RRTNode RRTStar::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 // 				check_point_.point_uav.x = point_.x*step_inv;
 // 				check_point_.point_uav.y = point_.y*step_inv;
 // 				check_point_.point_uav.z = point_.z*step_inv;	
-// 				if (!checkPointFeasibility(check_point_,true))
+// 				if (!checkNodeFeasibility(check_point_,true))
 // 					return false;
 // 				pos_uav_between_nodes.push_back(point_);
 // 			}while ( ( pow(point_.x - point_new_.x,2) + pow(point_.y - point_new_.y,2) + pow(point_.z - point_new_.z,2)) > step*step);
@@ -1098,7 +1118,7 @@ bool RRTStar::obstacleFree(const RRTNode q_nearest_,const RRTNode q_new_)
 				// std::cin >> y_ ;
 				// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;
 				///////////////////////////////////////	
-				if (!checkPointFeasibility(check_point_,false)){
+				if (!checkNodeFeasibility(check_point_,false)){
 					// ROS_ERROR("THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
 					return false;
 				}
@@ -1141,7 +1161,7 @@ bool RRTStar::obstacleFree(const RRTNode q_nearest_,const RRTNode q_new_)
 				// std::cin >> y_ ;
 				// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;
 				///////////////////////////////////////		
-				if (!checkPointFeasibility(check_point_,false)){
+				if (!checkNodeFeasibility(check_point_,false)){
 					// ROS_ERROR("THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
 					return false;
 				}
@@ -1181,7 +1201,7 @@ bool RRTStar::obstacleFree(const RRTNode q_nearest_,const RRTNode q_new_)
 				// std::cin >> y_ ;
 				// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;	
 				///////////////////////////////////////			
-				if (!checkPointFeasibility(check_point_,false)){
+				if (!checkNodeFeasibility(check_point_,false)){
 					// ROS_ERROR("THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
 					return false;
 				}
@@ -1411,8 +1431,8 @@ bool RRTStar::checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_)
 	bool ret;
 
 	if(ugv_above_z_){
-		if (isInside(pf_.point.x,pf_.point.y,pf_.point.z)){
-			if (isOccupied(pf_)){ 
+		if (isUGVInside(pf_.point.x,pf_.point.y,pf_.point.z)){
+			if (isUGVOccupied(pf_)){ 
 				ret = true;		
 				// ROS_ERROR("Cell able for UGV");
 			}
@@ -1425,7 +1445,7 @@ bool RRTStar::checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_)
 			ret = false;
 	}	
 	else{
-		if (isOccupied(pf_)){ 
+		if (isUGVOccupied(pf_)){ 
 			ret = false;		
 			// ROS_ERROR("Cell not able for UGV");
 		}
@@ -1437,7 +1457,7 @@ bool RRTStar::checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_)
 	return ret;	
 }
 
-bool RRTStar::checkPointFeasibility(const RRTNode pf_ , bool check_uav_)
+bool RRTStar::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 {
 	bool ret;
 
@@ -1810,7 +1830,7 @@ void RRTStar::getGraphMarker()
         pointTreeMarkerUGV.markers[count].ns = "tree_RRTStar_ugv";
         pointTreeMarkerUGV.markers[count].id = nt_->id;
         pointTreeMarkerUGV.markers[count].action = visualization_msgs::Marker::ADD;
-        pointTreeMarkerUGV.markers[count].type = visualization_msgs::Marker::SPHERE;
+        pointTreeMarkerUGV.markers[count].type = visualization_msgs::Marker::CYLINDER;
         pointTreeMarkerUGV.markers[count].lifetime = ros::Duration(180);
         pointTreeMarkerUGV.markers[count].pose.position.x = nt_->point.x * step; 
         pointTreeMarkerUGV.markers[count].pose.position.y = nt_->point.y * step; 
@@ -1819,9 +1839,9 @@ void RRTStar::getGraphMarker()
         pointTreeMarkerUGV.markers[count].pose.orientation.y = 0.0;
         pointTreeMarkerUGV.markers[count].pose.orientation.z = 0.0;
         pointTreeMarkerUGV.markers[count].pose.orientation.w = 1.0;
-        pointTreeMarkerUGV.markers[count].scale.x = 0.1;
-        pointTreeMarkerUGV.markers[count].scale.y = 0.1;
-        pointTreeMarkerUGV.markers[count].scale.z = 0.1;
+        pointTreeMarkerUGV.markers[count].scale.x = 0.08;
+        pointTreeMarkerUGV.markers[count].scale.y = 0.08;
+        pointTreeMarkerUGV.markers[count].scale.z = 0.28;
         pointTreeMarkerUGV.markers[count].color.r=1.0;
         pointTreeMarkerUGV.markers[count].color.g=1.0;
         pointTreeMarkerUGV.markers[count].color.b=1.0;
@@ -1906,7 +1926,7 @@ void RRTStar::getPathMarker(std::list<RRTNode*> pt_)
 	for (auto p_:pt_){
 		_p2.x = p_->point.x*step;
 		_p2.y = p_->point.y*step;
-		_p2.z = p_->point.z*step;
+		_p2.z = p_->point.z*step+0.1;
 		if (i_ > 0){
 			lines_ugv_marker_.markers[i_-1].header.frame_id = frame_id;
 			lines_ugv_marker_.markers[i_-1].header.stamp = ros::Time::now();
@@ -1931,7 +1951,7 @@ void RRTStar::getPathMarker(std::list<RRTNode*> pt_)
 		}
 		_p1.x = p_->point.x*step;
 		_p1.y = p_->point.y*step;
-		_p1.z = p_->point.z*step;	//Move in Z to see the point over the map surface
+		_p1.z = p_->point.z*step+0.1;	//Move in Z to see the point over the map surface
 		i_++;
 	}
 	lines_ugv_marker_pub_.publish(lines_ugv_marker_);
@@ -2427,7 +2447,7 @@ void RRTStar::configCatenaryCompute	(bool _u_c, bool _u_s_p, double _mf, double 
 
 bool RRTStar::setInitialPositionCoupled(DiscretePosition p_)
 {
-	if (isInside(p_.x, p_.y, p_.z))
+	if (isUGVInside(p_.x, p_.y, p_.z))
 	{
 		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(p_.x, p_.y, p_.z)];
 
@@ -2465,7 +2485,7 @@ bool RRTStar::setInitialPositionCoupled(DiscretePosition p_)
 
 bool RRTStar::setInitialPositionIndependent(DiscretePosition p1_, DiscretePosition p2_)
 {
-	if (isInside(p1_.x, p1_.y, p1_.z) && isInside(p2_.x, p2_.y, p2_.z))
+	if (isUGVInside(p1_.x, p1_.y, p1_.z) && isInside(p2_.x, p2_.y, p2_.z))
 	{
 		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(p1_.x, p1_.y, p1_.z)];
 
@@ -2545,10 +2565,18 @@ bool RRTStar::setFinalPosition(DiscretePosition p_)
 		return false;
 	}
 }
-
-bool RRTStar::isInitialPositionOccupied(bool check_uav_)
+bool RRTStar::isInitialPositionUGVOccupied()
 {
-	if (isOccupied(*disc_initial, check_uav_))
+
+	if (isUGVOccupied(*disc_initial))
+		return true;
+	else
+		return false;
+}
+
+bool RRTStar::isInitialPositionUAVOccupied()
+{
+	if (isOccupied(*disc_initial, true))
 		return true;
 	else
 		return false;
@@ -2570,6 +2598,16 @@ bool RRTStar::isOccupied(RRTNode n_, bool check_uav_)
 	else
 		return !discrete_world[getWorldIndex(n_.point_uav.x, n_.point_uav.y, n_.point_uav.z)].notOccupied;
 	
+}
+
+bool RRTStar::isUGVOccupied(RRTNode n_)
+{
+	RRTNode n_z_displace_;
+	n_z_displace_.point.x = n_.point.x;
+	n_z_displace_.point.y = n_.point.y;
+	n_z_displace_.point.z = n_.point.z + (v_inflation + step_inv);
+
+	return !discrete_world[getWorldIndex(n_z_displace_.point.x, n_z_displace_.point.y, n_z_displace_.point.z)].notOccupied;
 }
 
 void RRTStar::publishOccupationMarkersMap()
@@ -3087,7 +3125,7 @@ void RRTStar::clearMap()
 
 // bool RRTStar::setInitialPosition(DiscretePosition p_)
 // {
-// 	if (isInside(p_.x, p_.y, p_.z))
+// 	if (isUGVInside(p_.x, p_.y, p_.z))
 // 	{
 // 		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(p_.x, p_.y, p_.z)];
 // 		if (initialNodeInWorld->node == NULL)
@@ -3122,7 +3160,7 @@ void RRTStar::clearMap()
 // {
 	// 	initial_position_ugv = p;
 	// 	DiscretePosition p_ = discretizePosition(p);
-	// 	if (isInside(p_.x, p_.y, p_.z))
+	// 	if (isUGVInside(p_.x, p_.y, p_.z))
 	// 	{
 	// 		RRTStarNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(
 	// 			p_.x,
