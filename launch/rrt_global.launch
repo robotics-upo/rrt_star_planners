@@ -21,10 +21,10 @@
     <arg name="num_goal"         default="0"/>
     <arg name="n_iter_rrtstar"         default="4000"/>
     <arg name="radius_near_nodes"         default="2.0"/> 
-    <arg name="goal_gap_m"         default="0.6"/>
+    <arg name="goal_gap_m"         default="0.8"/>
     <arg name="step_steer"         default="0.5"/>
     <arg name="coupled"         default="true"/>
-    <arg name="samp_goal_rate"         default="5"/>
+    <arg name="samp_goal_rate"         default="12"/>
 
 
         <!-- Mission Planner -->

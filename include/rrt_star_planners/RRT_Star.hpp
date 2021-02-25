@@ -414,9 +414,9 @@ public:
 
 	NearNeighbor near_neighbor_nodes_ugv, near_neighbor_nodes_uav;
 	NearNeighbor near_neighbor_obstacles;
-	// std::vector<Eigen::Vector3d> v_node_kdtree_ugv, v_node_kdtree_uav;
+	// std::vector<Eigen::Vector3d> v_nodes_kdtree_ugv, v_nodes_kdtree_uav;
 
-	pointVec v_node_kdtree;
+	pointVec v_nodes_kdtree;
 
 	RRTNode *disc_initial, *disc_final; // Discretes
 	RRTNode *disc_goal; // That node is fill it by the node  that approach the goal in Independent configuration
@@ -431,7 +431,7 @@ protected:
   	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
 	bool obstacleFree(const RRTNode q_nearest, const RRTNode q_new);
 	// std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_, bool check_uav_ =false);
-	std::vector<std::vector<int>> getNearNodes(const RRTNode &q_new_, double radius_);
+	std::vector<int> getNearNodes(const RRTNode &q_new_, double radius_);
 	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
 	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
 	bool checkPointsCatenaryFeasibility(const geometry_msgs::Point pf_);
