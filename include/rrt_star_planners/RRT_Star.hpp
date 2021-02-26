@@ -80,6 +80,12 @@ public:
 	int x, y, z;
 };
 
+class nodeOrientation
+{
+public:
+	float x, y, z, w;
+};
+
 class RRTNode;
 
 class RRTStarNodeLink3D
@@ -101,6 +107,8 @@ public:
 	// NodeState st;
 	DiscretePosition point;
 	DiscretePosition point_uav;
+	nodeOrientation rot_ugv;
+	nodeOrientation rot_uav;
 	int id;
 	int id_uav;
 	bool catenary;	//Inform the feasibility to get a catenary in node
@@ -169,7 +177,8 @@ public:
   	virtual int computeTreeCoupled();      
   	virtual int computeTreesIndependent();      
 
-  	float getYawFromQuat(Quaternion quat);
+  	float getYawFromQuaternion(RRTNode n_, bool is_uav_);
+	float getYawFromQuat(Quaternion quat);
 
 
   	std::list<RRTNode *> nodes_tree; // TODO: single tree planners
@@ -183,7 +192,11 @@ public:
 	virtual void getCatenaryPathMarker(std::list<RRTNode*> ct_);
 	virtual void getAllCatenaryMarker();
 	virtual void goalPointMarker();
-	void randPointMarker(RRTNode rn_);
+	void reelPointMarker1(geometry_msgs::Point p_);
+	void reelPointMarker2(geometry_msgs::Point p_);
+	void randNodeMarker(RRTNode rn_);
+	void newNodeMarker(RRTNode rn_);
+	void nearestNodeMarker(RRTNode rn_);
 	void getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_);
 	virtual void clearMarkers();
   	virtual void clearNodes();
@@ -403,8 +416,6 @@ public:
 	float step_inv;
 
 	//Shearching Pyramid parameters
-	std::vector<double> length_catenary;
-	std::vector<double> length_catenary_aux;
 	geometry_msgs::Vector3 pos_reel_ugv , pos_tf_ugv;
 	geometry_msgs::Quaternion rot_tf_ugv;
 	geometry_msgs::Vector3 new_start, new_goal;
@@ -421,7 +432,8 @@ public:
 	RRTNode *disc_initial, *disc_final; // Discretes
 	RRTNode *disc_goal; // That node is fill it by the node  that approach the goal in Independent configuration
 
-
+	std::vector<double> length_catenary;
+	std::vector<double> length_catenary_aux;
 
 protected:
 	
@@ -432,14 +444,16 @@ protected:
 	bool obstacleFree(const RRTNode q_nearest, const RRTNode q_new);
 	// std::vector<Eigen::Vector3d> getNearNodes(const RRTNode &q_nearest_, const RRTNode &q_new_, double radius_, bool check_uav_ =false);
 	std::vector<int> getNearNodes(const RRTNode &q_new_, double radius_);
+	void getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_);
 	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
 	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
 	bool checkPointsCatenaryFeasibility(const geometry_msgs::Point pf_);
 	bool checkCatenary(RRTNode &q_init_, int mode_);
-	geometry_msgs::Point getReelNode(const RRTNode &node_);
+	geometry_msgs::Point getReelNode(const RRTNode node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtree(const RRTNode ukT_);
 	void getParamsNode(RRTNode &node_, bool is_init_= false);
+	void updateParamsNode(RRTNode &node_);
 	bool saveNode(RRTNode* sn_, bool is_init_=false);
 	void saveTakeOffNode(RRTNode* sn_);
 	double costNode(const RRTNode q_new_);
@@ -612,7 +626,7 @@ protected:
 	octomap::OcTree *map;
 	std::vector<geometry_msgs::Point> v_points_ws_ugv;
   	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_ugv_marker_pub_, lines_uav_marker_pub_, catenary_marker_pub_, all_catenary_marker_pub_;
-  	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_;
+  	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
 	visualization_msgs::MarkerArray pointTreeMarkerUGV, pointTreeMarkerUAV;
   	visualization_msgs::MarkerArray pointTakeOffMarker, lines_ugv_marker_, lines_uav_marker_, catenaryMarker, allCatenaryMarker;
 
@@ -642,6 +656,7 @@ protected:
 	bool use_catenary, use_search_pyramid;
 	double multiplicative_factor, length_tether_max, radius_near_nodes, step_steer;
 	int samp_goal_rate;
+	
 };
 
 }

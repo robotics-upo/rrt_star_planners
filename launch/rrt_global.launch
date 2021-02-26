@@ -37,7 +37,7 @@
         </node> -->
 
         <!-- Global Planner: Theta* -->
-        <node pkg="rrt_star_planners" type="rrt_star_planner_node" name="rrt_star_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
+        <node pkg="rrt_star_planners" type="rrt_star_planner_node" name="rrt_star_planner_node"># output="screen" launch-prefix="gdb -ex run --args">
             <rosparam command="load" file="$(find marsupial_g2o)/cfg/3d_global_params.yaml"/>
             <param name="ugv_base_frame" value="ugv_base_link"/> 
             <param name="uav_base_frame" value="uav_base_link"/>
