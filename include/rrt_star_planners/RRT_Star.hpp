@@ -39,12 +39,10 @@
 #include <Eigen/StdVector>
 
 // #include "rrt_star_planners/near_neighbor.hpp"
-#include "marsupial_g2o/near_neighbor.hpp"
 #include "rrt_star_planners/kdtree.hpp"
 
-// #include "marsupial_g2o/kdtree_test.hpp"
-#include "marsupial_g2o/catenary_solver_ceres.hpp"
-
+#include "misc/catenary_solver_ceres.hpp"
+#include "misc/near_neighbor.hpp"
 
 
 #define PRINTF_REGULAR "\x1B[0m"
@@ -199,7 +197,7 @@ public:
 	void nearestNodeMarker(RRTNode rn_);
 	void getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_);
 	virtual void clearMarkers();
-  	virtual void clearNodes();
+  	virtual void clearStatus();
 	bool getTrajectory(Trajectory &trajectory);
 
   	// virtual int getGraphSize() {
@@ -433,7 +431,6 @@ public:
 	RRTNode *disc_goal; // That node is fill it by the node  that approach the goal in Independent configuration
 
 	std::vector<double> length_catenary;
-	std::vector<double> length_catenary_aux;
 
 protected:
 	

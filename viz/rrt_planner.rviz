@@ -4,9 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Status1
         - /TF1/Frames1
-        - /UAV Robot1
       Splitter Ratio: 0.5414847135543823
     Tree Height: 753
   - Class: rviz/Selection
@@ -27,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -105,7 +103,7 @@ Visualization Manager:
       Marker Topic: /occupied_cells_vis_array
       Name: octomap
       Namespaces:
-        map: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -113,30 +111,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        map:
-          Value: true
-        reel_base_link:
-          Value: true
-        uav_base_link:
-          Value: true
-        ugv_base_link:
-          Value: true
-        world:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          uav_base_link:
-            {}
-          ugv_base_link:
-            reel_base_link:
-              {}
-        world:
-          {}
+        {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
@@ -168,7 +149,7 @@ Visualization Manager:
       Marker Topic: /ugv_marker_node/siar_model
       Name: UGV Robot
       Namespaces:
-        siar_model: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -176,7 +157,7 @@ Visualization Manager:
       Marker Topic: /m100/marker
       Name: UAV Robot
       Namespaces:
-        m100: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker

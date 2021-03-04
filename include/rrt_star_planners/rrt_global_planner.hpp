@@ -54,7 +54,7 @@ Global Planner Class using the RRT Star Algorithm
 #include <pcl_ros/transforms.h>
 
 #include <tf/transform_listener.h>
-#include "marsupial_g2o/bisection_catenary_3D.h"
+#include "misc/bisection_catenary_3D.h"
 
 
 namespace PathPlanners

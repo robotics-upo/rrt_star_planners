@@ -322,7 +322,8 @@ void RRTStarGlobalPlanner::sendPathToLocalPlannerServer()
     goal_action.path = trajectory;
     if (use_catenary){
         for(int i= 0; i<rrtstar.length_catenary.size() ; i++){
-            goal_action.length_catenary.push_back(rrtstar.length_catenary[i]);
+            int n_ = (int)(rrtstar.length_catenary.size() - i - 1);
+            goal_action.length_catenary.push_back(rrtstar.length_catenary[n_]);
         }
     }
 
@@ -587,7 +588,7 @@ bool RRTStarGlobalPlanner::calculatePath()
     if (use3d && !mapRec)
         return ret;
 
-    rrtstar.clearNodes(); 
+    rrtstar.clearStatus(); 
 	rrtstar.clearMarkers();
     // if (isMarsupialCoupled()){ 
 

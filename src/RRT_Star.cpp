@@ -93,7 +93,7 @@ void RRTStar::init(std::string plannerName, std::string frame_id_, float ws_x_ma
 
 RRTStar::~RRTStar()
 {
-//   clearNodes(); 
+//   clearStatus(); 
 }
 
 int RRTStar::computeTreeCoupled()
@@ -102,7 +102,7 @@ int RRTStar::computeTreeCoupled()
 	printf("RRTStar::computeTreeCoupled -->  STARTING --> star_point_ugv[%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n",
 	initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z, final_position.x, final_position.y, final_position.z);    
 
-  	// clearNodes(); 
+  	// clearStatus(); 
 	// clearMarkers();
 	v_nodes_kdtree.clear();
 
@@ -154,7 +154,8 @@ int RRTStar::computeTreeCoupled()
 
 int RRTStar::computeTreesIndependent()
 {
-	clearNodes();
+	clearStatus();
+	
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
 	printf("RRTStar::computeTreesIndependent -->  STARTING --> star_point_ugv[%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n",
 	initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z, final_position.x, final_position.y, final_position.z);    
@@ -682,7 +683,7 @@ bool RRTStar::obstacleFree(const RRTNode q_nearest_,const RRTNode q_new_)
 				// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;
 				///////////////////////////////////////	
 				if (!checkNodeFeasibility(check_point_,false)){
-					ROS_ERROR("A: THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
+					// ROS_ERROR("A: THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
 					return false;
 				}
 				
@@ -725,7 +726,7 @@ bool RRTStar::obstacleFree(const RRTNode q_nearest_,const RRTNode q_new_)
 				// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;
 				///////////////////////////////////////		
 				if (!checkNodeFeasibility(check_point_,false)){
-					ROS_ERROR("B: THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
+					// ROS_ERROR("B: THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
 					return false;
 				}
 			}while ( (  pow(point_obs_.x - points_cat_nearest_[i].x,2) + 
@@ -765,7 +766,7 @@ bool RRTStar::obstacleFree(const RRTNode q_nearest_,const RRTNode q_new_)
 				// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;	
 				///////////////////////////////////////			
 				if (!checkNodeFeasibility(check_point_,false)){
-					ROS_ERROR("C: THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
+					// ROS_ERROR("C: THERE IS A OBSTACLE BETWEEN CATENARY OF Q_NEW and Q_NEAREST");
 					return false;
 				}
 			}while ( (  pow(point_obs_.x - points_cat_nearest_[i].x,2) + 
@@ -850,10 +851,6 @@ float RRTStar::getYawFromQuaternion(RRTNode n_, bool is_uav_)
 		M.getRPY(r_, p_, y_);
 	}
 
-	//To round the Yaw value in two decimal
-	// float value_ = (int)(y_ * 100 + .5); 
-    // float yaw_ = (float)(value_ / 100); 
-	// return yaw_;
 	return y_;
 }
 
@@ -1270,7 +1267,7 @@ inline void RRTStar::saveTakeOffNode(RRTNode* ston_)
 	take_off_nodes.push_back(ston_); 
 }
 
-inline void RRTStar::clearNodes()
+inline void RRTStar::clearStatus()
 {
 	// for (auto nt_:nodes_tree) {
     // 	delete nt_;
@@ -1291,6 +1288,7 @@ inline void RRTStar::clearNodes()
   	got_to_goal = false;
 	// v_points_ws_ugv.clear();
 	v_nodes_kdtree.clear();
+	length_catenary.clear();
 }
 
 std::list<RRTNode*> RRTStar::getPath()
@@ -1321,12 +1319,15 @@ std::list<RRTNode*> RRTStar::getPath()
 	else{
 		current_node = disc_goal;
 		path_.push_front(current_node);
+		length_catenary.push_back(current_node->length_cat);
 		while (current_node->parentNode != NULL){ 
 			current_node = current_node->parentNode;
 			path_.push_front(current_node);
-			std::cout << "current_node :  " << current_node << " , parent= "<< current_node->parentNode << "  ,  points : [" 
-			<< current_node->point.x*step << "," << current_node->point.y*step << "," << current_node->point.z*step << "],["
-			<< current_node->point_uav.x*step << "," << current_node->point_uav.y*step << "," << current_node->point_uav.z*step << "]"<< std::endl;
+			length_catenary.push_back(current_node->length_cat);
+			// std::cout << "current_node :  " << current_node << " , parent= "<< current_node->parentNode << "  ,  points : [" 
+			// << current_node->point.x*step << "," << current_node->point.y*step << "," << current_node->point.z*step << "],["
+			// << current_node->point_uav.x*step << "," << current_node->point_uav.y*step << "," << current_node->point_uav.z*step << "]"<< std::endl;
+
 			// std::string y_ ;
 			// std::cout << "Press key to continue: " << y_ << std::endl;	
 			// std::cin >> y_ ;
@@ -1363,7 +1364,7 @@ void RRTStar::isGoal(const RRTNode st_)
 	  							 pow(point_.y*step - final_position.y,2) +
 					 			 pow(point_.z*step - final_position.z,2) );
 	
-		printf("dist_goal = %f/%f \n",dist_goal_, goal_gap_m);
+		// printf("dist_goal = %f/%f \n",dist_goal_, goal_gap_m);
 
 		if (dist_goal_ < goal_gap_m){
 			got_to_goal = true;
@@ -1616,7 +1617,7 @@ void RRTStar::getCatenaryPathMarker(std::list<RRTNode*> ct_)
 		y_uav_ = nt_->point_uav.y*step; 
 		z_uav_ = nt_->point_uav.z*step; 
 		len_cat_ = nt_->length_cat;
-		printf("Values to Compute Catenary: ugv[%f %f %f]  uav[%f %f %f] len_cat[%f]\n",x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_);
+		// printf("Values to Compute Catenary: ugv[%f %f %f]  uav[%f %f %f] len_cat[%f]\n",x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_);
 		cS_.solve(x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_, points_catenary_);
 
 		int id_ = nt_->id;
@@ -2310,10 +2311,10 @@ bool RRTStar::getTrajectory(Trajectory &trajectory)
 		traj_marsupial_.transforms[0].translation.x = nt_->point.x*step;
 		traj_marsupial_.transforms[0].translation.y = nt_->point.y*step;
 		traj_marsupial_.transforms[0].translation.z = nt_->point.z*step;
-		traj_marsupial_.transforms[0].rotation.x = 0.0;
-		traj_marsupial_.transforms[0].rotation.y = 0.0;
-		traj_marsupial_.transforms[0].rotation.z = 0.0;
-		traj_marsupial_.transforms[0].rotation.w = 1.0;
+		traj_marsupial_.transforms[0].rotation.x = nt_->rot_ugv.x;
+		traj_marsupial_.transforms[0].rotation.y = nt_->rot_ugv.y;
+		traj_marsupial_.transforms[0].rotation.z = nt_->rot_ugv.z;
+		traj_marsupial_.transforms[0].rotation.w = nt_->rot_ugv.w;
 		traj_marsupial_.velocities[0].linear.x = 0.0;
 		traj_marsupial_.velocities[0].linear.y = 0.0;
 		traj_marsupial_.velocities[0].linear.z = 0.0;
@@ -2323,10 +2324,10 @@ bool RRTStar::getTrajectory(Trajectory &trajectory)
 		traj_marsupial_.transforms[1].translation.x = nt_->point_uav.x*step;
 		traj_marsupial_.transforms[1].translation.y = nt_->point_uav.y*step;
 		traj_marsupial_.transforms[1].translation.z = nt_->point_uav.z*step;
-		traj_marsupial_.transforms[1].rotation.x = 0.0;
-		traj_marsupial_.transforms[1].rotation.y = 0.0;
-		traj_marsupial_.transforms[1].rotation.z = 0.0;
-		traj_marsupial_.transforms[1].rotation.w = 1.0;
+		traj_marsupial_.transforms[1].rotation.x = nt_->rot_uav.x;
+		traj_marsupial_.transforms[1].rotation.y = nt_->rot_uav.y;
+		traj_marsupial_.transforms[1].rotation.z = nt_->rot_uav.z;
+		traj_marsupial_.transforms[1].rotation.w = nt_->rot_uav.w;
 		traj_marsupial_.velocities[1].linear.x = 0.0;
 		traj_marsupial_.velocities[1].linear.y = 0.0;
 		traj_marsupial_.velocities[1].linear.z = 0.0;

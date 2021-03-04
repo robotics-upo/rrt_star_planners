@@ -12,7 +12,7 @@ find_package(PCL REQUIRED COMPONENTS)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
-  marsupial_g2o
+  marsupial_optimizer
   octomap_msgs
   octomap_ros
   pcl_ros
@@ -122,7 +122,7 @@ find_package(Ceres REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
-  CATKIN_DEPENDS roscpp upo_actions message_runtime octomap_msgs octomap_ros pcl_conversions pcl_ros marsupial_g2o
+  CATKIN_DEPENDS roscpp upo_actions message_runtime octomap_msgs octomap_ros pcl_conversions pcl_ros marsupial_optimizer
   DEPENDS octomap_msgs octomap_ros
   LIBRARIES ${EXTERNAL_LIBS} 
 )
@@ -160,7 +160,7 @@ include_directories(
 # )
 
 add_executable(rrt_star_planner_node src/rrt_star_planner_node.cpp src/rrt_global_planner.cpp src/RRT_Star.cpp src/kdtree.cpp)
-target_link_libraries(rrt_star_planner_node  marsupial_g2o ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+target_link_libraries(rrt_star_planner_node  marsupial_optimizer ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 add_dependencies(rrt_star_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 
 ## Add cmake target dependencies of the library
