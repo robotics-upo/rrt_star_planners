@@ -5,7 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /TF1/Frames1
-      Splitter Ratio: 0.5414847135543823
+      Splitter Ratio: 0.6000000238418579
     Tree Height: 753
   - Class: rviz/Selection
     Name: Selection
@@ -25,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -80,7 +80,7 @@ Visualization Manager:
       Color: 114; 159; 207
       Color Transformer: AxisColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -97,27 +97,43 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /occupied_cells_vis_array
       Name: octomap
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        map:
+          Value: true
+        reel_base_link:
+          Value: true
+        uav_base_link:
+          Value: true
+        ugv_base_link:
+          Value: true
+        world:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        world:
+          map:
+            uav_base_link:
+              {}
+            ugv_base_link:
+              reel_base_link:
+                {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
@@ -129,27 +145,47 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
-      Marker Topic: /optimizer_local_planner_node/opt_trajectory_marker
-      Name: OptImized Trajectory
+      Enabled: true
+      Marker Topic: /optimizer_local_planner_node/opt_trajectory_uav_marker
+      Name: OptImized_trajectory_uav
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
+      Marker Topic: /optimizer_local_planner_node/opt_trajectory_ugv_marker
+      Name: Optimized_trajectory_ugv
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
       Marker Topic: /optimizer_local_planner_node/catenary_marker
       Name: Catenary Cable
       Namespaces:
-        {}
+        catenary_0: true
+        catenary_1: true
+        catenary_10: true
+        catenary_11: true
+        catenary_12: true
+        catenary_2: true
+        catenary_3: true
+        catenary_4: true
+        catenary_5: true
+        catenary_6: true
+        catenary_7: true
+        catenary_8: true
+        catenary_9: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /ugv_marker_node/siar_model
       Name: UGV Robot
       Namespaces:
-        {}
+        siar_model: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -157,7 +193,7 @@ Visualization Manager:
       Marker Topic: /m100/marker
       Name: UAV Robot
       Namespaces:
-        {}
+        m100: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -259,7 +295,7 @@ Visualization Manager:
       Marker Topic: /rrt_star_planner_node/tree_rrt_star_ugv
       Name: RRTStar_nodes_ugv
       Namespaces:
-        {}
+        tree_RRTStar_ugv: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -267,7 +303,7 @@ Visualization Manager:
       Marker Topic: /rrt_star_planner_node/tree_rrt_star_uav
       Name: RRTStar_nodes_uav
       Namespaces:
-        {}
+        tree_RRTStar_uav: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -283,7 +319,7 @@ Visualization Manager:
       Marker Topic: /rrt_star_planner_node/path_ugv_rrt_star
       Name: RRTStar_path_ugv
       Namespaces:
-        {}
+        Line_ugv_RRTStar_Path: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -291,17 +327,17 @@ Visualization Manager:
       Marker Topic: /rrt_star_planner_node/path_uav_rrt_star
       Name: RRTStar_path_uav
       Namespaces:
-        {}
+        Line_uav_RRTStar_Path: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /rrt_star_planner_node/catenary_marsupial
       Name: Catenary_marsupial_path
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /rrt_star_planner_node/all_catenaries_rrt
@@ -315,7 +351,7 @@ Visualization Manager:
       Marker Topic: /rrt_star_planner_node/goal_point
       Name: Goal_point
       Namespaces:
-        {}
+        goal_point: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -323,7 +359,7 @@ Visualization Manager:
       Marker Topic: /rrt_star_planner_node/rand_point
       Name: Rand_node
       Namespaces:
-        {}
+        rand_uav_point: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -402,25 +438,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 15.711374282836914
+      Distance: 7.915018081665039
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.8757250308990479
-        Y: -0.46173274517059326
-        Z: 2.3675735064898618e-5
-      Focal Shape Fixed Size: true
+        X: -1.4297040700912476
+        Y: -0.2798299789428711
+        Z: 0
+      Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2297995686531067
+      Pitch: 0.16039958596229553
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 6.131021976470947
+      Yaw: 5.173202037811279
     Saved: ~
 Window Geometry:
   Displays:

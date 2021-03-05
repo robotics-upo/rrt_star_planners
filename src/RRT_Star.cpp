@@ -602,11 +602,19 @@ RRTNode RRTStar::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 			q_new_.point_uav.x = q_rand_.point_uav.x ; 
 			q_new_.point_uav.y = q_rand_.point_uav.y ; 
 			q_new_.point_uav.z = q_rand_.point_uav.z;
+			q_new_.rot_uav.x = 0.0;
+			q_new_.rot_uav.y = 0.0;
+			q_new_.rot_uav.z = 0.0;
+			q_new_.rot_uav.w = 1.0;
 		}
 		else{
 			q_new_.point_uav.x = x_uav_ * step_inv; 
 			q_new_.point_uav.y = y_uav_ * step_inv; 
 			q_new_.point_uav.z = z_uav_ * step_inv;
+			q_new_.rot_uav.x = 0.0;
+			q_new_.rot_uav.y = 0.0;
+			q_new_.rot_uav.z = 0.0;
+			q_new_.rot_uav.w = 1.0;
 		}
 
 		return q_new_;
