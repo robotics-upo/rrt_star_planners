@@ -547,7 +547,6 @@ RRTNode RRTStar::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 			node_in_air_ = true;
 			ROS_ERROR("new node steering to the air , the keeped the point q_nearest_ugv in q_new_ugv");
 		}
-
 	}
 
 	if ( (pow(x_ugv_ - x_nearest_ugv,2) + pow(y_ugv_ - y_nearest_ugv,2) + pow(z_ugv_ - z_nearest_ugv,2)) > 
@@ -619,7 +618,6 @@ RRTNode RRTStar::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 
 		return q_new_;
 	}
-	
 }
 
 bool RRTStar::obstacleFree(const RRTNode q_nearest_,const RRTNode q_new_)

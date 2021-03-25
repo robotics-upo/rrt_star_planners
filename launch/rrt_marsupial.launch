@@ -30,9 +30,13 @@
         <arg name="map_file"  value="$(arg map_file)"/>    
     </include>
 
+    <!-- Launch  region_growing-->
+	<node pkg="marsupial_optimizer" type="region_growing_segmentation_node" name="region_growing_segmentation_node" output="screen" />#launch-prefix="gdb -ex run --args"/>
+
+
     <!-- Launch Optimizer and Global Planner-->
-    <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="planner_sim" output="screen" 
-    args="2 rrt_star_planners rrt_global.launch use_catenary_planning:=$(arg use_catenary_planning) coupled:=$(arg is_coupled) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
+    <!-- <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="planner_sim" output="screen" 
+    args="2 rrt_star_planners rrt_global.launch use_catenary_planning:=$(arg use_catenary_planning) coupled:=$(arg is_coupled) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/> -->
         
     <!-- RViz -->
     <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_optimizer)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/> -->

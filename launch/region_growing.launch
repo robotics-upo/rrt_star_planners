@@ -1,0 +1,23 @@
+<launch>
+	<node pkg="marsupial_optimizer" type="region_growing_segmentation_node" name="region_growing_segmentation_node" output="screen" />#launch-prefix="gdb -ex run --args"/>
+	<!-- <param name="pos_base_link_x" value="0.0" />
+	<param name="pos_base_link_y" value="0.0" />
+	<param name="pos_base_link_z" value="0.0" /> -->
+
+	<!-- <param name="pos_base_link_x" value="-6.0" />
+	<param name="pos_base_link_y" value="0.5" />
+	<param name="pos_base_link_z" value="2.03" /> -->
+
+	<!-- <param name="pos_base_link_x" value="6.0" />
+	<param name="pos_base_link_y" value="-0.5" />
+	<param name="pos_base_link_z" value="0.0" /> -->
+
+	<!-- <param name="pos_base_link_x" value="11.5" />
+	<param name="pos_base_link_y" value="-0.6" />
+	<param name="pos_base_link_z" value="1.0" /> -->
+
+	<!-- <param name="pos_base_link_x" value="-9.4" />
+	<param name="pos_base_link_y" value="-2.2" />
+	<param name="pos_base_link_z" value="0.0" /> -->
+
+</launch>
