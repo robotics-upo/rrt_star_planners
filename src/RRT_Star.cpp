@@ -1225,7 +1225,7 @@ void RRTStar::updateKdtree(const RRTNode ukT_)
 	}
 }
 
-void RRTStar::readPointCloudMap(const sensor_msgs::PointCloud2::ConstPtr& msg)
+void RRTStar::readPointCloudMapForUGV(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
 	near_neighbor_obstacles.setInput(*msg);
 	ROS_INFO_COND(debug, PRINTF_BLUE "RRTStar Planner: Receiving point cloud map to create Kdtree for Obstacles");
@@ -1233,17 +1233,7 @@ void RRTStar::readPointCloudMap(const sensor_msgs::PointCloud2::ConstPtr& msg)
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::fromROSMsg(*msg,*cloud_in);
 
-	// pcl::RandomSample<pcl::PointXYZ> rs_;
-    // rs_.setInputCloud(cloud_in);
-    // rs_.setSample(2);
-	// rs_.filter(*cloud_out);
-	// for (auto& point: *cloud_out){
-    // std::cerr << "  PROBANDOOOOO  " << point.x << " "
-    //                     << point.y << " "
-    //                     << point.z << std::endl;
-	// }
-
-	ROS_INFO("size point cloud = [%lu]",cloud_in->size());
+	ROS_INFO(PRINTF_RED"size point cloud = [%lu]",cloud_in->size());
 	geometry_msgs::Point point_;
 	for (size_t i = 0 ; i < cloud_in->size() ; i ++){
 		point_.x = cloud_in->points[i].x;
@@ -1251,7 +1241,7 @@ void RRTStar::readPointCloudMap(const sensor_msgs::PointCloud2::ConstPtr& msg)
 		point_.z = cloud_in->points[i].z;
 		v_points_ws_ugv.push_back(point_);
 	}
-	ROS_INFO("size v_points_ws_ugv = [%lu]",v_points_ws_ugv.size());
+	ROS_INFO(PRINTF_RED"size v_points_ws_ugv = [%lu]",v_points_ws_ugv.size());
 }
 
 bool RRTStar::saveNode(RRTNode* sn_, bool is_init_)

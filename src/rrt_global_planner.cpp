@@ -126,7 +126,8 @@ void RRTStarGlobalPlanner::configTopics()
     {
         sub_map = nh->subscribe<PointCloud>("/points", 1, &RRTStarGlobalPlanner::pointsSub, this);
     }
-    point_cloud_map_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &RRTStarGlobalPlanner::readPointCloudMapCallback, this);
+    // point_cloud_map_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &RRTStarGlobalPlanner::readPointCloudMapCallback, this);
+    point_cloud_map_ugv_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &RRTStarGlobalPlanner::readPointCloudMapCallback, this);
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Topics and Subscriber Configurated:");
     
@@ -139,12 +140,13 @@ void RRTStarGlobalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConst
     mapRec = true;
     sub_map.shutdown();
 
-    ROS_INFO_COND(debug, PRINTF_MAGENTA "Collision Map Received");
+    ROS_INFO_COND(debug, PRINTF_GREEN "Collision Map Received");
 }
 
 void RRTStarGlobalPlanner::readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
-      rrtstar.readPointCloudMap(msg);
+    rrtstar.readPointCloudMapForUGV(msg);
+    ROS_INFO_COND(debug, PRINTF_GREEN "UGV Map Navigation Received");
 }
 
 void RRTStarGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)

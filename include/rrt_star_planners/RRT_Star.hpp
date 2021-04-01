@@ -404,7 +404,7 @@ public:
 								geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
 							   	bool coupled_, int n_iter_ , double r_nn_, double s_s_, int s_g_r_);
 
-	void readPointCloudMap(const sensor_msgs::PointCloud2::ConstPtr& msg);
+	void readPointCloudMapForUGV(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
 
 
@@ -421,7 +421,6 @@ public:
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
 	double phi_min, phi_max, theta_min, theta_max ;
 
-	NearNeighbor near_neighbor_nodes_ugv, near_neighbor_nodes_uav;
 	NearNeighbor near_neighbor_obstacles;
 	// std::vector<Eigen::Vector3d> v_nodes_kdtree_ugv, v_nodes_kdtree_uav;
 

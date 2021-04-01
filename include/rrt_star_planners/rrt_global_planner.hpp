@@ -168,7 +168,7 @@ private:
 
     //Publishers and Subscribers
     ros::Publisher replan_status_pub,visMarkersPublisher, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher, rayCastNoFreePublisher, reducedMapPublisher;
-    ros::Subscriber goal_sub, sub_map, point_cloud_map_sub_;
+    ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_;
 
     //Listener tf reel
 	tf::TransformListener listener;
