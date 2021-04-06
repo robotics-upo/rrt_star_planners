@@ -37,7 +37,7 @@
 
     <!-- Launch  region_growing-->
     <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="region_growing_time" output="screen" 
-    args="4 rrt_star_planners region_growing.launch  "/> 
+    args="2 rrt_star_planners region_growing.launch  "/> 
 
 
     <!-- RViz -->

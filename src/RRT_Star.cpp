@@ -13,15 +13,16 @@ RRTStar::RRTStar()
 }
 
 // Constructor with arguments
-RRTStar::RRTStar(std::string plannerName, std::string frame_id, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_)
+RRTStar::RRTStar(std::string plannerName, std::string frame_id, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
+			float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_)
 {
 	// Call to initialization
-	init(plannerName, frame_id, ws_x_max_, ws_y_max_, ws_z_max_, ws_x_min_, ws_y_min_, ws_z_min_, step_, h_inflation_, v_inflation_, goal_weight_, z_weight_cost_, z_not_inflate_, nh_ ,goal_gap_m_);
+	init(plannerName, frame_id, ws_x_max_, ws_y_max_, ws_z_max_, ws_x_min_, ws_y_min_, ws_z_min_, step_, h_inflation_, v_inflation_, goal_weight_, z_weight_cost_, z_not_inflate_, nh_ ,goal_gap_m_, debug_rrt);
 }
 
 // Initialization: creates the occupancy matrix (discrete nodes) from the bounding box sizes, resolution, inflation and optimization arguments
 void RRTStar::init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
-					   float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_)
+				   float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -67,28 +68,32 @@ void RRTStar::init(std::string plannerName, std::string frame_id_, float ws_x_ma
 	z_not_inflate = z_not_inflate_;
 
 	goal_gap_m = goal_gap_m_;
+
+	debug_rrt = debug_rrt_;
 	
-	debug = true;
+	graph_marker_debug = false;
 
-
-	occupancy_marker_pub_ = nh->advertise<PointCloud>("vis_marker_occupancy", 1, true);
-
-	tree_rrt_star_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("tree_rrt_star_ugv", 2, true);
-	tree_rrt_star_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("tree_rrt_star_uav", 2, true);
-	take_off_nodes_pub_ = nh->advertise<visualization_msgs::MarkerArray>("take_off_nodes_rrt_star", 2, true);
 	lines_ugv_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("path_ugv_rrt_star", 2, true);
 	lines_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("path_uav_rrt_star", 2, true);
-	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marsupial", 1000, true);
-	all_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("all_catenaries_rrt", 10000, true);
+	occupancy_marker_pub_ = nh->advertise<PointCloud>("vis_marker_occupancy", 1, true);
 	goal_point_pub_ = nh->advertise<visualization_msgs::Marker>("goal_point", 1, true);
-	rand_point_pub_ = nh->advertise<visualization_msgs::MarkerArray>("rand_point", 2, true);
-	one_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("one_catenaty", 1000, true);
+	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marsupial", 1000, true);
+
+	// if (graph_marker_debug){
+		tree_rrt_star_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("tree_rrt_star_ugv", 2, true);
+		tree_rrt_star_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("tree_rrt_star_uav", 2, true);
+		take_off_nodes_pub_ = nh->advertise<visualization_msgs::MarkerArray>("take_off_nodes_rrt_star", 2, true);
+
+		rand_point_pub_ = nh->advertise<visualization_msgs::MarkerArray>("rand_point", 2, true);
+		one_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("one_catenaty", 1000, true);
+		points_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("points_marker", 10, true);
+		new_point_pub_ = nh->advertise<visualization_msgs::MarkerArray>("new_point", 2, true);
+		nearest_point_pub_ = nh->advertise<visualization_msgs::MarkerArray>("nearest_point", 2, true);
+		reel1_point_pub_ = nh->advertise<visualization_msgs::Marker>("reel1_point", 1, true);
+		reel2_point_pub_ = nh->advertise<visualization_msgs::Marker>("reel2_point", 1, true);
+		all_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("all_catenaries_rrt", 10000, true);
+	// }
 	
-	points_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("points_marker", 10, true);
-	new_point_pub_ = nh->advertise<visualization_msgs::MarkerArray>("new_point", 2, true);
-	nearest_point_pub_ = nh->advertise<visualization_msgs::MarkerArray>("nearest_point", 2, true);
-	reel1_point_pub_ = nh->advertise<visualization_msgs::Marker>("reel1_point", 1, true);
-	reel2_point_pub_ = nh->advertise<visualization_msgs::Marker>("reel2_point", 1, true);
 }
 
 RRTStar::~RRTStar()
@@ -102,13 +107,13 @@ int RRTStar::computeTreeCoupled()
 	printf("RRTStar::computeTreeCoupled -->  STARTING --> star_point_ugv[%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n",
 	initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z, final_position.x, final_position.y, final_position.z);    
 
-  	// clearStatus(); 
-	// clearMarkers();
 	v_nodes_kdtree.clear();
 
 	saveNode(disc_initial,true);
-	getGraphMarker();			// Incremental algorithm --> the graph is generated in each calculation
-	getTakeOffNodesMarker();
+	if (graph_marker_debug){ 
+		getGraphMarker();			// Incremental algorithm --> the graph is generated in each calculation
+		getTakeOffNodesMarker();
+	}
 	updateKdtree(*disc_initial);
 
  	double ret_val = -1.0; 
@@ -120,7 +125,8 @@ int RRTStar::computeTreeCoupled()
 		// printf("__________________________________  RRTStar::computeTreeCoupled: STARTING WHILE LOOP[%i]  _________________________________\n",count);
 		RRTNode q_rand = getRandomNode();	// get a vector with one element in case of coupled configuration
 		
-		printf("q_rand = [%f %f %f / %f %f %f]\n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
+		if (debug_rrt)
+			printf("q_rand = [%f %f %f / %f %f %f]\n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
 
 		extendGraph(q_rand);
 		if ((take_off_nodes.size() > 0) && got_to_goal){
@@ -155,7 +161,8 @@ int RRTStar::computeTreeCoupled()
 int RRTStar::computeTreesIndependent()
 {
 	clearStatus();
-	
+	clearMarkers();
+
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
 	printf("RRTStar::computeTreesIndependent -->  STARTING --> star_point_ugv[%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n",
 	initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z, final_position.x, final_position.y, final_position.z);    
@@ -170,8 +177,11 @@ int RRTStar::computeTreesIndependent()
 		ROS_ERROR("RRTStar::computeTreesIndependent --> Not posible to get catenary in initial node");
 		return 0;
 	}
+	
 	goalPointMarker();
-	getGraphMarker();			
+	if (graph_marker_debug)
+		getGraphMarker();			
+
 	updateKdtree(*disc_initial);
 
  	double ret_val = -1.0; 
@@ -188,8 +198,11 @@ int RRTStar::computeTreesIndependent()
 		else{
 			q_rand = getRandomNode(true);	
 		}
-		printf(" q_rand = [%f %f %f / %f %f %f] \n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
-		randNodeMarker(q_rand);
+		if (debug_rrt)
+			printf(" q_rand = [%f %f %f / %f %f %f] \n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
+		
+		if (graph_marker_debug)
+			randNodeMarker(q_rand);
 		
 		extendGraph(q_rand);
 
@@ -222,12 +235,10 @@ int RRTStar::computeTreesIndependent()
   	std::cout << "Explored Graph Nodes Numbers: " << nodes_tree.size() <<std::endl;
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
 
-	// if (print_all_catenary)
-	getAllCatenaryMarker();
+	if (graph_marker_debug)
+		getAllCatenaryMarker();
 
-	
-
-  return ret_val; 
+  	return ret_val; 
 }
 
 bool RRTStar::extendGraph(const RRTNode q_rand_)
@@ -246,12 +257,12 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 				q_min = q_nearest;
 			}
 			else{
-				ROS_ERROR("RRTStar::extendGraph : Not Obstacle Free between q_new = [%f %f %f] and q_nearest =[%f %f %f]", q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step);
+				ROS_INFO_COND(debug_rrt, PRINTF_RED"  RRTStar::extendGraph : Not Obstacle Free between q_new = [%f %f %f] and q_nearest =[%f %f %f]", q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step);
 				return false;
 			}
 		}
 		else{
-			ROS_ERROR("RRTStar::extendGraph : Not Feasible to extend point q_new = [%f %f %f]",q_new.point.x*step, q_new.point.y*step, q_new.point.z*step);
+			ROS_INFO_COND(debug_rrt, PRINTF_RED"  RRTStar::extendGraph : Not Feasible to extend point q_new = [%f %f %f]",q_new.point.x*step, q_new.point.y*step, q_new.point.z*step);
 			return false;		
 		}
 
@@ -296,8 +307,12 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 
 		*new_node = q_new;
 		saveNode(new_node);
-		getGraphMarker();
-		getTakeOffNodesMarker();
+		
+		if (graph_marker_debug){
+			getGraphMarker();
+			getTakeOffNodesMarker();
+		}
+		
 		isGoal(q_new);
 		
 		return true;
@@ -306,9 +321,10 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 		RRTNode* new_node = new RRTNode();
 		RRTNode q_new;	//Take the new node value before to save it as a node in the list
 
-		RRTNode* q_nearest = getNearestNode(q_rand_);  
-		printf(" q_nearest = [%f %f %f / %f %f %f] \n", q_nearest->point.x*step,q_nearest->point.y*step,q_nearest->point.z*step,
-														q_nearest->point_uav.x*step,q_nearest->point_uav.y*step,q_nearest->point_uav.z*step);
+		RRTNode* q_nearest = getNearestNode(q_rand_); 
+
+		if (debug_rrt) 
+			printf(" q_nearest = [%f %f %f / %f %f %f] \n", q_nearest->point.x*step,q_nearest->point.y*step,q_nearest->point.z*step, q_nearest->point_uav.x*step,q_nearest->point_uav.y*step,q_nearest->point_uav.z*step);
 		/********************* To graph Catenary Node *********************/
 		// std::vector<geometry_msgs::Point> _points_cat_;
 		// _points_cat_.clear();
@@ -327,10 +343,12 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 		q_new = steering(*q_nearest, q_rand_, step_steer);
 		q_new.parentNode = q_nearest;
 		getParamsNode(q_new);
-		printf(" q_new = [%f %f %f / %f %f %f] q_new.catenary=[%s] cost=[%f] \n", q_new.point.x*step,q_new.point.y*step,q_new .point.z*step,q_new.point_uav.x*step,
-																		q_new.point_uav.y*step,q_new.point_uav.z*step,q_new.catenary ? "true" : "false",q_new.cost);
+		
+		if (debug_rrt)
+			printf(" q_new = [%f %f %f / %f %f %f] q_new.catenary=[%s] cost=[%f] \n", q_new.point.x*step,q_new.point.y*step,q_new .point.z*step,q_new.point_uav.x*step,q_new.point_uav.y*step,q_new.point_uav.z*step,q_new.catenary ? "true" : "false",q_new.cost);
+		
 		if (!q_new.catenary){
-			ROS_ERROR("RRTStar::extendGraph : Not Catenary for new point q_new = [%f %f %f]", q_new.point.x*step, q_new.point.y*step, q_new.point.z*step);
+			ROS_INFO_COND(debug_rrt, PRINTF_RED"  RRTStar::extendGraph : Not Catenary for new point q_new = [%f %f %f]", q_new.point.x*step, q_new.point.y*step, q_new.point.z*step);
 			return false;
 		}
 
@@ -340,16 +358,17 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 				q_min = q_nearest;
 			}
 			else{
-				ROS_ERROR("RRTStar::extendGraph : Not Obstacle Free q_new=[%f %f %f]  q_nearest=[%f %f %f]",
+				ROS_INFO_COND(debug_rrt, PRINTF_RED"  RRTStar::extendGraph : Not Obstacle Free q_new=[%f %f %f]  q_nearest=[%f %f %f]",
 				q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step);
 				return false;
 			}
 		}
 		else{
-			ROS_ERROR("RRTStar::extendGraph : Not Feasible to extend point q_new = [%f %f %f]", q_new.point.x*step, q_new.point.y*step, q_new.point.z*step);
+			ROS_INFO_COND(debug_rrt, PRINTF_RED"  RRTStar::extendGraph : Not Feasible to extend point q_new = [%f %f %f]", q_new.point.x*step, q_new.point.y*step, q_new.point.z*step);
 			return false;		
 		}
-		printf("q_min = [%f %f %f / %f %f %f] \n", q_min->point.x*step,q_min->point.y*step,q_min->point.z*step,q_min->point_uav.x*step,q_min->point_uav.y*step,q_min->point_uav.z*step);
+		if (debug_rrt)
+			printf("q_min = [%f %f %f / %f %f %f] \n", q_min->point.x*step,q_min->point.y*step,q_min->point.z*step,q_min->point_uav.x*step,q_min->point_uav.y*step,q_min->point_uav.z*step);
 
 
 		std::vector<int> v_near_nodes = getNearNodes(q_new, radius_near_nodes) ;
@@ -400,8 +419,10 @@ bool RRTStar::extendGraph(const RRTNode q_rand_)
 		else{
 			saveNode(new_node);
 		}
-		getGraphMarker();
-		getTakeOffNodesMarker();
+		if(graph_marker_debug){
+			getGraphMarker();
+			getTakeOffNodesMarker();
+		}
 
 		return true;
 	}
@@ -422,7 +443,7 @@ RRTNode RRTStar::getRandomNode(bool go_to_goal_)
 	bool finded_node = false;
 	bool catenary_state = false;
 		
-		// if (!go_to_goal_){
+		if (!go_to_goal_){
 			do{
 				int num_rand = distr_ugv(eng);
 				randomState_.point.x = v_points_ws_ugv[num_rand].x*step_inv;
@@ -436,12 +457,12 @@ RRTNode RRTStar::getRandomNode(bool go_to_goal_)
 				else 	
 					finded_node = checkUGVFeasibility(randomState_,true); 
 			}while(finded_node == false);
-		// }
-		// else{
-		// 		randomState_.point.x = disc_final->point.x;
-		// 		randomState_.point.y = disc_final->point.y;
-		// 		randomState_.point.z = disc_initial->point.z;   
-		// }
+		}
+		else{
+				randomState_.point.x = disc_final->point.x;
+				randomState_.point.y = disc_final->point.y;
+				randomState_.point.z = disc_initial->point.z;   
+		}
 
 	if (is_coupled){
 		return randomState_;
@@ -1228,12 +1249,12 @@ void RRTStar::updateKdtree(const RRTNode ukT_)
 void RRTStar::readPointCloudMapForUGV(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
 	near_neighbor_obstacles.setInput(*msg);
-	ROS_INFO_COND(debug, PRINTF_BLUE "RRTStar Planner: Receiving point cloud map to create Kdtree for Obstacles");
+	ROS_INFO_COND(debug_rrt, PRINTF_BLUE "RRTStar Planner: Receiving point cloud map to create Kdtree for Obstacles");
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::fromROSMsg(*msg,*cloud_in);
 
-	ROS_INFO(PRINTF_RED"size point cloud = [%lu]",cloud_in->size());
+	ROS_INFO(PRINTF_BLUE"RRTStar::readPointCloudMapForUGV  size point cloud = [%lu]",cloud_in->size());
 	geometry_msgs::Point point_;
 	for (size_t i = 0 ; i < cloud_in->size() ; i ++){
 		point_.x = cloud_in->points[i].x;
@@ -1241,7 +1262,7 @@ void RRTStar::readPointCloudMapForUGV(const sensor_msgs::PointCloud2::ConstPtr& 
 		point_.z = cloud_in->points[i].z;
 		v_points_ws_ugv.push_back(point_);
 	}
-	ROS_INFO(PRINTF_RED"size v_points_ws_ugv = [%lu]",v_points_ws_ugv.size());
+	ROS_INFO(PRINTF_BLUE"RRTStar::readPointCloudMapForUGV  size v_points_ws_ugv = [%lu]",v_points_ws_ugv.size());
 }
 
 bool RRTStar::saveNode(RRTNode* sn_, bool is_init_)
@@ -1265,24 +1286,11 @@ inline void RRTStar::saveTakeOffNode(RRTNode* ston_)
 
 inline void RRTStar::clearStatus()
 {
-	// for (auto nt_:nodes_tree) {
-    // 	delete nt_;
-  	// }
-
-  	// for (auto ton_:take_off_nodes) {
-    // 	delete ton_;
-  	// }
-  
-	// for (auto pt_:rrt_path) {
-    // 	delete pt_;
-  	// }
-
   	nodes_tree.clear();
   	take_off_nodes.clear();
 	rrt_path.clear();
 
   	got_to_goal = false;
-	// v_points_ws_ugv.clear();
 	v_nodes_kdtree.clear();
 	length_catenary.clear();
 }
@@ -1486,7 +1494,7 @@ void RRTStar::getPathMarker(std::list<RRTNode*> pt_)
 			lines_ugv_marker_.markers[i_-1].id = i_ + pt_.size();
 			lines_ugv_marker_.markers[i_-1].action = visualization_msgs::Marker::ADD;
 			lines_ugv_marker_.markers[i_-1].type = visualization_msgs::Marker::LINE_STRIP;
-			lines_ugv_marker_.markers[i_-1].lifetime = ros::Duration(180);
+			lines_ugv_marker_.markers[i_-1].lifetime = ros::Duration(0);
 			lines_ugv_marker_.markers[i_-1].points.push_back(_p1);
 			lines_ugv_marker_.markers[i_-1].points.push_back(_p2);
 			lines_ugv_marker_.markers[i_-1].pose.orientation.x = 0.0;
@@ -1523,7 +1531,7 @@ void RRTStar::getPathMarker(std::list<RRTNode*> pt_)
 				lines_uav_marker_.markers[i_-1].id = i_ + pt_.size();
 				lines_uav_marker_.markers[i_-1].action = visualization_msgs::Marker::ADD;
 				lines_uav_marker_.markers[i_-1].type = visualization_msgs::Marker::LINE_STRIP;
-				lines_uav_marker_.markers[i_-1].lifetime = ros::Duration(180);
+				lines_uav_marker_.markers[i_-1].lifetime = ros::Duration(0);
 				lines_uav_marker_.markers[i_-1].points.push_back(_p1);
 				lines_uav_marker_.markers[i_-1].points.push_back(_p2);
 				lines_uav_marker_.markers[i_-1].pose.orientation.x = 0.0;

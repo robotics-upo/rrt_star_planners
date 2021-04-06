@@ -84,6 +84,7 @@ void RRTStarGlobalPlanner::configParams()
     nh->param("use_search_pyramid", use_search_pyramid, (bool)false);
     nh->param("coupled", coupled, (bool)true);
     nh->param("samp_goal_rate", samp_goal_rate, (int)10);
+    nh->param("debug_rrt", debug_rrt, (bool)true);
 
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
@@ -98,10 +99,8 @@ void RRTStarGlobalPlanner::configParams()
 
 void RRTStarGlobalPlanner::configRRTStar()
 {
-    rrtstar.init(node_name, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m);
+    rrtstar.init(node_name, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt);
     rrtstar.setTimeOut(timeout);
-    // rrtstar.setTrajectoryParams(traj_dxy_max, traj_dz_max, traj_pos_tol, traj_vxy_m, traj_vz_m, traj_vxy_m_1, traj_vz_m_1, traj_wyaw_m, traj_yaw_tol);
-    // rrtstar.confPrintRosWarn(false);
 }
 
 void RRTStarGlobalPlanner::configTopics()
@@ -140,13 +139,13 @@ void RRTStarGlobalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConst
     mapRec = true;
     sub_map.shutdown();
 
-    ROS_INFO_COND(debug, PRINTF_GREEN "Collision Map Received");
+    ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: Collision Map Received");
 }
 
 void RRTStarGlobalPlanner::readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
     rrtstar.readPointCloudMapForUGV(msg);
-    ROS_INFO_COND(debug, PRINTF_GREEN "UGV Map Navigation Received");
+    ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UGV Map Navigation Received");
 }
 
 void RRTStarGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)
@@ -847,8 +846,8 @@ void RRTStarGlobalPlanner::configCatenary()
                                     pos_reel_ugv , pos_ugv_, rot_ugv_, 
                                     coupled , n_iter, radius_near_nodes, step_steer, samp_goal_rate);
 
-   	printf("RRTStarGlobalPlanner::configCatenary :  use_catenary=[%s] VALUES=[multiplicative_factor: %f  length_tether_max: %f] !!\n",use_catenary ? "true" : "false", multiplicative_factor, length_tether_max);
-	printf("RRTStarGlobalPlanner::configCatenary :  use_searching_pyramid=[%s] is_coupled=[%s]\n", use_search_pyramid ? "true" : "false", coupled? "true" : "false");
+   	ROS_INFO(PRINTF_GREEN"Global Planner  configCatenary() :  use_catenary=[%s] VALUES=[multiplicative_factor: %f  length_tether_max: %f] !!",use_catenary ? "true" : "false", multiplicative_factor, length_tether_max);
+	ROS_INFO(PRINTF_GREEN"Global Planner  configCatenary() :  use_searching_pyramid=[%s] is_coupled=[%s]", use_search_pyramid ? "true" : "false", coupled? "true" : "false");
 
 }
 

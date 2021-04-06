@@ -168,7 +168,7 @@ public:
 		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
-	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_);
+	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_);
 
   	~RRTStar();
   
@@ -195,6 +195,7 @@ public:
 	void randNodeMarker(RRTNode rn_);
 	void newNodeMarker(RRTNode rn_);
 	void nearestNodeMarker(RRTNode rn_);
+
 	void getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_);
 	virtual void clearMarkers();
   	virtual void clearStatus();
@@ -431,6 +432,8 @@ public:
 
 	std::vector<double> length_catenary;
 
+	bool debug_rrt;
+
 protected:
 	
 	RRTNode getRandomNode(bool go_to_goal_ = false); 
@@ -648,8 +651,8 @@ protected:
 	int Lx, Ly, Lz;												 // Inflated WorkSpace lenghts and theirs pre-computed inverses
 	float Lx_inv, Ly_inv, Lz_inv;
 	std::string frame_id;
-	bool debug, is_coupled;
-	bool use_catenary, use_search_pyramid;
+	bool is_coupled;
+	bool use_catenary, use_search_pyramid, graph_marker_debug;
 	double multiplicative_factor, length_tether_max, radius_near_nodes, step_steer;
 	int samp_goal_rate;
 	

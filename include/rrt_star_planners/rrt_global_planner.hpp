@@ -201,7 +201,7 @@ private:
     Trajectory trajectory;
 
     //These two flags can be configured as parameters
-    bool showConfig, debug;
+    bool showConfig, debug, debug_rrt;
 
     int countImpossible = 0;
 

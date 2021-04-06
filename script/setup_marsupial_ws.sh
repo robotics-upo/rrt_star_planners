@@ -70,8 +70,17 @@ make test
 # for the EXPORT_BUILD_DIR option for more information.
 sudo make install
 
-cd ceres-bin/bin 
-./simple_bundle_adjuster ~/ceres-solver/data/problem-16-22106-pre.txt
+# cd ceres-bin/bin 
+# ./simple_bundle_adjuster ~/ceres-solver/data/problem-16-22106-pre.txt
 
 
+#-------------- For GAZEBO 9 SIMULATOR -----------------
+sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+cat /etc/apt/sources.list.d/gazebo-stable.list
+wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install gazebo9
+sudo apt-get install libgazebo9-dev
+sudo apt upgrade libignition-math2
 
+git clone -b melodic https://github.com/robotics-upo/rotors_simulator.git
