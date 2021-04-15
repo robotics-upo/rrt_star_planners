@@ -1,4 +1,4 @@
-#include <rrt_star_planners/kdtree.hpp>
+#include <rrt_planners/kdtree.hpp>
 
 
 KDNode::KDNode() = default;

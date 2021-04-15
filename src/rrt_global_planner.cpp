@@ -1,11 +1,9 @@
-#include <rrt_star_planners/rrt_global_planner.hpp>
+#include <rrt_planners/rrt_global_planner.hpp>
 
 namespace PathPlanners
 {
-// Uncomment to set length catenary in nodes
-#define USE_CATENARY_COMPUTE
 
-RRTStarGlobalPlanner::RRTStarGlobalPlanner(std::string node_name_)
+RRTGlobalPlanner::RRTGlobalPlanner(std::string node_name_)
 {
     //The tf buffer is used to lookup the base link position(tf from world frame to robot base frame)
     //tfBuffer = tfBuffer_;
@@ -22,11 +20,11 @@ RRTStarGlobalPlanner::RRTStarGlobalPlanner(std::string node_name_)
     configServices();
     configRRTStar();
 
-    configCatenary();
+    configRRTPlanner();
 }
 
 //This function gets parameter from param server at startup if they exists, if not it passes default values
-void RRTStarGlobalPlanner::configParams()
+void RRTGlobalPlanner::configParams()
 {
     //At startup, no goal and no costmap received yet
     seq = 0;
@@ -80,30 +78,32 @@ void RRTStarGlobalPlanner::configParams()
   	nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
 	nh->param("path", path, (std::string) "~/");
 
-    nh->param("use_catenary", use_catenary, (bool)false);
-    nh->param("use_search_pyramid", use_search_pyramid, (bool)false);
+    nh->param("sample_mode", sample_mode, (int)0);
+    nh->param("do_steer_ugv", do_steer_ugv, (bool)true);
     nh->param("coupled", coupled, (bool)true);
     nh->param("samp_goal_rate", samp_goal_rate, (int)10);
     nh->param("debug_rrt", debug_rrt, (bool)true);
+     
+    nh->param("planner_type", planner_type, (std::string)"rrt_star");
 
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
     ROS_INFO_COND(showConfig, PRINTF_GREEN "   Workspace = X: [%.2f, %.2f]\t Y: [%.2f, %.2f]\t Z: [%.2f, %.2f]  ", ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min);
 
-    ROS_INFO_COND(showConfig, PRINTF_GREEN "   RRT* with optim.: goal_weight = [%.2f]", goal_weight);
+    ROS_INFO_COND(showConfig, PRINTF_GREEN "   rrtplanner* with optim.: goal_weight = [%.2f]", goal_weight);
     ROS_INFO_COND(showConfig, PRINTF_GREEN "   Trajectory Position Increments = [%.2f], Tolerance: [%.2f]", traj_dxy_max, traj_pos_tol);
     ROS_INFO_COND(showConfig, PRINTF_GREEN "   World frame: %s, UGV base frame: %s, UAV base frame: %s ", world_frame.c_str(), ugv_base_frame.c_str(), uav_base_frame.c_str());
 
     // configMarkers("global_path_3d");
 }
 
-void RRTStarGlobalPlanner::configRRTStar()
+void RRTGlobalPlanner::configRRTStar()
 {
-    rrtstar.init(node_name, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt);
-    rrtstar.setTimeOut(timeout);
+    rrtplanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt);
+    rrtplanner.setTimeOut(timeout);
 }
 
-void RRTStarGlobalPlanner::configTopics()
+void RRTGlobalPlanner::configTopics()
 {
     replan_status_pub = nh->advertise<std_msgs::Bool>("replanning_status", 1);
     visMarkersPublisher = nh->advertise<visualization_msgs::Marker>("markers", 2);
@@ -119,36 +119,36 @@ void RRTStarGlobalPlanner::configTopics()
 
     if (useOctomap)
     {
-        sub_map = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary", 1, &RRTStarGlobalPlanner::collisionMapCallBack, this);
+        sub_map = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary", 1, &RRTGlobalPlanner::collisionMapCallBack, this);
     }
     else
     {
-        sub_map = nh->subscribe<PointCloud>("/points", 1, &RRTStarGlobalPlanner::pointsSub, this);
+        sub_map = nh->subscribe<PointCloud>("/points", 1, &RRTGlobalPlanner::pointsSub, this);
     }
-    // point_cloud_map_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &RRTStarGlobalPlanner::readPointCloudMapCallback, this);
-    point_cloud_map_ugv_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &RRTStarGlobalPlanner::readPointCloudMapCallback, this);
+    // point_cloud_map_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &RRTGlobalPlanner::readPointCloudMapCallback, this);
+    point_cloud_map_ugv_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &RRTGlobalPlanner::readPointCloudMapCallback, this);
 
-    ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Topics and Subscriber Configurated:");
+    ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Topics and Subscriber Configurated");
     
 }
 
-void RRTStarGlobalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg)
+void RRTGlobalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg)
 {
     map = msg;
-    rrtstar.updateMap(map);
+    rrtplanner.updateMap(map);
     mapRec = true;
     sub_map.shutdown();
 
     ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: Collision Map Received");
 }
 
-void RRTStarGlobalPlanner::readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+void RRTGlobalPlanner::readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
-    rrtstar.readPointCloudMapForUGV(msg);
+    rrtplanner.readPointCloudMapForUGV(msg);
     ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UGV Map Navigation Received");
 }
 
-void RRTStarGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)
+void RRTGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)
 {
     if(mapRec){
         return;
@@ -174,27 +174,27 @@ void RRTStarGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)
             ROS_WARN("Transform exception: %s", ex.what());
             return;
         }
-        rrtstar.updateMap(out);
+        rrtplanner.updateMap(out);
         mapRec = true;
 
     }
     else
     {
-        rrtstar.updateMap(*points);
+        rrtplanner.updateMap(*points);
         mapRec = true;
         ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner 3D: Collision Map Received");
     }
-    rrtstar.publishOccupationMarkersMap();
+    rrtplanner.publishOccupationMarkersMap();
 
 
 }
 
-void RRTStarGlobalPlanner::configServices()
+void RRTGlobalPlanner::configServices()
 {
     execute_path_client_ptr.reset(new ExecutePathClient("/Execute_Plan", true));
     make_plan_server_ptr.reset(new MakePlanServer(*nh, "/Make_Plan", false));
-    make_plan_server_ptr->registerGoalCallback(boost::bind(&RRTStarGlobalPlanner::makePlanGoalCB, this));
-    make_plan_server_ptr->registerPreemptCallback(boost::bind(&RRTStarGlobalPlanner::makePlanPreemptCB, this));
+    make_plan_server_ptr->registerGoalCallback(boost::bind(&RRTGlobalPlanner::makePlanGoalCB, this));
+    make_plan_server_ptr->registerPreemptCallback(boost::bind(&RRTGlobalPlanner::makePlanPreemptCB, this));
 
     make_plan_server_ptr->start();
     execute_path_client_ptr->waitForServer();
@@ -202,7 +202,7 @@ void RRTStarGlobalPlanner::configServices()
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D: Action client from global planner ready");
 }
 
-void RRTStarGlobalPlanner::configMarkers(std::string ns)
+void RRTGlobalPlanner::configMarkers(std::string ns)
 {
     lineMarker.ns = ns;
     lineMarker.header.frame_id = world_frame;
@@ -315,23 +315,23 @@ void RRTStarGlobalPlanner::configMarkers(std::string ns)
     // raycastfreenoMarker.scale.z = 0.05;
 }
 
-void RRTStarGlobalPlanner::sendPathToLocalPlannerServer()
+void RRTGlobalPlanner::sendPathToLocalPlannerServer()
 {
     //Take the calculated path, insert it into an action, in the goal (ExecutePath.action)
     upo_actions::ExecutePathGoal goal_action;
     printfTrajectory(trajectory, "sendPathToLocalPlannerServer: Trajectory_state_1");
     goal_action.path = trajectory;
-    if (use_catenary){
-        for(int i= 0; i<rrtstar.length_catenary.size() ; i++){
-            int n_ = (int)(rrtstar.length_catenary.size() - i - 1);
-            goal_action.length_catenary.push_back(rrtstar.length_catenary[n_]);
+    // if (use_catenary){
+        for(int i= 0; i<rrtplanner.length_catenary.size() ; i++){
+            int n_ = (int)(rrtplanner.length_catenary.size() - i - 1);
+            goal_action.length_catenary.push_back(rrtplanner.length_catenary[n_]);
         }
-    }
+    // }
 
     execute_path_client_ptr->sendGoal(goal_action);
 }
 
-void RRTStarGlobalPlanner::publishMakePlanFeedback()
+void RRTGlobalPlanner::publishMakePlanFeedback()
 {
     float x = 0, y = 0, z = 0;
     x = (getRobotPoseUGV().transform.translation.x - goal.vector.x);
@@ -387,7 +387,7 @@ void RRTStarGlobalPlanner::publishMakePlanFeedback()
     make_plan_server_ptr->publishFeedback(make_plan_fb);
 }
 
-int RRTStarGlobalPlanner::getClosestWaypoint()
+int RRTGlobalPlanner::getClosestWaypoint()
 {
 
     geometry_msgs::Transform robotPose = getRobotPoseUGV().transform;
@@ -409,7 +409,7 @@ int RRTStarGlobalPlanner::getClosestWaypoint()
     return waypoint;
 }
 
-void RRTStarGlobalPlanner::makePlanGoalCB()
+void RRTGlobalPlanner::makePlanGoalCB()
 {
    //Cancel previous executing plan
     execute_path_client_ptr->cancelAllGoals();
@@ -444,7 +444,7 @@ void RRTStarGlobalPlanner::makePlanGoalCB()
     }
 }
 
-void RRTStarGlobalPlanner::makePlanPreemptCB()
+void RRTGlobalPlanner::makePlanPreemptCB()
 {
     make_plan_res.finished = false;
     travel_time.data = ros::Time::now() - start_time;
@@ -456,7 +456,7 @@ void RRTStarGlobalPlanner::makePlanPreemptCB()
     clearMarkers();
 }
 
-void RRTStarGlobalPlanner::clearMarkers()
+void RRTGlobalPlanner::clearMarkers()
 {
 
     waypointsMarker.action = RVizMarker::DELETEALL;
@@ -472,7 +472,7 @@ void RRTStarGlobalPlanner::clearMarkers()
     waypointsMarker.action = RVizMarker::ADD;
 }
 
-void RRTStarGlobalPlanner::clearMarkersRayCast()
+void RRTGlobalPlanner::clearMarkersRayCast()
 {
     fullrayMarker.action = RVizMarker::DELETEALL; 
     raycastfreeMarker.action = RVizMarker::DELETEALL;
@@ -501,7 +501,7 @@ void RRTStarGlobalPlanner::clearMarkersRayCast()
 }
 
 // This is the main function executed in loop
-void RRTStarGlobalPlanner::plan()
+void RRTGlobalPlanner::plan()
 {
     //TODO Maybe I can change the goalRunning flag by check if is active any goal
 
@@ -550,7 +550,7 @@ void RRTStarGlobalPlanner::plan()
     }
 }
 
-bool RRTStarGlobalPlanner::replan()
+bool RRTGlobalPlanner::replan()
 {
     make_plan_res.replan_number.data++;
 
@@ -580,7 +580,7 @@ bool RRTStarGlobalPlanner::replan()
     }
 }
 
-bool RRTStarGlobalPlanner::calculatePath()
+bool RRTGlobalPlanner::calculatePath()
 {
     //It seems that you can get a goal and no map and try to get a path but setGoal and setStart will check if the points are valid
     //so if there is no map received it won't calculate a path
@@ -589,8 +589,7 @@ bool RRTStarGlobalPlanner::calculatePath()
     if (use3d && !mapRec)
         return ret;
 
-    rrtstar.clearStatus(); 
-	rrtstar.clearMarkers();
+    rrtplanner.clearStatus(); 
     // if (isMarsupialCoupled()){ 
 
         if (setGoal() && setStart())
@@ -602,9 +601,9 @@ bool RRTStarGlobalPlanner::calculatePath()
             ftime(&start);
            
             if (coupled)
-                number_of_points = rrtstar.computeTreeCoupled();
+                number_of_points = rrtplanner.computeTreeCoupled();
             else
-                number_of_points = rrtstar.computeTreesIndependent();
+                number_of_points = rrtplanner.computeTreesIndependent();
 
             ftime(&finish);
 
@@ -659,7 +658,7 @@ bool RRTStarGlobalPlanner::calculatePath()
     return ret;
 }
 
-void RRTStarGlobalPlanner::calculatePathLength()
+void RRTGlobalPlanner::calculatePathLength()
 {
     float x, y, z;
     pathLength = 0;
@@ -675,7 +674,7 @@ void RRTStarGlobalPlanner::calculatePathLength()
 
 }
 
-geometry_msgs::TransformStamped RRTStarGlobalPlanner::getRobotPoseUGV()
+geometry_msgs::TransformStamped RRTGlobalPlanner::getRobotPoseUGV()
 {
     geometry_msgs::TransformStamped ret;
 
@@ -691,7 +690,7 @@ geometry_msgs::TransformStamped RRTStarGlobalPlanner::getRobotPoseUGV()
     return ret;
 }
 
-geometry_msgs::TransformStamped RRTStarGlobalPlanner::getRobotPoseUAV()
+geometry_msgs::TransformStamped RRTGlobalPlanner::getRobotPoseUAV()
 {
     geometry_msgs::TransformStamped ret;
 
@@ -707,7 +706,7 @@ geometry_msgs::TransformStamped RRTStarGlobalPlanner::getRobotPoseUAV()
     return ret;
 }
 
-void RRTStarGlobalPlanner::publishTrajectory()
+void RRTGlobalPlanner::publishTrajectory()
 {
     trajectory.header.stamp = ros::Time::now();
     trajectory.header.frame_id = world_frame;
@@ -721,13 +720,13 @@ void RRTStarGlobalPlanner::publishTrajectory()
 
     if (number_of_points > 1)
     {
-        rrtstar.getTrajectory(trajectory);        
+        rrtplanner.getTrajectory(trajectory);        
         printfTrajectory(trajectory, "After getting traj: ");
    
     }
     else if (number_of_points == 1)
     {
-        // rrtstar.getTrajectoryYawFixed(trajectory, rrtstar.getYawFromQuat(transform_robot_pose.transform.rotation));
+        // rrtplanner.getTrajectoryYawFixed(trajectory, getYawFromQuat(transform_robot_pose.transform.rotation));
         trajectory_msgs::MultiDOFJointTrajectoryPoint pos;
         // pos.transforms.push_back(transform_robot_pose.transform);
         // trajectory.points.push_back(pos);
@@ -773,11 +772,11 @@ void RRTStarGlobalPlanner::publishTrajectory()
     visMarkersPublisher.publish(waypointsMarker);
 }
 
-bool RRTStarGlobalPlanner::setGoal()
+bool RRTGlobalPlanner::setGoal()
 {
     bool ret = false;
 
-    if (rrtstar.setValidFinalPosition(goal.vector))
+    if (rrtplanner.setValidFinalPosition(goal.vector))
     {
         ret = true;
     }
@@ -789,7 +788,7 @@ bool RRTStarGlobalPlanner::setGoal()
     return ret;
 }
 
-bool RRTStarGlobalPlanner::setStart()
+bool RRTGlobalPlanner::setStart()
 {
     geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
     bool ret = false;
@@ -811,16 +810,11 @@ bool RRTStarGlobalPlanner::setStart()
     // if (start_ugv_.vector.z <= ws_z_min)
     //     start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
 
-    if (rrtstar.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
+    if (rrtplanner.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
     {
         ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position): [%.2f, %.2f, %.2f]", start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z);
         ret = true;
     }
-    // else if (rrtstar.searchInitialPosition3d(initialSearchAround))
-    // {
-    //     ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position");
-    //     ret = true;
-    // }
     else
     {
         ROS_ERROR("Global Planner 3D: Failed to set UGV initial global position(after search around): [%.2f, %.2f, %.2f]", start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z);
@@ -829,9 +823,8 @@ bool RRTStarGlobalPlanner::setStart()
     return ret;
 }
 
-void RRTStarGlobalPlanner::configCatenary()
+void RRTGlobalPlanner::configRRTPlanner()
 {
-    nh->param("multiplicative_factor", multiplicative_factor, (double)1.001);
     nh->param("length_tether_max", length_tether_max, (double)10.0);
 
     geometry_msgs::Vector3 pos_reel_ugv, pos_ugv_;
@@ -842,16 +835,14 @@ void RRTStarGlobalPlanner::configCatenary()
     pos_ugv_ = getRobotPoseUGV().transform.translation;
     rot_ugv_ = getRobotPoseUGV().transform.rotation;
     // bool coupled = isMarsupialCoupled();
-    rrtstar.configCatenaryCompute(use_catenary, use_search_pyramid, multiplicative_factor, length_tether_max, 
-                                    pos_reel_ugv , pos_ugv_, rot_ugv_, 
-                                    coupled , n_iter, radius_near_nodes, step_steer, samp_goal_rate);
+    rrtplanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, radius_near_nodes, step_steer, samp_goal_rate, sample_mode, do_steer_ugv);
 
-   	ROS_INFO(PRINTF_GREEN"Global Planner  configCatenary() :  use_catenary=[%s] VALUES=[multiplicative_factor: %f  length_tether_max: %f] !!",use_catenary ? "true" : "false", multiplicative_factor, length_tether_max);
-	ROS_INFO(PRINTF_GREEN"Global Planner  configCatenary() :  use_searching_pyramid=[%s] is_coupled=[%s]", use_search_pyramid ? "true" : "false", coupled? "true" : "false");
+   	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  length_tether_max: %f , sample_mode=%i !!", length_tether_max, sample_mode);
+	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  is_coupled=[%s] debug_rrt=[%s] debug=[%s]", coupled? "true" : "false", debug_rrt? "true" : "false", debug? "true" : "false");
 
 }
 
-geometry_msgs::Vector3 RRTStarGlobalPlanner::tfListenerReel(){
+geometry_msgs::Vector3 RRTGlobalPlanner::tfListenerReel(){
 
     geometry_msgs::Vector3 _p_reel;
 	tf::StampedTransform _transform;
@@ -865,7 +856,7 @@ geometry_msgs::Vector3 RRTStarGlobalPlanner::tfListenerReel(){
 	return _p_reel;
 }
 
-bool RRTStarGlobalPlanner::isMarsupialCoupled()
+bool RRTGlobalPlanner::isMarsupialCoupled()
 {
     geometry_msgs::TransformStamped position_ugv_;
     geometry_msgs::TransformStamped position_uav_;
@@ -886,7 +877,7 @@ bool RRTStarGlobalPlanner::isMarsupialCoupled()
     return coupled_;
 }
 
-void RRTStarGlobalPlanner::printfTrajectory(Trajectory trajectory, string trajectory_name)
+void RRTGlobalPlanner::printfTrajectory(Trajectory trajectory, string trajectory_name)
 {
     printf(PRINTF_YELLOW "%s trajectory [%d]:\n", trajectory_name.c_str(), (int)trajectory.points.size());
 
@@ -897,6 +888,16 @@ void RRTStarGlobalPlanner::printfTrajectory(Trajectory trajectory, string trajec
     }
 
     printf(PRINTF_REGULAR);
+}
+
+float RRTGlobalPlanner::getYawFromQuat(Quaternion quat)
+{
+	double r, p, y;
+	tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
+	tf::Matrix3x3 M(q);
+	M.getRPY(r, p, y);
+
+	return y;
 }
 
 } // namespace PathPlanners

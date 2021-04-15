@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rrt_star_planners)
+project(rrt_planners)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 if($ENV{ROS_DISTRO} STREQUAL "melodic" )
 add_definitions(-DMELODIC)
@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   upo_actions
   costmap_2d
   trajectory_msgs
+  kdtree_pkg
 )
 find_package(Boost REQUIRED COMPONENTS system)
 
@@ -122,7 +123,7 @@ find_package(Ceres REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
-  CATKIN_DEPENDS roscpp upo_actions message_runtime octomap_msgs octomap_ros pcl_conversions pcl_ros marsupial_optimizer
+  CATKIN_DEPENDS roscpp upo_actions message_runtime octomap_msgs octomap_ros pcl_conversions pcl_ros marsupial_optimizer kdtree_pkg
   DEPENDS octomap_msgs octomap_ros
   LIBRARIES ${EXTERNAL_LIBS} 
 )
@@ -156,12 +157,12 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/rrt_star_planners.cpp
+#   src/${PROJECT_NAME}/rrt_planners.cpp
 # )
 
-add_executable(rrt_star_planner_node src/rrt_star_planner_node.cpp src/rrt_global_planner.cpp src/RRT_Star.cpp src/kdtree.cpp)
-target_link_libraries(rrt_star_planner_node  marsupial_optimizer ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
-add_dependencies(rrt_star_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+add_executable(rrt_global_planner_node src/rrt_global_planner_node.cpp src/rrt_global_planner.cpp src/rrt_planner.cpp src/kdtree.cpp src/rrt_graph_markers.cpp)
+target_link_libraries(rrt_global_planner_node  marsupial_optimizer ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+add_dependencies(rrt_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -171,7 +172,7 @@ add_dependencies(rrt_star_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/rrt_star_planners_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/rrt_planners_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -235,7 +236,7 @@ add_dependencies(rrt_star_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_rrt_star_planners.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_rrt_planners.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

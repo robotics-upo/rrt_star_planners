@@ -1,5 +1,6 @@
 <launch>
     
+    <arg name="planner_type" default="rrt_star"/>
     <arg name="use_dron" default="true"/>
     <arg name="mission_enabled" default="false"/> <!-- To use mission_interface node-->
     <arg name="hmi" default="false"/> 
@@ -20,16 +21,18 @@
     <arg name="num_pos_initial"         default="1"/>
     <arg name="num_goal"         default="0"/>
     <arg name="n_iter_rrtstar"         default="4000"/>
-    <arg name="radius_near_nodes"         default="2.0"/> 
+    <arg name="radius_near_nodes"         default="1.0"/> 
     <arg name="goal_gap_m"         default="0.8"/>
     <arg name="step_steer"         default="0.5"/>
     <arg name="coupled"         default="true"/>
     <arg name="samp_goal_rate"         default="12"/>
+    <arg name="sample_mode_rrt"         default="1"/>
 
 
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_star_planners" type="rrt_star_planner_node" name="rrt_star_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
+    <node pkg="rrt_planners" type="rrt_global_planner_node" name="rrt_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
+        <param name="planner_type" value="$(arg planner_type)"/> 
         <param name="ugv_base_frame" value="ugv_base_link"/> 
         <param name="uav_base_frame" value="uav_base_link"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
@@ -53,7 +56,7 @@
         <param name="goal_gap_m"   value="$(arg goal_gap_m)"/>    
         <param name="samp_goal_rate"   value="$(arg samp_goal_rate)"/>  
         <param name="debug_rrt"    value="false"/>     
-
+        <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>     
     </node>
 
     <!-- Local Planner: Optimizer Ceres-->
@@ -95,8 +98,6 @@
         #Parameter for Edge Catenary
         <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
-        #Parameter for Bisection Method
-        <param name="z_constraint"      value="0.1"/> <!-- Z constraint under pos reel UGV-->
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="false"/>     
         <param name="name_output_file"    value="results_optimization"/>     

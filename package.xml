@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rrt_star_planners</name>
+  <name>rrt_planners</name>
   <version>0.0.0</version>
-  <description>The rrt_star_planners package</description>
+  <description>The rrt_planners package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -85,9 +85,9 @@
   <exec_depend>upo_actions</exec_depend>
   <build_export_depend>upo_actions</build_export_depend>
   
-  <build_depend>marsupial_optimizer</build_depend> 
-  <exec_depend>marsupial_optimizer</exec_depend> 
-  <build_export_depend>marsupial_optimizer</build_export_depend>
+  <build_depend>kdtree_pkg</build_depend> 
+  <exec_depend>kdtree_pkg</exec_depend> 
+  <build_export_depend>kdtree_pkg</build_export_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

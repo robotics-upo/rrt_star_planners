@@ -1,6 +1,7 @@
 <launch>
 
     <!-- Loading Arguments -->
+    <arg name="planner_type"        default="rrt_star"/>
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="num_goal"         default="0"/>
@@ -9,6 +10,7 @@
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="marsupial"/>
     <arg name="is_coupled"    default="true"/>
+    <arg name="sample_mode"    default="0"/>
 
     <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number).yaml" />
     <arg name="map_file" default="stage_$(arg scenario_number)"/>
@@ -30,15 +32,25 @@
         <arg name="map_file"  value="$(arg map_file)"/>    
     </include>
 
-    <!-- Launch Optimizer and Global Planner-->
-    <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="global_planner_time" output="screen" 
-    args="0 rrt_star_planners rrt_global.launch use_catenary_planning:=$(arg use_catenary_planning) coupled:=$(arg is_coupled) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/> 
-        
-
     <!-- Launch  region_growing-->
-    <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="region_growing_time" output="screen" 
-    args="2 rrt_star_planners region_growing.launch  "/> 
+    <!-- <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="region_growing_time" output="screen" 
+    args="0 rrt_planners region_growing.launch  "/> -->
+    <include file="$(find rrt_planners)/launch/region_growing.launch">
+    </include> 
 
+    <!-- Launch Optimizer and Global Planner-->
+    <!-- <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="global_planner_time" output="screen" 
+    args="0 rrt_planners rrt_global.launch planner_type:=$(arg planner_type) use_catenary_planning:=$(arg use_catenary_planning) coupled:=$(arg is_coupled) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal) sample_mode:=$(arg sample_mode) "/>  -->
+    <include file="$(find rrt_planners)/launch/rrt_global.launch">
+        <arg name="use_catenary_planning" value="$(arg use_catenary_planning)"/>  
+        <arg name="coupled" value="$(arg is_coupled)"/> 
+        <arg name="scenario_number" value="$(arg scenario_number)"/> 
+        <arg name="num_pos_initial" value="$(arg num_pos_initial)" /> 
+        <arg name="num_goal"  value="$(arg num_goal)"/> 
+        <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
+    </include>    
+
+    
 
     <!-- RViz -->
     <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_optimizer)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/> -->

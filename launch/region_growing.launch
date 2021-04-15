@@ -1,5 +1,10 @@
 <launch>
-	<node pkg="marsupial_optimizer" type="region_growing_segmentation_node" name="region_growing_segmentation_node" output="screen" />#launch-prefix="gdb -ex run --args"/>
+	<node pkg="marsupial_optimizer" type="region_growing_segmentation_node" name="region_growing_segmentation_node" output="screen" >#launch-prefix="gdb -ex run --args"/>
+		<param name="world_frame" value="map" />
+		<param name="ugv_base_frame" value="ugv_base_link" />
+		<param name="debug_rgs" value="true" />
+		<param name="latch_topic" value="true" />
+	</node>
 	<!-- <param name="pos_base_link_x" value="0.0" />
 	<param name="pos_base_link_y" value="0.0" />
 	<param name="pos_base_link_z" value="0.0" /> -->
