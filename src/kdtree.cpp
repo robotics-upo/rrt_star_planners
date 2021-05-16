@@ -21,7 +21,7 @@ KDNode::KDNode(const pointIndex &pi, const KDNodePtr &left_,
 
 KDNode::~KDNode() = default;
 
-int KDNode::coord(const size_t &idx) { return x.at(idx); }
+float KDNode::coord(const size_t &idx) { return x.at(idx); }
 KDNode::operator bool() { return (!x.empty()); }
 KDNode::operator point_t() { return x; }
 KDNode::operator size_t() { return index; }
@@ -32,24 +32,33 @@ KDNodePtr NewKDNodePtr() {
     return mynode;
 }
 
-inline int dist2(const point_t &a, const point_t &b) {
-    int distc = 0;
+inline float dist2(const point_t &a, const point_t &b) {
+    float distc = 0;
     for (size_t i = 0; i < a.size(); i++) {
-        int di = a.at(i) - b.at(i);
+        float di = a.at(i) - b.at(i);
         distc += di * di;
     }
     return distc;
 }
 
-inline int dist2(const KDNodePtr &a, const KDNodePtr &b) {
+inline float dist2(const point_t &a, const point_t &b, int dimension_bias) {
+    float distc = 0;
+    for (size_t i = 0; i < dimension_bias; i++) {
+        float di = a.at(i) - b.at(i);
+        distc += di * di;
+    }
+    return distc;
+}
+
+inline float dist2(const KDNodePtr &a, const KDNodePtr &b) {
     return dist2(a->x, b->x);
 }
 
-inline int dist(const point_t &a, const point_t &b) {
+inline float dist(const point_t &a, const point_t &b) {
     return std::sqrt(dist2(a, b));
 }
 
-inline int dist(const KDNodePtr &a, const KDNodePtr &b) {
+inline float dist(const KDNodePtr &a, const KDNodePtr &b) {
     return std::sqrt(dist2(a, b));
 }
 
@@ -140,9 +149,9 @@ KDNodePtr KDTree::nearest_(   //
     const point_t &pt,        //
     const size_t &level,      //
     const KDNodePtr &best,    //
-    const int &best_dist   //
+    const float &best_dist   //
 ) {
-    int d, dx, dx2;
+    float d, dx, dx2;
 
     if (!bool(*branch)) {
         return NewKDNodePtr();  // basically, null
@@ -156,7 +165,7 @@ KDNodePtr KDTree::nearest_(   //
     dx2 = dx * dx;
 
     KDNodePtr best_l = best;
-    int best_dist_l = best_dist;
+    float best_dist_l = best_dist;
 
     if (d < best_dist) {
         best_dist_l = d;
@@ -179,7 +188,7 @@ KDNodePtr KDTree::nearest_(   //
     // keep nearest neighbor from further down the tree
     KDNodePtr further = nearest_(section, pt, next_lv, best_l, best_dist_l);
     if (!further->x.empty()) {
-        int dl = dist2(further->x, pt);
+        float dl = dist2(further->x, pt);
         if (dl < best_dist_l) {
             best_dist_l = dl;
             best_l = further;
@@ -189,7 +198,7 @@ KDNodePtr KDTree::nearest_(   //
     if (dx2 < best_dist_l) {
         further = nearest_(other, pt, next_lv, best_l, best_dist_l);
         if (!further->x.empty()) {
-            int dl = dist2(further->x, pt);
+            float dl = dist2(further->x, pt);
             if (dl < best_dist_l) {
                 best_dist_l = dl;
                 best_l = further;
@@ -204,7 +213,18 @@ KDNodePtr KDTree::nearest_(   //
 KDNodePtr KDTree::nearest_(const point_t &pt) {
     size_t level = 0;
     // KDNodePtr best = branch;
-    int branch_dist = dist2(point_t(*root), pt);
+    float branch_dist = dist2(point_t(*root), pt);
+    return nearest_(root,          // beginning of tree
+                    pt,            // point we are querying
+                    level,         // start from level 0
+                    root,          // best is the root
+                    branch_dist);  // best_dist = branch_dist
+};
+
+KDNodePtr KDTree::nearest_(const point_t &pt, int dimension_bias) {
+    size_t level = 0;
+    // KDNodePtr best = branch;
+    float branch_dist = dist2(point_t(*root), pt, dimension_bias);
     return nearest_(root,          // beginning of tree
                     pt,            // point we are querying
                     level,         // start from level 0
@@ -215,6 +235,11 @@ KDNodePtr KDTree::nearest_(const point_t &pt) {
 point_t KDTree::nearest_point(const point_t &pt) {
     return point_t(*nearest_(pt));
 };
+
+point_t KDTree::nearest_point(const point_t &pt, int dimension_bias) {
+    return point_t(*nearest_(pt, dimension_bias));
+};
+
 size_t KDTree::nearest_index(const point_t &pt) {
     return size_t(*nearest_(pt));
 };
@@ -227,10 +252,10 @@ pointIndex KDTree::nearest_pointIndex(const point_t &pt) {
 pointIndexArr KDTree::neighborhood_(  //
     const KDNodePtr &branch,          //
     const point_t &pt,                //
-    const int &rad,                //
+    const float &rad,                //
     const size_t &level               //
 ) {
-    int d, dx, dx2;
+    float d, dx, dx2;
 
     if (!bool(*branch)) {
         // branch has no point, means it is a leaf,
@@ -240,7 +265,7 @@ pointIndexArr KDTree::neighborhood_(  //
 
     size_t dim = pt.size();
 
-    int r2 = rad * rad;
+    float r2 = rad * rad;
 
     d = dist2(point_t(*branch), pt);
     dx = point_t(*branch).at(level) - pt.at(level);
@@ -274,14 +299,14 @@ pointIndexArr KDTree::neighborhood_(  //
 
 pointIndexArr KDTree::neighborhood(  //
     const point_t &pt,               //
-    const int &rad) {
+    const float &rad) {
     size_t level = 0;
     return neighborhood_(root, pt, rad, level);
 }
 
 pointVec KDTree::neighborhood_points(  //
     const point_t &pt,                 //
-    const int &rad) {
+    const float &rad) {
     size_t level = 0;
     pointIndexArr nbh = neighborhood_(root, pt, rad, level);
     pointVec nbhp;
@@ -293,7 +318,7 @@ pointVec KDTree::neighborhood_points(  //
 
 indexArr KDTree::neighborhood_indices(  //
     const point_t &pt,                  //
-    const int &rad) {
+    const float &rad) {
     size_t level = 0;
     pointIndexArr nbh = neighborhood_(root, pt, rad, level);
     indexArr nbhi;

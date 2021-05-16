@@ -1,9 +1,6 @@
 <launch>
-    
     <arg name="planner_type" default="rrt_star"/>
     <arg name="use_dron" default="true"/>
-    <arg name="mission_enabled" default="false"/> <!-- To use mission_interface node-->
-    <arg name="hmi" default="false"/> 
     <arg name="launch_robot_marker" default="true"/>
     
     <arg name="lidar_topic" default="os1_cloud_node/points"/>
@@ -14,13 +11,14 @@
 
     <arg name="use_catenary_planning" default="true"/>
     <arg name="use_search_pyramid_planning" default="false"/>
-    <arg name="multiplicative_factor"  default="1.001"/>    
     <arg name="length_tether_max"    default="20.0"/>   
 
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
+    <arg name="name_output_file"    default="results_optimization"/>     
     <arg name="num_goal"         default="0"/>
-    <arg name="n_iter_rrtstar"         default="4000"/>
+    <arg name="n_iter_rrt"         default="500"/>
+    <arg name="n_loop_rrt"         default="10"/>
     <arg name="radius_near_nodes"         default="1.0"/> 
     <arg name="goal_gap_m"         default="0.8"/>
     <arg name="step_steer"         default="0.5"/>
@@ -32,6 +30,7 @@
     <!-- Global Planner: RRT* -->
     <node pkg="rrt_planners" type="rrt_global_planner_node" name="rrt_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
+        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <param name="planner_type" value="$(arg planner_type)"/> 
         <param name="ugv_base_frame" value="ugv_base_link"/> 
         <param name="uav_base_frame" value="uav_base_link"/>
@@ -45,13 +44,17 @@
         <param name="timeout" value="10"/>
         <param name="use_catenary" value="$(arg use_catenary_planning)"/>  
         <param name="use_search_pyramid" value="$(arg use_search_pyramid_planning)"/>   
-        <param name="n_iter" value="$(arg n_iter_rrtstar)"/>   
+        <param name="n_iter" value="$(arg n_iter_rrt)"/>   
+        <param name="n_loop" value="$(arg n_loop_rrt)"/>   
         <param name="radius_near_nodes" value="$(arg radius_near_nodes)"/>   
         <param name="step_steer" value="$(arg step_steer)"/>   
-        <param name="multiplicative_factor" value="$(arg multiplicative_factor)"/>     
         <param name="length_tether_max" value="$(arg length_tether_max)"/>   
         <param name="write_data_for_analysis"    value="true"/>     
-        <param name="path"   value="/home/simon/"/>     
+        <param name="path"   value="/home/simon/"/>  
+        <param name="name_output_file"    value="$(arg name_output_file)"/>     
+        <param name="scenario_number"    value="$(arg scenario_number)"/>     
+        <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
+        <param name="num_goal"   value="$(arg num_goal)"/>     
         <param name="coupled"   value="$(arg coupled)"/>     
         <param name="goal_gap_m"   value="$(arg goal_gap_m)"/>    
         <param name="samp_goal_rate"   value="$(arg samp_goal_rate)"/>  
@@ -65,42 +68,73 @@
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <remap from="/Navigation" to="Navigation"/>
         <remap from="/points" to="$(arg lidar_topic)" if="$(eval not arg('use_octomap') and arg('use_dron'))" />
-        <remap from="/octomap_binary_local" to="/octomap_full_local" if="$(eval arg('use_dron') and arg('use_octomap'))"/>
+        <remap from="/octomap_binary_local" to="/octomap_binary"/>
         <param name="debug" value="$(arg debug_msgs)"/>
         <param name="show_config" value="$(arg show_config_msgs)"/>
-        <param name="mode3d" value="$(arg use_dron)"/>
+        <!-- <param name="mode3d" value="$(arg use_dron)"/> -->
         <!-- <param name="uav_base_frame" value="uav_base_link"/>
         <param name="ugv_base_frame" value="ugv_base_link"/> -->
         <param name="traj_dest_frame" value="uav_base_link"/>
-        <param name="timeout" value="0.4"/>
-        <param name="final_search_around" value="1.4"/>
+        <!-- <param name="timeout" value="0.4"/> -->
+        <!-- <param name="final_search_around" value="1.4"/> -->
+        <param name="use_octomap_local" value="true"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
 
-        <param name="w_alpha" value="0.4"/>   # equi-distance 
-        <param name="w_beta"    value="0.9"/>   # obstacles 
-        <param name="w_gamma"   value="0.8"/>   # kinematics 
-        <param name="w_delta"    value="0.1"/>  # time 
-        <param name="w_epsilon"     value="0.45"/>   # velocity 
-        <param name="w_zeta"   value="0.1"/>   # acceleration 
-        <param name="w_eta"   value="0.5"/>   # catenary 
-        <param name="w_lambda"   value="0.1"/>   # dynamic catenary 
+        <!-- <param name="w_alpha_uav" value="0.6"/>   # equi-distance uav
+        <param name="w_alpha_ugv" value="0.6"/>   # equi-distance ugv
+        <param name="w_beta_uav"    value="0.03"/>   # obstacles uav
+        <param name="w_iota_uav"    value="0.4"/>   # obstacles through uav
+        <param name="w_beta_ugv"    value="0.4"/>   # obstacles ugv
+        <param name="w_theta_ugv"    value="0.1"/>   # traversability ugv
+        <param name="w_gamma_uav"   value="0.2"/>   # kinematics uav 
+        <param name="w_gamma_ugv"   value="0.05"/>   # kinematics ugv 
+        <param name="w_kappa_ugv"   value="0.1"/>   # rotation ugv 
+        <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
+        <param name="w_delta"    value="0.01"/>  # time 
+        <param name="w_epsilon"     value="0.01"/>   # velocity 
+        <param name="w_zeta"   value="0.01"/>   # acceleration 
+        <param name="w_eta"   value="0.12"/>   # catenary 
+        <param name="w_lambda"   value="0.0"/>   # dynamic catenary  -->
+        
+        <param name="w_alpha_ugv"   value="0.4"/>   # equi-distance ugv
+        <param name="w_beta_ugv"    value="0.01"/>   # obstacles ugv
+        <param name="w_gamma_ugv"   value="0.01"/>   # kinematics ugv 
+        <param name="w_theta_ugv"   value="0.01"/>   # traversability ugv
+        <param name="w_kappa_ugv"   value="0.01"/>   # rotation ugv 
+        
+        <param name="w_alpha_uav"   value="0.2"/>   # equi-distance uav
+        <param name="w_beta_uav"    value="0.03"/>   # obstacles uav
+        <param name="w_iota_uav"    value="0.4"/>   # obstacles through uav
+        <param name="w_gamma_uav"   value="0.2"/>   # kinematics uav 
+        <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
+        
+        <param name="w_delta"     value="0.04"/>  # time 
+        <param name="w_epsilon"   value="0.04"/>   # velocity 
+        <param name="w_zeta_ugv"      value="0.04"/>   # acceleration 
+        <param name="w_zeta"      value="0.01"/>   # acceleration 
+        
+        <param name="w_eta"    value="0.12"/>   # catenary 
+        <param name="w_lambda" value="0.0"/>   # dynamic catenary 
 
-        <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
+        
+        <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
             
-        <param name="initial_multiplicative_factor_length_catenary"   value="1.002"/>    <!-- This parameter multiply the length between UGV and vertex to adjust Catenary-->
-        <param name="distance_obstacle"         value="1.0"/> <!-- bound distance UAV to obstacles [m]-->
-        <param name="initial_velocity"      value="2.0"/> <!-- [m/seg]  Constant velocity during trajectory-->
-        <param name="initial_acceleration"  value="0.0"/> <!-- [m/seg^2]  0 acceleration during trajectory-->
-        <param name="angle_min_traj"  value="$(eval 3.1415 / 6.0)"/> 
+        <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles [m]-->
+        <param name="distance_obstacle_uav"         value="0.8"/> <!-- bound distance UAV to obstacles [m]-->
+        <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
+        <param name="initial_velocity_uav"  value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
+        <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
+        <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
+        <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> 
         <param name="min_distance_add_new_point" value="1.0"/>  
         #Parameter for Edge Catenary
         <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
         #Parameter to write file 
-        <param name="write_data_for_analysis"    value="false"/>     
-        <param name="name_output_file"    value="results_optimization"/>     
+        <param name="write_data_for_analysis"    value="true"/>     
+        <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="num_goal"   value="$(arg num_goal)"/>     

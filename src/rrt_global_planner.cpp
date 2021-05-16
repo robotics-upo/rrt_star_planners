@@ -33,10 +33,10 @@ void RRTGlobalPlanner::configParams()
     minPathLenght=0;
 
     //Get params from param server. If they dont exist give variables default values
-    nh->param("show_config", showConfig, (bool)0);
+// nh->param("show_config", showConfig, (bool)0);
     nh->param("debug", debug, (bool)0);
     nh->param("timeout", timeout, (double)10);
-    nh->param("initial_position_search_dist", initialSearchAround, (double)1);
+// nh->param("initial_position_search_dist", initialSearchAround, (double)1);
 
     nh->param("ws_x_max", ws_x_max, (double)30);
     nh->param("ws_y_max", ws_y_max, (double)30);
@@ -64,6 +64,7 @@ void RRTGlobalPlanner::configParams()
     nh->param("traj_wyaw_m", traj_wyaw_m, (double)1);
 
     nh->param("n_iter", n_iter, (int)100);
+    nh->param("n_loop", n_loop, (int)1);
     nh->param("world_frame", world_frame, (string) "/map");
     nh->param("ugv_base_frame", ugv_base_frame, (string) "ugv_base_link");
     nh->param("uav_base_frame", uav_base_frame, (string) "uav_base_link");
@@ -85,6 +86,11 @@ void RRTGlobalPlanner::configParams()
     nh->param("debug_rrt", debug_rrt, (bool)true);
      
     nh->param("planner_type", planner_type, (std::string)"rrt_star");
+
+	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
+    nh->param("scenario_number", scenario_number,(int)1);
+	nh->param("num_pos_initial", num_pos_initial,(int)1);
+	nh->param("num_goal", num_goal,(int)0);
 
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
@@ -113,6 +119,9 @@ void RRTGlobalPlanner::configTopics()
     rayCastCollPublisher = nh->advertise<visualization_msgs::Marker>("ray_cast_coll", 2);
     rayCastNoFreePublisher = nh->advertise<visualization_msgs::Marker>("ray_cast_no_free", 2);
     reducedMapPublisher = nh->advertise<octomap_msgs::Octomap>("octomap_reduced", 1000);
+
+    cleanMarkersOptimizerPublisher = nh->advertise<std_msgs::Bool>("/clean_marker_optimizer", 1);
+
 
     bool useOctomap;
     nh->param("use_octomap", useOctomap, (bool)false);
@@ -389,7 +398,6 @@ void RRTGlobalPlanner::publishMakePlanFeedback()
 
 int RRTGlobalPlanner::getClosestWaypoint()
 {
-
     geometry_msgs::Transform robotPose = getRobotPoseUGV().transform;
     int waypoint = 0;
     float dist = std::numeric_limits<float>::max();
@@ -458,7 +466,6 @@ void RRTGlobalPlanner::makePlanPreemptCB()
 
 void RRTGlobalPlanner::clearMarkers()
 {
-
     waypointsMarker.action = RVizMarker::DELETEALL;
     lineMarker.action = RVizMarker::DELETEALL;
 
@@ -590,6 +597,9 @@ bool RRTGlobalPlanner::calculatePath()
         return ret;
 
     rrtplanner.clearStatus(); 
+    std_msgs::Bool clean_markers_optimizer_;
+    clean_markers_optimizer_.data = true;
+    cleanMarkersOptimizerPublisher.publish(clean_markers_optimizer_); 
     // if (isMarsupialCoupled()){ 
 
         if (setGoal() && setStart())
@@ -611,17 +621,32 @@ bool RRTGlobalPlanner::calculatePath()
             milliseconds = (1000 - start.millitm) + finish.millitm;
 
             if (write_data_for_analysis){
-                std::ofstream ofs;
-                std::string output_file = path + "time_compute_initial_planner.txt";
-                ofs.open(output_file.c_str(), std::ofstream::app);
-                if (ofs.is_open()) {
-                    std::cout << "Saving time initial planning data in output file: " << output_file << std::endl;
-                    ofs << (milliseconds + seconds * 1000.0)/1000.0 <<std::endl;
+                std::ofstream ofs_ugv, ofs_uav;
+                // std::string output_file = path + "time_compute_initial_planner.txt";
+                std::string output_file_ugv, output_file_uav;
+	            output_file_ugv = path+name_output_file+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+"_UGV"+".txt";
+	            output_file_uav = path+name_output_file+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+"_UAV"+".txt";
+
+                ofs_ugv.open(output_file_ugv.c_str(), std::ofstream::app);
+                if (ofs_ugv.is_open()) {
+                    std::cout << "Saving time initial planning data in output file ugv: " << output_file_ugv << std::endl;
+                    ofs_ugv << (milliseconds + seconds * 1000.0)/1000.0 <<";";
                 } 
                 else {
-                    std::cout << "Couldn't be open the output data file for time initial planning" << std::endl;
+                    std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
                 }
-                ofs.close();
+                ofs_ugv.close();
+
+                ofs_uav.open(output_file_uav.c_str(), std::ofstream::app);
+                if (ofs_uav.is_open()) {
+                    std::cout << "Saving time initial planning data in output file uav: " << output_file_uav << std::endl;
+                    ofs_uav << (milliseconds + seconds * 1000.0)/1000.0 <<";";
+                } 
+                else {
+                    std::cout << "Couldn't be open the output data file for time initial planning uav" << std::endl;
+                }
+                ofs_uav.close();
+
             }
 
             ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", milliseconds + seconds * 1000);
@@ -712,7 +737,6 @@ void RRTGlobalPlanner::publishTrajectory()
     trajectory.header.frame_id = world_frame;
     trajectory.header.seq = ++seq;
     trajectory.points.clear();
-    
 
     ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner 3D: Trajectory calculation... POINTS: %d",number_of_points);
 
@@ -835,15 +859,14 @@ void RRTGlobalPlanner::configRRTPlanner()
     pos_ugv_ = getRobotPoseUGV().transform.translation;
     rot_ugv_ = getRobotPoseUGV().transform.rotation;
     // bool coupled = isMarsupialCoupled();
-    rrtplanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, radius_near_nodes, step_steer, samp_goal_rate, sample_mode, do_steer_ugv);
+    rrtplanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, radius_near_nodes, step_steer, samp_goal_rate, sample_mode, do_steer_ugv);
 
    	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  length_tether_max: %f , sample_mode=%i !!", length_tether_max, sample_mode);
 	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  is_coupled=[%s] debug_rrt=[%s] debug=[%s]", coupled? "true" : "false", debug_rrt? "true" : "false", debug? "true" : "false");
-
 }
 
-geometry_msgs::Vector3 RRTGlobalPlanner::tfListenerReel(){
-
+geometry_msgs::Vector3 RRTGlobalPlanner::tfListenerReel()
+{
     geometry_msgs::Vector3 _p_reel;
 	tf::StampedTransform _transform;
 

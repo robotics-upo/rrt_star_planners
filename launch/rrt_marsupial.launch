@@ -9,8 +9,8 @@
     <arg name="use_catenary_planning" default="true"/>
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="marsupial"/>
-    <arg name="is_coupled"    default="true"/>
-    <arg name="sample_mode"    default="0"/>
+    <arg name="is_coupled"    default="false"/>
+    <arg name="sample_mode"    default="1"/>
 
     <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number).yaml" />
     <arg name="map_file" default="stage_$(arg scenario_number)"/>
@@ -48,6 +48,7 @@
         <arg name="num_pos_initial" value="$(arg num_pos_initial)" /> 
         <arg name="num_goal"  value="$(arg num_goal)"/> 
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
+        <arg name="planner_type" value="$(arg planner_type)" /> 
     </include>    
 
     

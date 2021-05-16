@@ -46,7 +46,6 @@
 #include "misc/catenary_solver_ceres.hpp"
 #include "misc/near_neighbor.hpp"
 
-
 #define PRINTF_REGULAR "\x1B[0m"
 #define PRINTF_RED "\x1B[31m"
 #define PRINTF_GREEN "\x1B[32m"
@@ -312,7 +311,7 @@ public:
 	virtual void publishOccupationMarkersMap();
 	
 	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
-							bool coupled_, int n_iter_ , double r_nn_, double s_s_, int s_g_r_, int sample_m_, bool do_s_ugv_);
+							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, bool do_s_ugv_);
 
 	void readPointCloudMapForUGV(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
@@ -354,7 +353,7 @@ protected:
   	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
 	bool obstacleFree(const RRTNode q_nearest, const RRTNode q_new);
 	std::vector<int> getNearNodes(const RRTNode &q_new_, double radius_);
-	std::vector<int> getNearestUGVNode(const RRTNode &q_new_);
+	std::vector<float> getNearestUGVNode(const RRTNode &q_new_);
 	// int getNearestUGVNode(const RRTNode &q_new_);
 	void getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_);
 	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
@@ -553,7 +552,7 @@ protected:
 	std::vector<RRTNodeLink3D> discrete_world; // Occupancy Matrix and its size
 
 	int matrix_size;
-	int K, n_iter;
+	int K, n_iter, n_loop, count_graph;
 	int ws_x_max, ws_y_max, ws_z_max; // WorkSpace lenghts from origin (0,0,0)
 	int ws_x_min, ws_y_min, ws_z_min;
 	int h_inflation; // Inflation (Real and Safe distances from the MAV CoG)

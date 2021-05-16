@@ -16,65 +16,122 @@ void RRTGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, boo
 }
 
 
-void RRTGraphMarkers::getGraphMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_)
-{
-    pointTreeMarkerUGV.markers.resize(nodes_tree_.size());
+// void RRTGraphMarkers::getGraphMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_)
+// {
+//     pointTreeMarkerUGV.markers.resize(nodes_tree_.size());
 
-	int count = 0; 
-    for (auto nt_:nodes_tree_) {
-        pointTreeMarkerUGV.markers[count].header.frame_id = frame_id;
-        pointTreeMarkerUGV.markers[count].header.stamp = ros::Time::now();
-        pointTreeMarkerUGV.markers[count].ns = "tree_RRTStar_ugv";
-        pointTreeMarkerUGV.markers[count].id = nt_->id;
-        pointTreeMarkerUGV.markers[count].action = visualization_msgs::Marker::ADD;
-        pointTreeMarkerUGV.markers[count].type = visualization_msgs::Marker::CYLINDER;
-        pointTreeMarkerUGV.markers[count].lifetime = ros::Duration(180);
-        pointTreeMarkerUGV.markers[count].pose.position.x = nt_->point.x * step; 
-        pointTreeMarkerUGV.markers[count].pose.position.y = nt_->point.y * step; 
-        pointTreeMarkerUGV.markers[count].pose.position.z = nt_->point.z * step ; //Move in Z to see the point over the map surface
-        pointTreeMarkerUGV.markers[count].pose.orientation.x = 0.0;
-        pointTreeMarkerUGV.markers[count].pose.orientation.y = 0.0;
-        pointTreeMarkerUGV.markers[count].pose.orientation.z = 0.0;
-        pointTreeMarkerUGV.markers[count].pose.orientation.w = 1.0;
-        pointTreeMarkerUGV.markers[count].scale.x = 0.08;
-        pointTreeMarkerUGV.markers[count].scale.y = 0.08;
-        pointTreeMarkerUGV.markers[count].scale.z = 0.28;
-        pointTreeMarkerUGV.markers[count].color.r=1.0;
-        pointTreeMarkerUGV.markers[count].color.g=1.0;
-        pointTreeMarkerUGV.markers[count].color.b=1.0;
-        pointTreeMarkerUGV.markers[count].color.a=1.0; 
-		count++;
-    }	
+// 	int count = 0; 
+//     for (auto nt_:nodes_tree_) {
+//         pointTreeMarkerUGV.markers[count].header.frame_id = frame_id;
+//         pointTreeMarkerUGV.markers[count].header.stamp = ros::Time::now();
+//         pointTreeMarkerUGV.markers[count].ns = "tree_RRTStar_ugv";
+//         pointTreeMarkerUGV.markers[count].id = nt_->id;
+//         pointTreeMarkerUGV.markers[count].action = visualization_msgs::Marker::ADD;
+//         pointTreeMarkerUGV.markers[count].type = visualization_msgs::Marker::CYLINDER;
+//         pointTreeMarkerUGV.markers[count].lifetime = ros::Duration(0);
+//         pointTreeMarkerUGV.markers[count].pose.position.x = nt_->point.x * step; 
+//         pointTreeMarkerUGV.markers[count].pose.position.y = nt_->point.y * step; 
+//         pointTreeMarkerUGV.markers[count].pose.position.z = nt_->point.z * step ; //Move in Z to see the point over the map surface
+//         pointTreeMarkerUGV.markers[count].pose.orientation.x = 0.0;
+//         pointTreeMarkerUGV.markers[count].pose.orientation.y = 0.0;
+//         pointTreeMarkerUGV.markers[count].pose.orientation.z = 0.0;
+//         pointTreeMarkerUGV.markers[count].pose.orientation.w = 1.0;
+//         pointTreeMarkerUGV.markers[count].scale.x = 0.08;
+//         pointTreeMarkerUGV.markers[count].scale.y = 0.08;
+//         pointTreeMarkerUGV.markers[count].scale.z = 0.28;
+//         pointTreeMarkerUGV.markers[count].color.r=1.0;
+//         pointTreeMarkerUGV.markers[count].color.g=1.0;
+//         pointTreeMarkerUGV.markers[count].color.b=1.0;
+//         pointTreeMarkerUGV.markers[count].color.a=1.0; 
+// 		count++;
+//     }	
+//     tree_rrt_star_ugv_pub_.publish(pointTreeMarkerUGV);
+
+// 	if(!is_coupled){
+// 		pointTreeMarkerUAV.markers.resize(nodes_tree_.size());
+
+// 		int count = 0; 
+// 		for (auto nt_:nodes_tree_) {
+// 			pointTreeMarkerUAV.markers[count].header.frame_id = frame_id;
+// 			pointTreeMarkerUAV.markers[count].header.stamp = ros::Time::now();
+// 			pointTreeMarkerUAV.markers[count].ns = "tree_RRTStar_uav";
+// 			pointTreeMarkerUAV.markers[count].id = nt_->id_uav;
+// 			pointTreeMarkerUAV.markers[count].action = visualization_msgs::Marker::ADD;
+// 			pointTreeMarkerUAV.markers[count].type = visualization_msgs::Marker::SPHERE;
+// 			pointTreeMarkerUAV.markers[count].lifetime = ros::Duration(0);
+// 			pointTreeMarkerUAV.markers[count].pose.position.x = nt_->point_uav.x * step; 
+// 			pointTreeMarkerUAV.markers[count].pose.position.y = nt_->point_uav.y * step; 
+// 			pointTreeMarkerUAV.markers[count].pose.position.z = nt_->point_uav.z * step;
+// 			pointTreeMarkerUAV.markers[count].pose.orientation.x = 0.0;
+// 			pointTreeMarkerUAV.markers[count].pose.orientation.y = 0.0;
+// 			pointTreeMarkerUAV.markers[count].pose.orientation.z = 0.0;
+// 			pointTreeMarkerUAV.markers[count].pose.orientation.w = 1.0;
+// 			pointTreeMarkerUAV.markers[count].scale.x = 0.1;
+// 			pointTreeMarkerUAV.markers[count].scale.y = 0.1;
+// 			pointTreeMarkerUAV.markers[count].scale.z = 0.1;
+// 			pointTreeMarkerUAV.markers[count].color.r=0.2;
+// 			pointTreeMarkerUAV.markers[count].color.g=0.2;
+// 			pointTreeMarkerUAV.markers[count].color.b=1.0;
+// 			pointTreeMarkerUAV.markers[count].color.a=1.0; 
+// 			count++;
+// 		}	
+// 		tree_rrt_star_uav_pub_.publish(pointTreeMarkerUAV);
+// 	}
+// }
+
+
+void RRTGraphMarkers::getGraphMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_)
+{
+    pointTreeMarkerUGV.markers.resize(count+1);
+
+    pointTreeMarkerUGV.markers[count].header.frame_id = frame_id;
+    pointTreeMarkerUGV.markers[count].header.stamp = ros::Time::now();
+    pointTreeMarkerUGV.markers[count].ns = "tree_RRTStar_ugv";
+    pointTreeMarkerUGV.markers[count].id = nodes_tree_->id;
+    pointTreeMarkerUGV.markers[count].action = visualization_msgs::Marker::ADD;
+    pointTreeMarkerUGV.markers[count].type = visualization_msgs::Marker::CYLINDER;
+    pointTreeMarkerUGV.markers[count].lifetime = ros::Duration(0);
+    pointTreeMarkerUGV.markers[count].pose.position.x = nodes_tree_->point.x * step; 
+    pointTreeMarkerUGV.markers[count].pose.position.y = nodes_tree_->point.y * step; 
+    pointTreeMarkerUGV.markers[count].pose.position.z = nodes_tree_->point.z * step ; //Move in Z to see the point over the map surface
+    pointTreeMarkerUGV.markers[count].pose.orientation.x = 0.0;
+    pointTreeMarkerUGV.markers[count].pose.orientation.y = 0.0;
+    pointTreeMarkerUGV.markers[count].pose.orientation.z = 0.0;
+    pointTreeMarkerUGV.markers[count].pose.orientation.w = 1.0;
+    pointTreeMarkerUGV.markers[count].scale.x = 0.08;
+    pointTreeMarkerUGV.markers[count].scale.y = 0.08;
+    pointTreeMarkerUGV.markers[count].scale.z = 0.28;
+    pointTreeMarkerUGV.markers[count].color.r=1.0;
+    pointTreeMarkerUGV.markers[count].color.g=1.0;
+    pointTreeMarkerUGV.markers[count].color.b=1.0;
+    pointTreeMarkerUGV.markers[count].color.a=1.0; 
     tree_rrt_star_ugv_pub_.publish(pointTreeMarkerUGV);
 
 	if(!is_coupled){
-		pointTreeMarkerUAV.markers.resize(nodes_tree_.size());
+		pointTreeMarkerUAV.markers.resize(count+1);
 
-		int count = 0; 
-		for (auto nt_:nodes_tree_) {
-			pointTreeMarkerUAV.markers[count].header.frame_id = frame_id;
-			pointTreeMarkerUAV.markers[count].header.stamp = ros::Time::now();
-			pointTreeMarkerUAV.markers[count].ns = "tree_RRTStar_uav";
-			pointTreeMarkerUAV.markers[count].id = nt_->id_uav;
-			pointTreeMarkerUAV.markers[count].action = visualization_msgs::Marker::ADD;
-			pointTreeMarkerUAV.markers[count].type = visualization_msgs::Marker::SPHERE;
-			pointTreeMarkerUAV.markers[count].lifetime = ros::Duration(180);
-			pointTreeMarkerUAV.markers[count].pose.position.x = nt_->point_uav.x * step; 
-			pointTreeMarkerUAV.markers[count].pose.position.y = nt_->point_uav.y * step; 
-			pointTreeMarkerUAV.markers[count].pose.position.z = nt_->point_uav.z * step;
-			pointTreeMarkerUAV.markers[count].pose.orientation.x = 0.0;
-			pointTreeMarkerUAV.markers[count].pose.orientation.y = 0.0;
-			pointTreeMarkerUAV.markers[count].pose.orientation.z = 0.0;
-			pointTreeMarkerUAV.markers[count].pose.orientation.w = 1.0;
-			pointTreeMarkerUAV.markers[count].scale.x = 0.1;
-			pointTreeMarkerUAV.markers[count].scale.y = 0.1;
-			pointTreeMarkerUAV.markers[count].scale.z = 0.1;
-			pointTreeMarkerUAV.markers[count].color.r=0.2;
-			pointTreeMarkerUAV.markers[count].color.g=0.2;
-			pointTreeMarkerUAV.markers[count].color.b=1.0;
-			pointTreeMarkerUAV.markers[count].color.a=1.0; 
-			count++;
-		}	
+		pointTreeMarkerUAV.markers[count].header.frame_id = frame_id;
+		pointTreeMarkerUAV.markers[count].header.stamp = ros::Time::now();
+		pointTreeMarkerUAV.markers[count].ns = "tree_RRTStar_uav";
+		pointTreeMarkerUAV.markers[count].id = nodes_tree_->id_uav;
+		pointTreeMarkerUAV.markers[count].action = visualization_msgs::Marker::ADD;
+		pointTreeMarkerUAV.markers[count].type = visualization_msgs::Marker::SPHERE;
+		pointTreeMarkerUAV.markers[count].lifetime = ros::Duration(0);
+		pointTreeMarkerUAV.markers[count].pose.position.x = nodes_tree_->point_uav.x * step; 
+		pointTreeMarkerUAV.markers[count].pose.position.y = nodes_tree_->point_uav.y * step; 
+		pointTreeMarkerUAV.markers[count].pose.position.z = nodes_tree_->point_uav.z * step;
+		pointTreeMarkerUAV.markers[count].pose.orientation.x = 0.0;
+		pointTreeMarkerUAV.markers[count].pose.orientation.y = 0.0;
+		pointTreeMarkerUAV.markers[count].pose.orientation.z = 0.0;
+		pointTreeMarkerUAV.markers[count].pose.orientation.w = 1.0;
+		pointTreeMarkerUAV.markers[count].scale.x = 0.1;
+		pointTreeMarkerUAV.markers[count].scale.y = 0.1;
+		pointTreeMarkerUAV.markers[count].scale.z = 0.1;
+		pointTreeMarkerUAV.markers[count].color.r=0.2;
+		pointTreeMarkerUAV.markers[count].color.g=0.2;
+		pointTreeMarkerUAV.markers[count].color.b=1.0;
+		pointTreeMarkerUAV.markers[count].color.a=1.0; 
+
 		tree_rrt_star_uav_pub_.publish(pointTreeMarkerUAV);
 	}
 }
@@ -91,7 +148,7 @@ void RRTGraphMarkers::getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_,
 		pointTakeOffMarker.markers[count_].id = nt_->id;
 		pointTakeOffMarker.markers[count_].action = visualization_msgs::Marker::ADD;
 		pointTakeOffMarker.markers[count_].type = visualization_msgs::Marker::SPHERE;
-		pointTakeOffMarker.markers[count_].lifetime = ros::Duration(180);
+		pointTakeOffMarker.markers[count_].lifetime = ros::Duration(0);
 		pointTakeOffMarker.markers[count_].pose.position.x = nt_->point.x * step; 
 		pointTakeOffMarker.markers[count_].pose.position.y = nt_->point.y * step; 
 		pointTakeOffMarker.markers[count_].pose.position.z = nt_->point.z * step;

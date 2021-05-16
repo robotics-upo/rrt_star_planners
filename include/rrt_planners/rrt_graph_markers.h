@@ -29,7 +29,8 @@ class RRTGraphMarkers
 
 		void configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv);
 
-		void getGraphMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_);
+		// void getGraphMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_);
+		void getGraphMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_);
 		void getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_, ros::Publisher take_off_nodes_pub_);
 		void getPathMarker(std::list<RRTNode*> pt_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_);
 		void getCatenaryMarker(vector<geometry_msgs::Point> points_catenary_, ros::Publisher one_catenary_marker_pub_);

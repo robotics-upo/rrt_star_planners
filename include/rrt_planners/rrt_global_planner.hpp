@@ -166,7 +166,8 @@ namespace PathPlanners
             geometry_msgs::Vector3 start_rpy;
 
             //Publishers and Subscribers
-            ros::Publisher replan_status_pub,visMarkersPublisher, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher, rayCastNoFreePublisher, reducedMapPublisher;
+            ros::Publisher replan_status_pub,visMarkersPublisher, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
+            ros::Publisher rayCastNoFreePublisher, reducedMapPublisher, cleanMarkersOptimizerPublisher;
             ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_;
 
             //Listener tf reel
@@ -202,6 +203,8 @@ namespace PathPlanners
             //These two flags can be configured as parameters
             bool showConfig, debug, debug_rrt;
 
+	        std::string path, name_output_file;
+	        int scenario_number, num_pos_initial, num_goal;
             int countImpossible = 0;
 
             //Action client stuff
@@ -260,10 +263,9 @@ namespace PathPlanners
             double timeout;
             double initialSearchAround;
 
-            string path;
             bool write_data_for_analysis;
             double length_tether_max, radius_near_nodes, step_steer;
-            int n_iter, samp_goal_rate;
+            int n_iter, n_loop, samp_goal_rate;
             double goal_gap_m;
             int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary

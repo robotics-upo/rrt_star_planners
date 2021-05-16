@@ -23,9 +23,9 @@
 #include <vector>
 
 
-using point_t = std::vector< int >;
+using point_t = std::vector< float >;
 using indexArr = std::vector< size_t >;
-using pointIndex = typename std::pair< std::vector< int >, size_t >;
+using pointIndex = typename std::pair< std::vector< float >, size_t >;
 
 class KDNode {
    public:
@@ -43,7 +43,7 @@ class KDNode {
     ~KDNode();
 
     // getter
-    int coord(const size_t &);
+    float coord(const size_t &);
 
     // conversions
     explicit operator bool();
@@ -57,12 +57,12 @@ using KDNodePtr = std::shared_ptr< KDNode >;
 KDNodePtr NewKDNodePtr();
 
 // square euclidean distance
-inline int dist2(const point_t &, const point_t &);
-inline int dist2(const KDNodePtr &, const KDNodePtr &);
+inline float dist2(const point_t &, const point_t &, int dimension_bias);
+inline float dist2(const KDNodePtr &, const KDNodePtr &);
 
 // euclidean distance
-inline int dist(const point_t &, const point_t &);
-inline int dist(const KDNodePtr &, const KDNodePtr &);
+inline float dist(const point_t &, const point_t &);
+inline float dist(const KDNodePtr &, const KDNodePtr &);
 
 // Need for sorting
 class comparer {
@@ -70,8 +70,8 @@ class comparer {
     size_t idx;
     explicit comparer(size_t idx_);
     inline bool compare_idx(
-        const std::pair< std::vector< int >, size_t > &,  //
-        const std::pair< std::vector< int >, size_t > &   //
+        const std::pair< std::vector< float >, size_t > &,  //
+        const std::pair< std::vector< float >, size_t > &   //
     );
 };
 
@@ -103,14 +103,16 @@ class KDTree {
         const point_t &pt,        //
         const size_t &level,      //
         const KDNodePtr &best,    //
-        const int &best_dist   //
+        const float &best_dist   //
     );
 
     // default caller
     KDNodePtr nearest_(const point_t &pt);
+    KDNodePtr nearest_(const point_t &pt, int dimension_bias);
 
    public:
     point_t nearest_point(const point_t &pt);
+    point_t nearest_point(const point_t &pt, int dimension_bias);
     size_t nearest_index(const point_t &pt);
     pointIndex nearest_pointIndex(const point_t &pt);
 
@@ -118,22 +120,22 @@ class KDTree {
     pointIndexArr neighborhood_(  //
         const KDNodePtr &branch,  //
         const point_t &pt,        //
-        const int &rad,        //
+        const float &rad,        //
         const size_t &level       //
     );
 
    public:
     pointIndexArr neighborhood(  //
         const point_t &pt,       //
-        const int &rad);
+        const float &rad);
 
     pointVec neighborhood_points(  //
         const point_t &pt,         //
-        const int &rad);
+        const float &rad);
 
     indexArr neighborhood_indices(  //
         const point_t &pt,          //
-        const int &rad);
+        const float &rad);
 };
 
 
