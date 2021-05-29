@@ -97,21 +97,22 @@
         <param name="w_eta"   value="0.12"/>   # catenary 
         <param name="w_lambda"   value="0.0"/>   # dynamic catenary  -->
         
-        <param name="w_alpha_ugv"   value="0.4"/>   # equi-distance ugv
-        <param name="w_beta_ugv"    value="0.01"/>   # obstacles ugv
-        <param name="w_gamma_ugv"   value="0.01"/>   # kinematics ugv 
-        <param name="w_theta_ugv"   value="0.01"/>   # traversability ugv
+        <param name="w_alpha_ugv"   value="0.80"/>   # equi-distance ugv
+        <param name="w_beta_ugv"    value="0.20"/>   # obstacles ugv
+        <param name="w_theta_ugv"   value="0.12"/>   # traversability ugv
+        <param name="w_gamma_ugv"   value="0.06"/>   # kinematics ugv 
         <param name="w_kappa_ugv"   value="0.01"/>   # rotation ugv 
+        <param name="w_delta_ugv"     value="0.03"/>  # time 
+        <param name="w_epsilon_ugv"   value="0.03"/>   # velocity 
+        <param name="w_zeta_ugv"      value="0.001"/>   # acceleration 
         
         <param name="w_alpha_uav"   value="0.2"/>   # equi-distance uav
         <param name="w_beta_uav"    value="0.03"/>   # obstacles uav
         <param name="w_iota_uav"    value="0.4"/>   # obstacles through uav
         <param name="w_gamma_uav"   value="0.2"/>   # kinematics uav 
         <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
-        
-        <param name="w_delta"     value="0.04"/>  # time 
-        <param name="w_epsilon"   value="0.04"/>   # velocity 
-        <param name="w_zeta_ugv"      value="0.04"/>   # acceleration 
+        <param name="w_delta"     value="0.03"/>  # time 
+        <param name="w_epsilon"   value="0.03"/>   # velocity 
         <param name="w_zeta"      value="0.01"/>   # acceleration 
         
         <param name="w_eta"    value="0.12"/>   # catenary 
@@ -143,13 +144,13 @@
 
 
     <!-- Robot Marker -->
-    <node pkg="upo_markers" type="siar_marker_node" name="ugv_marker_node" output="screen" if="$(arg launch_robot_marker)">
+    <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
         <param name="frame_id" value="ugv_base_link"/>
         <param name="scale" value="2.0"/>
     </node>
 
      <!-- Robot Marker -->
-    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen" if="$(arg launch_robot_marker)">
+    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
         <param name="base_frame_id" value="uav_base_link"/>
         <param name="model" value="m100"/> <!-- m600 or m100 -->
         <param name="color" value="0.0"/> 
@@ -159,7 +160,7 @@
         <param name="scale" value="1.0"/>
     </node>
 
-    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen" if="$(arg launch_robot_marker)">
+    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
         <param name="base_frame_id" value="uav_base_link"/>
         <param name="model" value="circle"/> 
         <param name="radius" value="0.6"/> 
