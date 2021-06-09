@@ -102,18 +102,18 @@
         <param name="w_theta_ugv"   value="0.120"/>   # traversability ugv
         <param name="w_gamma_ugv"   value="0.060"/>   # kinematics ugv 
         <param name="w_kappa_ugv"   value="0.010"/>   # rotation ugv 
-        <param name="w_delta_ugv"     value="0.002"/>  # time 
+        <param name="w_delta_ugv"     value="0.003"/>  # time 
         <param name="w_epsilon_ugv"   value="0.001"/>   # velocity 
-        <param name="w_zeta_ugv"      value="0.0005"/>   # acceleration 
+        <param name="w_zeta_ugv"      value="0.0006"/>   # acceleration 
         
         <param name="w_alpha_uav"   value="0.300"/>   # equi-distance uav
         <param name="w_beta_uav"    value="0.010"/>   # obstacles uav
         <param name="w_iota_uav"    value="0.001"/>   # obstacles through uav
         <param name="w_gamma_uav"   value="0.020"/>   # kinematics uav 
         <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
-        <param name="w_delta"     value="0.003"/>  # time 
-        <param name="w_epsilon"   value="0.001"/>   # velocity 
-        <param name="w_zeta"      value="0.0006"/>   # acceleration 
+        <param name="w_delta"     value="0.004"/>  # time 
+        <param name="w_epsilon"   value="0.003"/>   # velocity 
+        <param name="w_zeta"      value="0.002"/>   # acceleration 
         
         <param name="w_eta"    value="0.12"/>   # catenary 
         <param name="w_lambda" value="0.0"/>   # dynamic catenary 
