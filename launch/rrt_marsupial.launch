@@ -33,7 +33,7 @@
 
     <!-- Launch Octomap of Scenario -->
     <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
-        <arg name="map_file"  value="$(arg map_file)"/>    
+        <arg name="map_file"  value="stage_$(arg scenario_number)"/>    
     </include>
 
     <!-- Launch  region_growing-->

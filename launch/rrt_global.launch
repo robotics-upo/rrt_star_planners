@@ -80,45 +80,29 @@
         <param name="use_octomap_local" value="true"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
-
-        <!-- <param name="w_alpha_uav" value="0.6"/>   # equi-distance uav
-        <param name="w_alpha_ugv" value="0.6"/>   # equi-distance ugv
-        <param name="w_beta_uav"    value="0.03"/>   # obstacles uav
-        <param name="w_iota_uav"    value="0.4"/>   # obstacles through uav
-        <param name="w_beta_ugv"    value="0.4"/>   # obstacles ugv
-        <param name="w_theta_ugv"    value="0.1"/>   # traversability ugv
-        <param name="w_gamma_uav"   value="0.2"/>   # kinematics uav 
-        <param name="w_gamma_ugv"   value="0.05"/>   # kinematics ugv 
-        <param name="w_kappa_ugv"   value="0.1"/>   # rotation ugv 
-        <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
-        <param name="w_delta"    value="0.01"/>  # time 
-        <param name="w_epsilon"     value="0.01"/>   # velocity 
-        <param name="w_zeta"   value="0.01"/>   # acceleration 
-        <param name="w_eta"   value="0.12"/>   # catenary 
-        <param name="w_lambda"   value="0.0"/>   # dynamic catenary  -->
-        
-        <param name="w_alpha_ugv"   value="0.600"/>   # equi-distance ugv
-        <param name="w_beta_ugv"    value="0.200"/>   # obstacles ugv
-        <param name="w_theta_ugv"   value="0.120"/>   # traversability ugv
-        <param name="w_gamma_ugv"   value="0.060"/>   # kinematics ugv 
+       
+        <param name="w_alpha_ugv"   value="1.000"/>   # equi-distance ugv
+        <param name="w_beta_ugv"    value="0.100"/>   # obstacles ugv
+        <param name="w_iota_uav"    value="0.800"/>   # obstacles through ugv
+        <param name="w_theta_ugv"   value="0.180"/>   # traversability ugv
+        <param name="w_gamma_ugv"   value="0.100"/>   # kinematics ugv 
         <param name="w_kappa_ugv"   value="0.010"/>   # rotation ugv 
         <param name="w_delta_ugv"     value="0.003"/>  # time 
-        <param name="w_epsilon_ugv"   value="0.001"/>   # velocity 
-        <param name="w_zeta_ugv"      value="0.0006"/>   # acceleration 
+        <param name="w_epsilon_ugv"   value="0.0004"/>   # velocity 
+        <param name="w_zeta_ugv"      value="0.0001"/>   # acceleration 
         
-        <param name="w_alpha_uav"   value="0.300"/>   # equi-distance uav
+        <param name="w_alpha_uav"   value="0.250"/>   # equi-distance uav
         <param name="w_beta_uav"    value="0.010"/>   # obstacles uav
         <param name="w_iota_uav"    value="0.001"/>   # obstacles through uav
         <param name="w_gamma_uav"   value="0.020"/>   # kinematics uav 
         <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
-        <param name="w_delta"     value="0.004"/>  # time 
-        <param name="w_epsilon"   value="0.003"/>   # velocity 
-        <param name="w_zeta"      value="0.002"/>   # acceleration 
+        <param name="w_delta"     value="0.003"/>  # time 
+        <param name="w_epsilon"   value="0.001"/>   # velocity 
+        <param name="w_zeta"      value="0.0006"/>   # acceleration 
         
         <param name="w_eta"    value="0.12"/>   # catenary 
         <param name="w_lambda" value="0.0"/>   # dynamic catenary 
 
-        
         <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
             
