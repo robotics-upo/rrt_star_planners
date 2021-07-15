@@ -13,6 +13,11 @@
     <arg name="viz_file"    default="marsupial"/>
     <arg name="is_coupled"    default="false"/>
     <arg name="sample_mode"    default="1"/>
+    
+    <arg name="pos_reel_x"    default="0.0"/>
+    <arg name="pos_reel_y"    default="0.0"/>
+    <arg name="pos_reel_z"    default="0.3"/>
+
 
     <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number).yaml" />
     <arg name="map_file" default="stage_$(arg scenario_number)"/>
@@ -29,7 +34,8 @@
 
     <!-- Publishing static tf -->
     <node pkg="tf" type="static_transform_publisher" name="map_tf_node" args="0 0 0 0 0 0  world /map 10"/> # x y z y p r
-    <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="0.4 0.0 0.22 -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r
+    <!-- <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="0.4 0.0 0.22 -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r -->
+    <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="$(arg pos_reel_x) $(arg pos_reel_y) $(arg pos_reel_z) -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r
 
     <!-- Launch Octomap of Scenario -->
     <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
@@ -53,6 +59,9 @@
         <arg name="num_goal"  value="$(arg num_goal)"/> 
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
         <arg name="planner_type" value="$(arg planner_type)" /> 
+        <arg name="pos_reel_x" value="$(arg pos_reel_x)" /> 
+        <arg name="pos_reel_y" value="$(arg pos_reel_y)" /> 
+        <arg name="pos_reel_z" value="$(arg pos_reel_z)" /> 
     </include>    
 
     

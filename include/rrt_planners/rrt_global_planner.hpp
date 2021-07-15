@@ -125,7 +125,9 @@ namespace PathPlanners
             @brief: 
             */
             void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
-            void readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+            void readPointCloudTraversabilityMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+            void readPointCloudUGVObstaclesMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+            void readPointCloudUAVObstaclesMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
             void pointsSub(const PointCloud::ConstPtr &points);
             /*
             @brief: 
@@ -168,7 +170,7 @@ namespace PathPlanners
             //Publishers and Subscribers
             ros::Publisher replan_status_pub,visMarkersPublisher, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
             ros::Publisher rayCastNoFreePublisher, reducedMapPublisher, cleanMarkersOptimizerPublisher;
-            ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_;
+            ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_, point_cloud_map_trav_sub_;
 
             //Listener tf reel
             tf::TransformListener listener;
@@ -267,6 +269,7 @@ namespace PathPlanners
             double length_tether_max, radius_near_nodes, step_steer;
             int n_iter, n_loop, samp_goal_rate;
             double goal_gap_m;
+            double min_d_steer_ugv;// min distance UGV-UAV to steer a new position of UGV
             int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 

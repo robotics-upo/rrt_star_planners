@@ -74,6 +74,7 @@ void RRTGlobalPlanner::configParams()
     nh->param("radius_near_nodes", radius_near_nodes, (double)1.0);
     nh->param("step_steer", step_steer, (double)0.5);
     nh->param("goal_gap_m", goal_gap_m, (double)0.2);
+    nh->param("min_d_steer_ugv", min_d_steer_ugv, (double)5.0);
 
 
   	nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
@@ -135,7 +136,9 @@ void RRTGlobalPlanner::configTopics()
         sub_map = nh->subscribe<PointCloud>("/points", 1, &RRTGlobalPlanner::pointsSub, this);
     }
     // point_cloud_map_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &RRTGlobalPlanner::readPointCloudMapCallback, this);
-    point_cloud_map_ugv_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &RRTGlobalPlanner::readPointCloudMapCallback, this);
+    point_cloud_map_trav_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &RRTGlobalPlanner::readPointCloudTraversabilityMapCallback, this);
+    point_cloud_map_ugv_sub_ = nh->subscribe( "/region_growing_obstacles_pc_map", 1,  &RRTGlobalPlanner::readPointCloudUGVObstaclesMapCallback, this);
+    point_cloud_map_uav_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &RRTGlobalPlanner::readPointCloudUAVObstaclesMapCallback, this);
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Topics and Subscriber Configurated");
     
@@ -151,10 +154,22 @@ void RRTGlobalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConstPtr 
     ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: Collision Map Received");
 }
 
-void RRTGlobalPlanner::readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+void RRTGlobalPlanner::readPointCloudTraversabilityMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+{
+    rrtplanner.readPointCloudTraversabilityMapUGV(msg);
+    ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UGV Traversability Map Navigation Received");
+}
+
+void RRTGlobalPlanner::readPointCloudUGVObstaclesMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
     rrtplanner.readPointCloudMapForUGV(msg);
-    ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UGV Map Navigation Received");
+    ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UGV Obstacles Map Navigation Received");
+}
+
+void RRTGlobalPlanner::readPointCloudUAVObstaclesMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+{
+    rrtplanner.readPointCloudMapForUAV(msg);
+    ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UAV Obstacles Map Navigation Received");
 }
 
 void RRTGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)
@@ -194,8 +209,6 @@ void RRTGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)
         ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner 3D: Collision Map Received");
     }
     rrtplanner.publishOccupationMarkersMap();
-
-
 }
 
 void RRTGlobalPlanner::configServices()
@@ -859,7 +872,8 @@ void RRTGlobalPlanner::configRRTPlanner()
     pos_ugv_ = getRobotPoseUGV().transform.translation;
     rot_ugv_ = getRobotPoseUGV().transform.rotation;
     // bool coupled = isMarsupialCoupled();
-    rrtplanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, radius_near_nodes, step_steer, samp_goal_rate, sample_mode, do_steer_ugv);
+    rrtplanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, radius_near_nodes, 
+                                   step_steer, samp_goal_rate, sample_mode, do_steer_ugv, min_d_steer_ugv);
 
    	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  length_tether_max: %f , sample_mode=%i !!", length_tether_max, sample_mode);
 	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  is_coupled=[%s] debug_rrt=[%s] debug=[%s]", coupled? "true" : "false", debug_rrt? "true" : "false", debug? "true" : "false");

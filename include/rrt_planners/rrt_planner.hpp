@@ -311,9 +311,20 @@ public:
 	virtual void publishOccupationMarkersMap();
 	
 	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
-							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, bool do_s_ugv_);
+							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, bool do_s_ugv_, double min_d_steer_ugv_);
 
+	/** 
+	   Receive segmented PointCloud2 for UGV traversability
+	**/
+	void readPointCloudTraversabilityMapUGV(const sensor_msgs::PointCloud2::ConstPtr& msg);
+	/** 
+	   Receive PointCloud2 from map to get UGV obstacles
+	**/
 	void readPointCloudMapForUGV(const sensor_msgs::PointCloud2::ConstPtr& msg);
+	/** 
+	   Receive whole PointCloud2 from map to get UAV obstacles 
+	**/
+	void readPointCloudMapForUAV(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
 	void setInitialCostGoal(RRTNode* n_);
 
@@ -332,7 +343,7 @@ public:
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
 	double phi_min, phi_max, theta_min, theta_max ;
 
-	NearNeighbor near_neighbor_obstacles;
+	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
 	// std::vector<Eigen::Vector3d> v_nodes_kdtree_ugv, v_nodes_kdtree_uav;
 
 	pointVec v_nodes_kdtree, v_ugv_nodes_kdtree;
@@ -566,8 +577,11 @@ protected:
 	bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
+	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV 
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
+
+	visualization_msgs::MarkerArray catenary_marker;
 	
 };
 
