@@ -89,7 +89,9 @@ public:
 		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
-	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_);
+	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
+			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, 
+			   ros::NodeHandlePtr nh_, double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_);
 
 	/**
 		  Initialization
@@ -103,7 +105,9 @@ public:
 		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
-	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_);
+	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
+			float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, 
+			ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_);
 
   	~RRTPlanner();
   
@@ -311,7 +315,7 @@ public:
 	virtual void publishOccupationMarkersMap();
 	
 	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
-							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, bool do_s_ugv_, double min_d_steer_ugv_);
+							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, bool do_s_ugv_, double min_l_steer_ugv_);
 
 	/** 
 	   Receive segmented PointCloud2 for UGV traversability
@@ -362,7 +366,7 @@ protected:
 	bool extendGraph(const RRTNode q_rand_);
 	RRTNode* getNearestNode(const RRTNode q_rand_);
   	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
-	bool obstacleFree(const RRTNode q_nearest, const RRTNode q_new);
+	bool obstacleFreeBetweenNodes(const RRTNode q_nearest, const RRTNode q_new);
 	std::vector<int> getNearNodes(const RRTNode &q_new_, double radius_);
 	std::vector<float> getNearestUGVNode(const RRTNode &q_new_);
 	// int getNearestUGVNode(const RRTNode &q_new_);
@@ -580,6 +584,8 @@ protected:
 	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV 
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
+    double distance_obstacle_ugv, distance_obstacle_uav; //Safe distance to obstacle to accept a point valid for UGV and UAV
+
 
 	visualization_msgs::MarkerArray catenary_marker;
 	

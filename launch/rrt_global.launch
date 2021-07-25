@@ -16,24 +16,24 @@
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="results_optimization"/>     
+    <arg name="path_files"    default="/home/simon/results_marsupial_optimizer/"/>     
     <arg name="num_goal"         default="0"/>
     <arg name="n_iter_rrt"         default="1000"/>
     <arg name="n_loop_rrt"         default="40"/>
     <arg name="radius_near_nodes"         default="1.0"/> 
     <arg name="goal_gap_m"         default="0.8"/>
     <arg name="step_steer"         default="0.5"/>
-    <arg name="min_d_steer_ugv"         default="5.0"/>
+    <arg name="min_l_steer_ugv"         default="8.0"/>
     <arg name="coupled"         default="true"/>
-    <arg name="samp_goal_rate"         default="12"/>
+    <arg name="samp_goal_rate"         default="15"/>
     <arg name="sample_mode_rrt"         default="1"/>
 
     <arg name="pos_reel_x"    default="0.4"/>
     <arg name="pos_reel_y"    default="0.0"/>
     <arg name="pos_reel_z"    default="0.22"/>
 
-
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_planners" type="rrt_global_planner_node" name="rrt_planner_node" output="screen" launch-prefix="gdb -ex run --args">
+    <node pkg="rrt_planners" type="rrt_global_planner_node" name="rrt_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <param name="planner_type" value="$(arg planner_type)"/> 
@@ -53,10 +53,10 @@
         <param name="n_loop" value="$(arg n_loop_rrt)"/>   
         <param name="radius_near_nodes" value="$(arg radius_near_nodes)"/>   
         <param name="step_steer" value="$(arg step_steer)"/>   
-        <param name="min_d_steer_ugv" value="$(arg min_d_steer_ugv)"/>   
+        <param name="min_l_steer_ugv" value="$(arg min_l_steer_ugv)"/>   
         <param name="length_tether_max" value="$(arg length_tether_max)"/>   
         <param name="write_data_for_analysis"    value="true"/>     
-        <param name="path"   value="/home/simon/"/>  
+        <param name="path"   value="$(arg path_files)"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
@@ -69,6 +69,8 @@
         <param name="pos_reel_x"    value="$(arg pos_reel_x)"/>     
         <param name="pos_reel_y"    value="$(arg pos_reel_y)"/>     
         <param name="pos_reel_z"    value="$(arg pos_reel_z)"/>     
+        <param name="distance_obstacle_ugv"         value="0.2"/> <!-- bound distance UGV to obstacles 0.2[m] resolution of the map-->
+        <param name="distance_obstacle_uav"         value="0.2"/> <!-- bound distance UAV to obstacles 0.2[m] resolution of the map-->
     </node>
 
     <!-- Local Planner: Optimizer Ceres-->
@@ -80,12 +82,7 @@
         <remap from="/octomap_binary_local" to="/octomap_binary"/>
         <param name="debug" value="$(arg debug_msgs)"/>
         <param name="show_config" value="$(arg show_config_msgs)"/>
-        <!-- <param name="mode3d" value="$(arg use_dron)"/> -->
-        <!-- <param name="uav_base_frame" value="uav_base_link"/>
-        <param name="ugv_base_frame" value="ugv_base_link"/> -->
         <param name="traj_dest_frame" value="uav_base_link"/>
-        <!-- <param name="timeout" value="0.4"/> -->
-        <!-- <param name="final_search_around" value="1.4"/> -->
         <param name="use_octomap_local" value="true"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
@@ -94,7 +91,7 @@
         <param name="w_beta_ugv"    value="0.100"/>   # obstacles ugv
         <param name="w_nu_ugv"    value="0.080"/>   # length uav
         <param name="w_theta_ugv"   value="0.500"/>   # traversability ugv
-        <param name="w_gamma_ugv"   value="0.260"/>   # kinematics ugv 
+        <param name="w_gamma_ugv"   value="0.300"/>   # kinematics ugv 
         <!-- <param name="w_iota_ugv"    value="0.800"/>   # obstacles through ugv -->
         <param name="w_kappa_ugv"   value="0.010"/>   # rotation ugv 
         <param name="w_delta_ugv"     value="0.100"/>  # time 
@@ -102,16 +99,18 @@
         <param name="w_zeta_ugv"      value="0.0010"/>   # acceleration 
         
         <param name="w_alpha_uav"   value="0.280"/>   # equi-distance uav
-        <param name="w_beta_uav"    value="0.120"/>   # obstacles uav
-        <param name="w_mu_uav"    value="0.100"/>   # repulsion uav
-        <param name="w_gamma_uav"   value="0.240"/>   # kinematics uav 
+        <param name="w_beta_uav"    value="0.160"/>   # obstacles uav
+        <param name="w_mu_uav"    value="0.120"/>   # repulsion uav
+        <param name="w_gamma_uav"   value="0.260"/>   # kinematics uav 
         <!-- <param name="w_iota_uav"    value="0.001"/>   # obstacles through uav -->
         <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
         <param name="w_delta"     value="0.003"/>  # time 
         <param name="w_epsilon"   value="0.006"/>   # velocity 
         <param name="w_zeta"      value="0.0006"/>   # acceleration 
         
-        <param name="w_eta"    value="0.010"/>   # catenary 
+        <param name="w_eta_1"    value="0.010"/>   # catenary Obstacles collision
+        <param name="w_eta_2"    value="0.005"/>   # catenary length
+        <param name="w_eta_3"    value="0.010"/>   # catenary Z collision
         <param name="w_lambda" value="0.0"/>   # dynamic catenary 
 
         <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
@@ -134,7 +133,7 @@
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="num_goal"   value="$(arg num_goal)"/>     
-        <param name="path"   value="/home/simon/"/>     
+        <param name="path"   value="$(arg path_files)"/>     
     </node>
 
 

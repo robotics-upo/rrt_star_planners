@@ -74,8 +74,10 @@ void RRTGlobalPlanner::configParams()
     nh->param("radius_near_nodes", radius_near_nodes, (double)1.0);
     nh->param("step_steer", step_steer, (double)0.5);
     nh->param("goal_gap_m", goal_gap_m, (double)0.2);
-    nh->param("min_d_steer_ugv", min_d_steer_ugv, (double)5.0);
+    nh->param("min_l_steer_ugv", min_l_steer_ugv, (double)5.0);
 
+    nh->param("distance_obstacle_ugv", distance_obstacle_ugv, (double)1.0);
+    nh->param("distance_obstacle_uav", distance_obstacle_uav, (double)1.0);
 
   	nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
 	nh->param("path", path, (std::string) "~/");
@@ -106,7 +108,8 @@ void RRTGlobalPlanner::configParams()
 
 void RRTGlobalPlanner::configRRTStar()
 {
-    rrtplanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt);
+    rrtplanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
+                    goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav);
     rrtplanner.setTimeOut(timeout);
 }
 
@@ -873,7 +876,7 @@ void RRTGlobalPlanner::configRRTPlanner()
     rot_ugv_ = getRobotPoseUGV().transform.rotation;
     // bool coupled = isMarsupialCoupled();
     rrtplanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, radius_near_nodes, 
-                                   step_steer, samp_goal_rate, sample_mode, do_steer_ugv, min_d_steer_ugv);
+                                   step_steer, samp_goal_rate, sample_mode, do_steer_ugv, min_l_steer_ugv);
 
    	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  length_tether_max: %f , sample_mode=%i !!", length_tether_max, sample_mode);
 	ROS_INFO(PRINTF_GREEN"Global Planner  configRRTPlanner() :  is_coupled=[%s] debug_rrt=[%s] debug=[%s]", coupled? "true" : "false", debug_rrt? "true" : "false", debug? "true" : "false");

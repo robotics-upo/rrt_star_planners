@@ -269,7 +269,8 @@ namespace PathPlanners
             double length_tether_max, radius_near_nodes, step_steer;
             int n_iter, n_loop, samp_goal_rate;
             double goal_gap_m;
-            double min_d_steer_ugv;// min distance UGV-UAV to steer a new position of UGV
+            double min_l_steer_ugv;// min distance UGV-UAV to steer a new position of UGV
+            double distance_obstacle_ugv, distance_obstacle_uav; //Safe distance to obstacle to accept a point valid for UGV and UAV
             int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 
