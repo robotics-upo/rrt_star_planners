@@ -45,6 +45,8 @@
 
 #include "misc/catenary_solver_ceres.hpp"
 #include "misc/near_neighbor.hpp"
+#include "misc/grid3d.hpp"
+
 
 #define PRINTF_REGULAR "\x1B[0m"
 #define PRINTF_RED "\x1B[31m"
@@ -54,6 +56,11 @@
 #define PRINTF_MAGENTA "\x1B[35m"
 #define PRINTF_CYAN "\x1B[36m"
 #define PRINTF_WHITE "\x1B[37m"
+#define PRINTF_ORANGE  "\x1B[38;2;255;128;0m"
+#define PRINTF_ROSE    "\x1B[38;2;255;151;203m"
+#define PRINTF_LBLUE   "\x1B[38;2;53;149;240m"
+#define PRINTF_LGREEN  "\x1B[38;2;17;245;120m"
+#define PRINTF_GRAY    "\x1B[38;2;176;174;174m"
 
 // Uncomment to set length catenary in nodes
 #define USE_CATENARY_COMPUTE
@@ -77,6 +84,8 @@ class RRTPlanner
 public:
 	RRTPlanner();
 
+	RRTPlanner(std::string node_name_, std::string path_name_);
+
 	/**
 		  Constructor with arguments
 		   @param planner name for topic names 
@@ -91,7 +100,7 @@ public:
 		**/
 	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
 			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, 
-			   ros::NodeHandlePtr nh_, double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_);
+			   ros::NodeHandlePtr nh_, double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, Grid3d *grid3D_);
 
 	/**
 		  Initialization
@@ -107,7 +116,7 @@ public:
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
 			float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, 
-			ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_);
+			ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, Grid3d *grid3D_);
 
   	~RRTPlanner();
   
@@ -347,10 +356,9 @@ public:
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
 	double phi_min, phi_max, theta_min, theta_max ;
 
-	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
 	// std::vector<Eigen::Vector3d> v_nodes_kdtree_ugv, v_nodes_kdtree_uav;
 
-	pointVec v_nodes_kdtree, v_ugv_nodes_kdtree;
+	pointVec v_nodes_kdtree, v_ugv_nodes_kdtree, v_uav_nodes_kdtree;
 
 	RRTNode *disc_initial, *disc_final; // Discretes
 	RRTNode *disc_goal; // That node is fill it by the node that approach the goal in Independent configuration
@@ -358,17 +366,23 @@ public:
 	std::vector<double> length_catenary;
 
 	bool debug_rrt;
+
+	std::string node_name, path_name;
+
+	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
 	RRTGraphMarkers rrtgm;
+	Grid3d *grid_3D;
 
 protected:
 	
 	RRTNode getRandomNode(bool go_to_goal_ = false); 
 	bool extendGraph(const RRTNode q_rand_);
 	RRTNode* getNearestNode(const RRTNode q_rand_);
-  	RRTNode steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_);
+  	bool steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_, RRTNode &q_new_);
 	bool obstacleFreeBetweenNodes(const RRTNode q_nearest, const RRTNode q_new);
 	std::vector<int> getNearNodes(const RRTNode &q_new_, double radius_);
 	std::vector<float> getNearestUGVNode(const RRTNode &q_new_);
+	std::vector<float> getNearestUAVNode(const RRTNode &q_new_);
 	// int getNearestUGVNode(const RRTNode &q_new_);
 	void getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_);
 	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
@@ -379,6 +393,7 @@ protected:
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtreeNode(const RRTNode ukT_);
 	void updateKdtreeUGV(const RRTNode ukT_);
+	void updateKdtreeUAV(const RRTNode ukT_);
 	void getParamsNode(RRTNode &node_, bool is_init_= false);
 	void updateParamsNode(RRTNode &node_);
 	bool saveNode(RRTNode* sn_, bool is_init_=false);

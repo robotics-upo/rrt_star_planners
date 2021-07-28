@@ -55,6 +55,7 @@ Global Planner Class using RRT Algorithms
 
 #include <tf/transform_listener.h>
 #include "misc/bisection_catenary_3D.h"
+#include "misc/grid3d.hpp"
 
 
 namespace PathPlanners
@@ -81,6 +82,8 @@ namespace PathPlanners
             @brief: This is the main function that should be executed in loop by the node
             */
             void plan();
+            
+            void receiveGrid3D(Grid3d* G3D_);
 
         private:
             void clearMarkers();
@@ -150,6 +153,7 @@ namespace PathPlanners
             */
             void calculatePathLength();
             float getYawFromQuat(Quaternion quat);
+           
 
             /*
             @brief: Get tf reel tether to compute catenary.
@@ -206,6 +210,7 @@ namespace PathPlanners
             bool showConfig, debug, debug_rrt;
 
 	        std::string path, name_output_file;
+	        std::string path_grid3D;
 	        int scenario_number, num_pos_initial, num_goal;
             int countImpossible = 0;
 
@@ -277,6 +282,8 @@ namespace PathPlanners
             bool coupled;
 
             std::string planner_type;
+
+            Grid3d *grid3D;
     }; //class RRTGlobalPlanner
 
 } //namespace PathPlanners

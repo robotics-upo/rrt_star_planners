@@ -39,7 +39,7 @@ class RRTGraphMarkers
 		void goalPointMarker(geometry_msgs::Vector3 final_position_, ros::Publisher goal_point_pub_);
 		void reelPointMarker1(geometry_msgs::Point p_, ros::Publisher reel1_point_pub_);
 		void reelPointMarker2(geometry_msgs::Point p_, ros::Publisher reel2_point_pub_);
-		void randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_);
+		void randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_, int color_);
 		void newNodeMarker(RRTNode rn_, ros::Publisher new_point_pub_);
 		void nearestNodeMarker(RRTNode rn_, ros::Publisher nearest_point_pub_);
 		void getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_, ros::Publisher points_marker_pub_);
