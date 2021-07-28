@@ -514,8 +514,22 @@ void RRTGraphMarkers::reelPointMarker2(geometry_msgs::Point p_, ros::Publisher r
 	reel2_point_pub_.publish(marker_);
 }
 
-void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_)
+void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_, int color_)
 {
+	//color: 0 = red , 1 = green , 2 = blue
+	double color_r1, color_g1, color_b1, color_r2, color_g2, color_b2;
+	if (color_ == 0){
+		color_r1 = 1.0;	color_g1 = 0.0;	color_b1 = 0.0;
+		color_r2 = 1.0;	color_g2 = 0.4;	color_b1 = 0.4;
+	}
+	else if(color_ == 1){
+		color_r1 = 0.0;	color_g1 = 1.0;	color_b1 = 0.0;
+		color_r2 = 0.4;	color_g2 = 1.0;	color_b2 = 0.4;
+	}
+	else if(color_ == 2){
+		color_r1 = 0.0;	color_g1 = 0.0;	color_b1 = 1.0;
+		color_r2 = 0.4;	color_g2 = 0.4;	color_b2 = 1.0;
+	}
 	visualization_msgs::MarkerArray marker_rand;
 	marker_rand.markers.resize(2);
 	marker_rand.markers[0].header.frame_id = frame_id;
@@ -524,7 +538,7 @@ void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_
 	marker_rand.markers[0].id = 0;
 	marker_rand.markers[0].type = visualization_msgs::Marker::SPHERE;
 	marker_rand.markers[0].action = visualization_msgs::Marker::ADD;
-	marker_rand.markers[0].lifetime = ros::Duration(20);
+	marker_rand.markers[0].lifetime = ros::Duration(80);
 	marker_rand.markers[0].pose.position.x = rn_.point.x*step;
 	marker_rand.markers[0].pose.position.y = rn_.point.y*step;
 	marker_rand.markers[0].pose.position.z = rn_.point.z*step+0.1;
@@ -535,9 +549,9 @@ void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_
 	marker_rand.markers[0].scale.x = 0.4;
 	marker_rand.markers[0].scale.y = 0.4;
 	marker_rand.markers[0].scale.z = 0.4;
-	marker_rand.markers[0].color.r = 0.0;
-	marker_rand.markers[0].color.g = 1.0;
-	marker_rand.markers[0].color.b = 0.0;
+	marker_rand.markers[0].color.r = color_r1;
+	marker_rand.markers[0].color.g = color_g1;
+	marker_rand.markers[0].color.b = color_b1;
 	marker_rand.markers[0].color.a = 1.0; 
 
 	marker_rand.markers[1].header.frame_id = frame_id;
@@ -546,7 +560,7 @@ void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_
 	marker_rand.markers[1].id = 1;
 	marker_rand.markers[1].type = visualization_msgs::Marker::SPHERE;
 	marker_rand.markers[1].action = visualization_msgs::Marker::ADD;
-	marker_rand.markers[1].lifetime = ros::Duration(20);
+	marker_rand.markers[1].lifetime = ros::Duration(80);
 	marker_rand.markers[1].pose.position.x = rn_.point_uav.x*step;
 	marker_rand.markers[1].pose.position.y = rn_.point_uav.y*step;
 	marker_rand.markers[1].pose.position.z = rn_.point_uav.z*step;
@@ -557,9 +571,9 @@ void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_
 	marker_rand.markers[1].scale.x = 0.4;
 	marker_rand.markers[1].scale.y = 0.4;
 	marker_rand.markers[1].scale.z = 0.4;
-	marker_rand.markers[1].color.r = 0.4;
-	marker_rand.markers[1].color.g = 1.0;
-	marker_rand.markers[1].color.b = 0.4;
+	marker_rand.markers[1].color.r = color_r2;
+	marker_rand.markers[1].color.g = color_g2;
+	marker_rand.markers[1].color.b = color_b2;
 	marker_rand.markers[1].color.a = 1.0; 
 	
 	rand_point_pub_.publish(marker_rand);

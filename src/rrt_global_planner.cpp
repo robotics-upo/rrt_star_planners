@@ -14,6 +14,8 @@ RRTGlobalPlanner::RRTGlobalPlanner(std::string node_name_)
     tfBuffer.reset(new tf2_ros::Buffer);
     tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
     tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
+	nh->param("path_grid3D", path_grid3D, (std::string) "~/");
+    // RRTPlanner RRTPlanner(node_name, path_grid3D);
     
     configParams();
     configTopics();
@@ -109,7 +111,7 @@ void RRTGlobalPlanner::configParams()
 void RRTGlobalPlanner::configRRTStar()
 {
     rrtplanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
-                    goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav);
+                    goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, grid3D);
     rrtplanner.setTimeOut(timeout);
 }
 
@@ -938,6 +940,11 @@ float RRTGlobalPlanner::getYawFromQuat(Quaternion quat)
 	M.getRPY(r, p, y);
 
 	return y;
+}
+
+void RRTGlobalPlanner::receiveGrid3D(Grid3d* G3D_)
+{
+    grid3D = G3D_;
 }
 
 } // namespace PathPlanners
