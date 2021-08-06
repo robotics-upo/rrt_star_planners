@@ -13,14 +13,9 @@
 #include <geometry_msgs/Vector3.h>
 
 #include "misc/catenary_solver_ceres.hpp"
-
 #include <rrt_planners/RRTNode.h>
 
-
-
 using namespace std;
-
-// class RRTNode;
 
 class RRTGraphMarkers
 {
@@ -28,7 +23,6 @@ class RRTGraphMarkers
 		RRTGraphMarkers();
 
 		void configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv);
-
 		// void getGraphMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_);
 		void getGraphMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_);
 		void getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_, ros::Publisher take_off_nodes_pub_);

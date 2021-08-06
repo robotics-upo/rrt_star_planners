@@ -27,9 +27,11 @@ Global Planner Class using RRT Algorithms
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Bool.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 
 //Dynamic reconfigure auto generated libraries
 #include <dynamic_reconfigure/server.h>
@@ -56,11 +58,15 @@ Global Planner Class using RRT Algorithms
 #include <tf/transform_listener.h>
 #include "misc/bisection_catenary_3D.h"
 #include "misc/grid3d.hpp"
+#include "misc/catenary_solver_ceres.hpp"
+#include "misc/near_neighbor.hpp"
+#include "rrt_planners/rrt_graph_markers.h"
+
 
 
 namespace PathPlanners
 {
-    class RRTGlobalPlanner : public RRTPlanner
+    class RRTGlobalPlanner 
     {
         typedef actionlib::SimpleActionClient<upo_actions::ExecutePathAction> ExecutePathClient;
         typedef actionlib::SimpleActionServer<upo_actions::MakePlanAction> MakePlanServer;
@@ -124,6 +130,9 @@ namespace PathPlanners
             //get UAV pose to know from where to plan
             geometry_msgs::TransformStamped getRobotPoseUAV();
             
+            // This method graph the catenary for the initial position.
+            void graphMarker();
+
             /*
             @brief: 
             */
@@ -173,7 +182,7 @@ namespace PathPlanners
 
             //Publishers and Subscribers
             ros::Publisher replan_status_pub,visMarkersPublisher, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
-            ros::Publisher rayCastNoFreePublisher, reducedMapPublisher, cleanMarkersOptimizerPublisher;
+            ros::Publisher rayCastNoFreePublisher, reducedMapPublisher, cleanMarkersOptimizerPublisher, initial_catenary_pub_;
             ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_, point_cloud_map_trav_sub_;
 
             //Listener tf reel
@@ -242,6 +251,8 @@ namespace PathPlanners
             //! 3D specific variables
             bool mapRec;
             RRTPlanner rrtplanner;
+	        RRTGraphMarkers rrtgm;
+            
             bool use3d;
 
             octomap_msgs::OctomapConstPtr map;
@@ -275,7 +286,7 @@ namespace PathPlanners
             int n_iter, n_loop, samp_goal_rate;
             double goal_gap_m;
             double min_l_steer_ugv;// min distance UGV-UAV to steer a new position of UGV
-            double distance_obstacle_ugv, distance_obstacle_uav; //Safe distance to obstacle to accept a point valid for UGV and UAV
+            double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
             int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 

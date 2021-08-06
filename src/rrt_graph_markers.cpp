@@ -517,18 +517,21 @@ void RRTGraphMarkers::reelPointMarker2(geometry_msgs::Point p_, ros::Publisher r
 void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_, int color_)
 {
 	//color: 0 = red , 1 = green , 2 = blue
-	double color_r1, color_g1, color_b1, color_r2, color_g2, color_b2;
+	double color_r1, color_g1, color_b1, color_r2, color_g2, color_b2, scale_;
 	if (color_ == 0){
 		color_r1 = 1.0;	color_g1 = 0.0;	color_b1 = 0.0;
 		color_r2 = 1.0;	color_g2 = 0.4;	color_b1 = 0.4;
+		scale_ = 0.2;
 	}
 	else if(color_ == 1){
 		color_r1 = 0.0;	color_g1 = 1.0;	color_b1 = 0.0;
 		color_r2 = 0.4;	color_g2 = 1.0;	color_b2 = 0.4;
+		scale_ = 0.4;
 	}
 	else if(color_ == 2){
 		color_r1 = 0.0;	color_g1 = 0.0;	color_b1 = 1.0;
 		color_r2 = 0.4;	color_g2 = 0.4;	color_b2 = 1.0;
+		scale_ = 0.2;
 	}
 	visualization_msgs::MarkerArray marker_rand;
 	marker_rand.markers.resize(2);
@@ -546,9 +549,9 @@ void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_
 	marker_rand.markers[0].pose.orientation.y = 0.0;
 	marker_rand.markers[0].pose.orientation.z = 0.0;
 	marker_rand.markers[0].pose.orientation.w = 1.0;
-	marker_rand.markers[0].scale.x = 0.4;
-	marker_rand.markers[0].scale.y = 0.4;
-	marker_rand.markers[0].scale.z = 0.4;
+	marker_rand.markers[0].scale.x = scale_;
+	marker_rand.markers[0].scale.y = scale_;
+	marker_rand.markers[0].scale.z = scale_;
 	marker_rand.markers[0].color.r = color_r1;
 	marker_rand.markers[0].color.g = color_g1;
 	marker_rand.markers[0].color.b = color_b1;
@@ -568,9 +571,9 @@ void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_
 	marker_rand.markers[1].pose.orientation.y = 0.0;
 	marker_rand.markers[1].pose.orientation.z = 0.0;
 	marker_rand.markers[1].pose.orientation.w = 1.0;
-	marker_rand.markers[1].scale.x = 0.4;
-	marker_rand.markers[1].scale.y = 0.4;
-	marker_rand.markers[1].scale.z = 0.4;
+	marker_rand.markers[1].scale.x = scale_;
+	marker_rand.markers[1].scale.y = scale_;
+	marker_rand.markers[1].scale.z = scale_;
 	marker_rand.markers[1].color.r = color_r2;
 	marker_rand.markers[1].color.g = color_g2;
 	marker_rand.markers[1].color.b = color_b2;

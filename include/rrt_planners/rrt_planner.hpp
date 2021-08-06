@@ -11,6 +11,7 @@
 
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <geometry_msgs/QuaternionStamped.h>
 
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -84,8 +85,6 @@ class RRTPlanner
 public:
 	RRTPlanner();
 
-	RRTPlanner(std::string node_name_, std::string path_name_);
-
 	/**
 		  Constructor with arguments
 		   @param planner name for topic names 
@@ -99,8 +98,8 @@ public:
 		   @param NodeHandle 
 		**/
 	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
-			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, 
-			   ros::NodeHandlePtr nh_, double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, Grid3d *grid3D_);
+			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, 
+			   double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
 
 	/**
 		  Initialization
@@ -115,8 +114,8 @@ public:
 		   @param NodeHandle 
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
-			float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, 
-			ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, Grid3d *grid3D_);
+			float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, 
+			double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
 
   	~RRTPlanner();
   
@@ -160,8 +159,8 @@ public:
 			@return false if is outside the workspace
 		**/
 	bool setInitialPosition(DiscretePosition p_);
-	bool setInitialPositionCoupled(DiscretePosition p_);
-	bool setInitialPositionIndependent(DiscretePosition p1_, DiscretePosition p2_);
+	bool setInitialPositionCoupled(RRTNode n_);
+	bool setInitialPositionIndependent(RRTNode n_);
 	bool setInitialPosition(Vector3 p);
 
 	/**
@@ -196,14 +195,14 @@ public:
 	// 	return false;
 	// }
 
-	inline bool setValidInitialPositionMarsupial(DiscretePosition p1, DiscretePosition p2)
+	inline bool setValidInitialPositionMarsupial(RRTNode n_)
 	{
 		if (is_coupled){
-			if (setInitialPositionCoupled(p1))
+			if (setInitialPositionCoupled(n_))
 			{
 				if (!isInitialPositionUGVOccupied())
 				{
-					ROS_INFO("RRTPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", p1.x, p1.y, p1.z);
+					ROS_INFO("RRTPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
 					return true;
 				}
 			}
@@ -215,12 +214,13 @@ public:
 			return false;
 		}
 		else{
-				if(setInitialPositionIndependent(p1,p2))
+				if(setInitialPositionIndependent(n_))
 				{
 					if (!isInitialPositionUGVOccupied())
 					{
 						if(!isInitialPositionUAVOccupied()){
-							ROS_INFO("RRTPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+							ROS_INFO("RRTPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
+									n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
 							return true;
 						}
 						else{
@@ -237,23 +237,35 @@ public:
 		}
 	}
 
-	
-
 	// inline bool setValidInitialPosition(Vector3 p)
 	// {
-
 	// 	DiscretePosition pp = discretizePosition(p);
-
 	// 	return setValidInitialPosition(pp);
 	// }
 
-	inline bool setValidInitialPositionMarsupial(Vector3 p1,Vector3 p2)
+	inline bool setValidInitialPositionMarsupial(Vector3 p1,Vector3 p2, Quaternion q1, Quaternion q2)
 	{
-
+		RRTNode n_ ;
 		DiscretePosition pp1 = discretizePosition(p1);
 		DiscretePosition pp2 = discretizePosition(p2);
+		
+		n_.point.x = pp1.x;
+		n_.point.y = pp1.y;
+		n_.point.z = pp1.z;
+		n_.rot_ugv.w = q1.w;
+		n_.rot_ugv.x = q1.x;
+		n_.rot_ugv.y = q1.y;
+		n_.rot_ugv.z = q1.z;
 
-		return setValidInitialPositionMarsupial(pp1,pp2);
+		n_.point_uav.x = pp2.x;
+		n_.point_uav.y = pp2.y;
+		n_.point_uav.z = pp2.z;
+		n_.rot_uav.w = q2.w;
+		n_.rot_uav.x = q2.x;
+		n_.rot_uav.y = q2.y;
+		n_.rot_uav.z = q2.z;
+
+		return setValidInitialPositionMarsupial(n_);
 	}
 
 	inline bool setValidFinalPosition(DiscretePosition p)
@@ -387,8 +399,8 @@ protected:
 	void getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_);
 	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
 	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
-	bool checkPointsCatenaryFeasibility(const geometry_msgs::Point pf_);
-	bool checkCatenary(RRTNode &q_init_, int mode_);
+	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
+	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Point> &points_catenary_);
 	geometry_msgs::Point getReelNode(const RRTNode node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtreeNode(const RRTNode ukT_);
@@ -567,9 +579,11 @@ protected:
 	double minR;
 
 	octomap::OcTree *map;
+	std::vector<geometry_msgs::Point> points_catenary_new_node;
 	std::vector<geometry_msgs::Point> v_points_ws_ugv;
   	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_ugv_marker_pub_, lines_uav_marker_pub_, catenary_marker_pub_, all_catenary_marker_pub_;
   	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
+	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_;
 
 	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	double goal_gap_m;
@@ -599,7 +613,7 @@ protected:
 	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV 
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
-    double distance_obstacle_ugv, distance_obstacle_uav; //Safe distance to obstacle to accept a point valid for UGV and UAV
+    double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
 
 
 	visualization_msgs::MarkerArray catenary_marker;

@@ -15,7 +15,6 @@ RRTGlobalPlanner::RRTGlobalPlanner(std::string node_name_)
     tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
     tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
 	nh->param("path_grid3D", path_grid3D, (std::string) "~/");
-    // RRTPlanner RRTPlanner(node_name, path_grid3D);
     
     configParams();
     configTopics();
@@ -23,6 +22,101 @@ RRTGlobalPlanner::RRTGlobalPlanner(std::string node_name_)
     configRRTStar();
 
     configRRTPlanner();
+
+    // graphMarker();  // This method graph the catenary for the initial position.
+}
+
+void RRTGlobalPlanner::graphMarker()
+{
+	CatenarySolver cS;
+	std::vector<geometry_msgs::Point> points_catenary_;
+    geometry_msgs::Vector3 pos_reel_ugv ;
+    pos_reel_ugv.x = pos_reel_x;
+    pos_reel_ugv.y = pos_reel_y;
+    pos_reel_ugv.z = pos_reel_z;
+    
+    geometry_msgs::Point start_ugv, start_uav;
+    geometry_msgs::TransformStamped position_ugv_,position_uav_;
+    position_ugv_ = getRobotPoseUGV();
+    position_uav_ = getRobotPoseUAV();
+    start_ugv.x = position_ugv_.transform.translation.x;
+    start_ugv.y = position_ugv_.transform.translation.y;
+    start_ugv.z = position_ugv_.transform.translation.z + pos_reel_z; 
+    start_uav.x = position_uav_.transform.translation.x;
+    start_uav.y = position_uav_.transform.translation.y;
+    start_uav.z = position_uav_.transform.translation.z;
+
+    bool check_catenary = true;
+	bool founded_catenary = false;
+	bool increase_catenary;
+	double length_catenary_;
+	int n_points_cat_dis_;
+	double security_dis_ca_ = 0.1;
+	double delta_ = 0.0;	//Initial Value
+    double dist_init_final_ = sqrt(pow(start_uav.x-start_ugv.x,2) + pow(start_uav.y-start_ugv.y,2) + pow(start_uav.z-start_ugv.z,2));
+
+	std::string node_name_ = "grid3D_global_node";
+	Grid3d grid_3D(node_name_);
+
+    do{
+		increase_catenary = false;
+		points_catenary_.clear();
+		length_catenary_ = dist_init_final_* (1.001 + delta_);
+		if (length_catenary_ > length_tether_max){
+			check_catenary = false;
+			break;
+		}
+		cS.solve(start_ugv.x, start_ugv.y, start_ugv.z, start_uav.x, start_uav.y, start_uav.z, length_catenary_, points_catenary_);
+		double d_min_point_cat = 100000;
+		if (points_catenary_.size() > 5){
+			n_points_cat_dis_ = ceil(1.5*ceil(length_catenary_)); // parameter to ignore collsion points in the begining and in the end of catenary
+			if (n_points_cat_dis_ < 5)
+				n_points_cat_dis_ = 5;
+			for (size_t i = 0 ; i < points_catenary_.size() ; i++){
+				geometry_msgs::Point point_cat;
+				Eigen::Vector3d p_in_cat_, obs_to_cat_;
+				if (points_catenary_[i].z < ws_z_min){
+					check_catenary = false;
+					break;
+				}
+				if ((i > n_points_cat_dis_ ) && (i < points_catenary_.size()-n_points_cat_dis_/2)){
+					p_in_cat_.x() = points_catenary_[i].x;
+					p_in_cat_.y() = points_catenary_[i].y;
+					p_in_cat_.z() = points_catenary_[i].z;
+					double dist_cat_obs;
+					bool is_into_ = grid_3D.isIntoMap(p_in_cat_.x(),p_in_cat_.y(),p_in_cat_.z());
+					if(is_into_)
+						dist_cat_obs =  grid_3D.getPointDist((double)p_in_cat_.x(),(double)p_in_cat_.y(),(double)p_in_cat_.z()) ;
+					else
+						dist_cat_obs = -1.0;
+
+					if (d_min_point_cat > dist_cat_obs){
+						d_min_point_cat = dist_cat_obs;
+					}
+					if (dist_cat_obs < security_dis_ca_){
+						delta_ = delta_ + 0.005;
+						increase_catenary = true;
+						break;
+					}
+				}
+				point_cat.x = points_catenary_[i].x;
+				point_cat.y = points_catenary_[i].y;
+				point_cat.z = points_catenary_[i].z;
+	
+			}
+			if (check_catenary && !increase_catenary){
+				founded_catenary = true;
+				check_catenary = false;
+			}
+		}
+		else{
+			check_catenary = false;
+		}
+	}while (check_catenary);
+
+
+	rrtgm.configGraphMarkers(world_frame, map_resolution, coupled, n_iter, pos_reel_ugv);
+    rrtgm.getCatenaryMarker(points_catenary_, initial_catenary_pub_);
 }
 
 //This function gets parameter from param server at startup if they exists, if not it passes default values
@@ -80,6 +174,7 @@ void RRTGlobalPlanner::configParams()
 
     nh->param("distance_obstacle_ugv", distance_obstacle_ugv, (double)1.0);
     nh->param("distance_obstacle_uav", distance_obstacle_uav, (double)1.0);
+    nh->param("distance_catenary_obstacle", distance_catenary_obstacle, (double)0.1);
 
   	nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
 	nh->param("path", path, (std::string) "~/");
@@ -111,7 +206,7 @@ void RRTGlobalPlanner::configParams()
 void RRTGlobalPlanner::configRRTStar()
 {
     rrtplanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
-                    goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, grid3D);
+                    goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid3D);
     rrtplanner.setTimeOut(timeout);
 }
 
@@ -127,6 +222,7 @@ void RRTGlobalPlanner::configTopics()
     reducedMapPublisher = nh->advertise<octomap_msgs::Octomap>("octomap_reduced", 1000);
 
     cleanMarkersOptimizerPublisher = nh->advertise<std_msgs::Bool>("/clean_marker_optimizer", 1);
+	initial_catenary_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_initial_position", 100, true);
 
 
     bool useOctomap;
@@ -354,7 +450,7 @@ void RRTGlobalPlanner::sendPathToLocalPlannerServer()
             goal_action.length_catenary.push_back(rrtplanner.length_catenary[n_]);
         }
     // }
-
+    rrtplanner.~RRTPlanner();
     execute_path_client_ptr->sendGoal(goal_action);
 }
 
@@ -833,6 +929,7 @@ bool RRTGlobalPlanner::setGoal()
 bool RRTGlobalPlanner::setStart()
 {
     geometry_msgs::Vector3Stamped start_ugv_, start_uav_;
+    geometry_msgs::QuaternionStamped q_start_ugv_, q_start_uav_;
     bool ret = false;
 
     geometry_msgs::TransformStamped position_ugv_,position_uav_;
@@ -843,16 +940,30 @@ bool RRTGlobalPlanner::setStart()
     start_ugv_.vector.y = position_ugv_.transform.translation.y;
     // start_ugv_.vector.z = position_ugv_.transform.translation.z + map_v_inflaction + map_resolution; //Added to be consecuent with the line 809, the the displacement of UGV is always apply
     start_ugv_.vector.z = position_ugv_.transform.translation.z ; 
+    q_start_ugv_.quaternion.w = position_ugv_.transform.rotation.w;
+    q_start_ugv_.quaternion.x = position_ugv_.transform.rotation.x;
+    q_start_ugv_.quaternion.y = position_ugv_.transform.rotation.y;
+    q_start_ugv_.quaternion.z = position_ugv_.transform.rotation.z;
+    q_start_ugv_.header = position_ugv_.header;
+    
     start_uav_.vector.x = position_uav_.transform.translation.x;
     start_uav_.vector.y = position_uav_.transform.translation.y;
     start_uav_.vector.z = position_uav_.transform.translation.z;
-    printf("setStart :  ugv[%f %f %f]  uav[%f %f %f]\n",start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z, start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z);
-
+    q_start_uav_.quaternion.w = position_uav_.transform.rotation.w;
+    q_start_uav_.quaternion.x = position_uav_.transform.rotation.x;
+    q_start_uav_.quaternion.y = position_uav_.transform.rotation.y;
+    q_start_uav_.quaternion.z = position_uav_.transform.rotation.z;
+    q_start_uav_.header = position_uav_.header;
+    printf("setStart position:  ugv[%f %f %f / %f %f %f %f]  uav[%f %f %f / %f %f %f %f]\n",
+            start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z, 
+            q_start_ugv_.quaternion.x , q_start_ugv_.quaternion.y, q_start_ugv_.quaternion.z, q_start_ugv_.quaternion.w,
+            start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z, 
+            q_start_uav_.quaternion.x, q_start_uav_.quaternion.y, q_start_uav_.quaternion.z, q_start_uav_.quaternion.w);
 
     // if (start_ugv_.vector.z <= ws_z_min)
     //     start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
 
-    if (rrtplanner.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector))
+    if (rrtplanner.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector, q_start_ugv_.quaternion, q_start_uav_.quaternion))
     {
         ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position): [%.2f, %.2f, %.2f]", start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z);
         ret = true;

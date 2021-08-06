@@ -5,7 +5,7 @@
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="num_goal"         default="0"/>
-    <arg name="pos_uav_above_ugv"     default="1.0"/> #meters UAV above UGV
+    <arg name="pos_uav_above_ugv"     default="2.0"/> #meters UAV above UGV
     <arg name="pos_uav_x_ugv"         default="0.0"/> #meters UAV in X axe UGV
     <arg name="pos_uav_y_ugv"         default="0.0"/> #meters UAV in Y axe UGV
     <arg name="use_catenary_planning" default="true"/>

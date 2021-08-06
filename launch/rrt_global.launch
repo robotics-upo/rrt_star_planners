@@ -33,7 +33,7 @@
     <arg name="pos_reel_z"    default="0.22"/>
 
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_planners" type="rrt_global_planner_node" name="rrt_planner_node" output="screen" launch-prefix="gdb -ex run --args">
+    <node pkg="rrt_planners" type="rrt_global_planner_node" name="rrt_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <param name="planner_type" value="$(arg planner_type)"/> 
@@ -57,7 +57,6 @@
         <param name="length_tether_max" value="$(arg length_tether_max)"/>   
         <param name="write_data_for_analysis"    value="true"/>     
         <param name="path"   value="$(arg path_files)"/>  
-        <param name="path_grid3D"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/> 
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
@@ -73,6 +72,11 @@
         <param name="pos_reel_z"    value="$(arg pos_reel_z)"/>     
         <param name="distance_obstacle_ugv"         value="0.2"/> <!-- bound distance UGV to obstacles 0.2[m] resolution of the map-->
         <param name="distance_obstacle_uav"         value="0.2"/> <!-- bound distance UAV to obstacles 0.2[m] resolution of the map-->
+        <param name="distance_catenary_obstacle"  value="0.05"/> <!--bound distance catenary to obstacles [m] -->   
+        <!-- For Grid3D -->
+        <param name="path_grid3D"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
+        <param name="m_globalFrameId"   value="map"/>
+        <param name="sensor_dev "   value="0.2"/> # Gaussian error
     </node>
 
     <!-- Local Planner: Optimizer Ceres-->
@@ -136,6 +140,11 @@
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="num_goal"   value="$(arg num_goal)"/>     
         <param name="path"   value="$(arg path_files)"/>     
+
+        <!-- For Grid3D -->
+        <param name="path_grid3D"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
+        <param name="m_globalFrameId"   value="map"/>
+        <param name="sensor_dev "   value="0.2"/> # Gaussian error
     </node>
 
 
