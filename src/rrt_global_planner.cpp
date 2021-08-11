@@ -6,7 +6,6 @@ namespace PathPlanners
 RRTGlobalPlanner::RRTGlobalPlanner(std::string node_name_)
 {
     //The tf buffer is used to lookup the base link position(tf from world frame to robot base frame)
-    //tfBuffer = tfBuffer_;
     node_name = node_name_;
 
     nh.reset(new ros::NodeHandle("~"));
@@ -14,15 +13,12 @@ RRTGlobalPlanner::RRTGlobalPlanner(std::string node_name_)
     tfBuffer.reset(new tf2_ros::Buffer);
     tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
     tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
-	nh->param("path_grid3D", path_grid3D, (std::string) "~/");
     
     configParams();
     configTopics();
     configServices();
     configRRTStar();
-
     configRRTPlanner();
-
     // graphMarker();  // This method graph the catenary for the initial position.
 }
 
@@ -1051,11 +1047,6 @@ float RRTGlobalPlanner::getYawFromQuat(Quaternion quat)
 	M.getRPY(r, p, y);
 
 	return y;
-}
-
-void RRTGlobalPlanner::receiveGrid3D(Grid3d* G3D_)
-{
-    grid3D = G3D_;
 }
 
 } // namespace PathPlanners

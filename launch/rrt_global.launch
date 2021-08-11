@@ -19,7 +19,7 @@
     <arg name="path_files"    default="/home/simon/results_marsupial_optimizer/"/>     
     <arg name="num_goal"         default="0"/>
     <arg name="n_iter_rrt"         default="500"/>
-    <arg name="n_loop_rrt"         default="80"/>
+    <arg name="n_loop_rrt"         default="100"/>
     <arg name="radius_near_nodes"         default="1.0"/> 
     <arg name="goal_gap_m"         default="0.8"/>
     <arg name="step_steer"         default="0.5"/>
@@ -57,7 +57,6 @@
         <param name="length_tether_max" value="$(arg length_tether_max)"/>   
         <param name="write_data_for_analysis"    value="true"/>     
         <param name="path"   value="$(arg path_files)"/>  
-        <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
@@ -74,8 +73,8 @@
         <param name="distance_obstacle_uav"         value="0.2"/> <!-- bound distance UAV to obstacles 0.2[m] resolution of the map-->
         <param name="distance_catenary_obstacle"  value="0.05"/> <!--bound distance catenary to obstacles [m] -->   
         <!-- For Grid3D -->
-        <param name="path_grid3D"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
-        <param name="m_globalFrameId"   value="map"/>
+        <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
+        <param name="global_frame_id"   value="map"/>
         <param name="sensor_dev "   value="0.2"/> # Gaussian error
     </node>
 
@@ -142,11 +141,10 @@
         <param name="path"   value="$(arg path_files)"/>     
 
         <!-- For Grid3D -->
-        <param name="path_grid3D"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
-        <param name="m_globalFrameId"   value="map"/>
+        <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
+        <param name="global_frame_id"   value="map"/>
         <param name="sensor_dev "   value="0.2"/> # Gaussian error
     </node>
-
 
     <!-- Robot Marker -->
     <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">

@@ -89,8 +89,6 @@ namespace PathPlanners
             */
             void plan();
             
-            void receiveGrid3D(Grid3d* G3D_);
-
         private:
             void clearMarkers();
             void clearMarkersRayCast();
@@ -219,7 +217,6 @@ namespace PathPlanners
             bool showConfig, debug, debug_rrt;
 
 	        std::string path, name_output_file;
-	        std::string path_grid3D;
 	        int scenario_number, num_pos_initial, num_goal;
             int countImpossible = 0;
 

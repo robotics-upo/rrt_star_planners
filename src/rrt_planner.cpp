@@ -11,7 +11,6 @@ namespace PathPlanners
 RRTPlanner::RRTPlanner()
 {
 	std::string node_name_ = "grid3D_node";
-	// grid_3D = new Grid3d(node_name_, path_name_);
 	grid_3D = new Grid3d(node_name_);
 }
 
@@ -285,7 +284,7 @@ int RRTPlanner::computeTreesIndependent()
 	if (markers_debug)
 		rrtgm.getAllCatenaryMarker(nodes_tree, all_catenary_marker_pub_);
 
-	ros::Duration(5.0).sleep();
+	// ros::Duration(5.0).sleep();
 	rrtgm.clearCatenaryMarker(catenary_marker_pub_);
 
   	return ret_val; 

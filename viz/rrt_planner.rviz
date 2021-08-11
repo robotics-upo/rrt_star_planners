@@ -86,7 +86,7 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: PC Octomap
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -127,13 +127,14 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          map:
-            uav_base_link:
+        map:
+          uav_base_link:
+            {}
+          ugv_base_link:
+            reel_base_link:
               {}
-            ugv_base_link:
-              reel_base_link:
-                {}
+        world:
+          {}
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
@@ -189,7 +190,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/tree_rrt_star_ugv
       Name: RRTStar_nodes_ugv
       Namespaces:
-        tree_RRTStar_ugv: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -197,7 +198,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/tree_rrt_star_uav
       Name: RRTStar_nodes_uav
       Namespaces:
-        tree_RRTStar_uav: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -237,7 +238,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/rand_point
       Name: RRT_Rand_node
       Namespaces:
-        rand_uav_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -245,7 +246,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/new_point
       Name: New_node
       Namespaces:
-        rand_uav_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -253,7 +254,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/nearest_point
       Name: Nearest_node
       Namespaces:
-        rand_uav_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -261,7 +262,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/points_marker
       Name: Points_between_cat
       Namespaces:
-        points_marker: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -484,7 +485,7 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: PC Grid3D
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -501,7 +502,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/new_catenaty
       Name: MarkerArray
       Namespaces:
-        one_catenary: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -509,7 +510,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/nearest_catenaty
       Name: MarkerArray
       Namespaces:
-        one_catenary: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -540,25 +541,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 7.283443927764893
+      Distance: 13.814668655395508
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -8.750072479248047
-        Y: -17.81958770751953
-        Z: -7.240592822199687e-6
+        X: 1.3433845043182373
+        Y: -2.809767246246338
+        Z: -1.7569655028637499e-6
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4247978925704956
+      Pitch: 0.5797983407974243
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 2.8551506996154785
+      Yaw: 5.43019437789917
     Saved: ~
 Window Geometry:
   Displays:
