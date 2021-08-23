@@ -81,6 +81,7 @@
     <!-- Local Planner: Optimizer Ceres-->
     <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
+        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <remap from="/Navigation" to="Navigation"/>
         <remap from="/points" to="$(arg lidar_topic)" if="$(eval not arg('use_octomap') and arg('use_dron'))" />
@@ -92,36 +93,54 @@
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
        
-        <param name="w_alpha_ugv"   value="0.520"/>   # equi-distance ugv
-        <param name="w_beta_ugv"    value="0.100"/>   # obstacles ugv
-        <param name="w_nu_ugv"    value="0.080"/>   # length uav
-        <param name="w_theta_ugv"   value="0.500"/>   # traversability ugv
-        <param name="w_gamma_ugv"   value="0.300"/>   # kinematics ugv 
-        <!-- <param name="w_iota_ugv"    value="0.800"/>   # obstacles through ugv -->
-        <param name="w_kappa_ugv"   value="0.010"/>   # rotation ugv 
-        <param name="w_delta_ugv"     value="0.100"/>  # time 
-        <param name="w_epsilon_ugv"   value="0.0100"/>   # velocity 
-        <param name="w_zeta_ugv"      value="0.0010"/>   # acceleration 
+       
+        <param name="optimize_ugv"   value="true"/>  # UGV
+        <param name="optimize_uav"   value="false"/>  # UAV
+        <param name="optimize_cat"   value="false"/>  # CAT
+
+        <param name="equidistance_ugv_constraint"   value="1"/>   # equidistance_ugv_constraint
+        <param name="obstacles_ugv_constraint"      value="1"/>   # obstacles_ugv_constraint
+        <param name="traversability_ugv_constraint" value="1"/>   # traversability_ugv_constraint
+        <param name="kinematic_ugv_constraint"      value="1"/>   # kinematic_ugv_constraint
+        <param name="time_ugv_constraint"           value="false"/>   # time_ugv_constraint
+        <param name="velocity_ugv_constraint"       value="false"/>   # velocity_ugv_constraint
+        <param name="acceleration_ugv_constraint"   value="false"/>   # acceleration_ugv_constraint
+
+        <param name="equidistance_uav_constraint"   value="1"/>    # equidistance_uav_constraint    // 1 = autodiff ; 0 = analytic  
+        <param name="obstacles_uav_constraint"      value="1"/>    # obstacles_uav_constraint    // 1 = autodiff ; 0 = analytic
+        <param name="kinematics_uav_constraint"     value="1"/>    # kinematics_uav_constraint    // 1 = autodiff ; 0 = analytic
+        <param name="time_uav_constraint"           value="true"/>    # time_uav_constraint
+        <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
+        <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
+
+
+        <!-- UGV Constraint Parameters -->
+        <param name="w_alpha_ugv"   value="0.070"/>   # equi-distance ugv
+        <param name="w_beta_ugv"    value="0.120"/>   # obstacles ugv
+        <param name="w_theta_ugv"   value="0.200"/>   # traversability ugv
+        <param name="w_gamma_ugv"   value="0.180"/>   # kinematics ugv 
+        <param name="w_delta_ugv"     value="0.003"/>  # time 
+        <param name="w_epsilon_ugv"   value="0.008"/>   # velocity 
+        <param name="w_zeta_ugv"      value="0.0006"/>   # acceleration 
         
-        <param name="w_alpha_uav"   value="0.280"/>   # equi-distance uav
-        <param name="w_beta_uav"    value="0.160"/>   # obstacles uav
-        <param name="w_mu_uav"    value="0.120"/>   # repulsion uav
-        <param name="w_gamma_uav"   value="0.260"/>   # kinematics uav 
-        <!-- <param name="w_iota_uav"    value="0.001"/>   # obstacles through uav -->
-        <param name="w_kappa_uav"   value="0.05"/>   # rotation uav 
+        <!-- UAV Constraint Parameters -->
+        <param name="w_alpha_uav"   value="0.100"/>   # equi-distance uav Automatic
+        <param name="w_beta_uav"    value="0.100"/>   # obstacles uav Automatic
+        <param name="w_gamma_uav"   value="0.320"/>   # kinematics uav Automatic
         <param name="w_delta"     value="0.003"/>  # time 
-        <param name="w_epsilon"   value="0.006"/>   # velocity 
+        <param name="w_epsilon"   value="0.008"/>   # velocity 
         <param name="w_zeta"      value="0.0006"/>   # acceleration 
         
+        <!-- Catenary Constraint Parameters -->
         <param name="w_eta_1"    value="0.010"/>   # catenary Obstacles collision
         <param name="w_eta_2"    value="0.005"/>   # catenary length
         <param name="w_eta_3"    value="0.010"/>   # catenary Z collision
-        <param name="w_lambda" value="0.0"/>   # dynamic catenary 
 
-        <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
+
+        <param name="n_iter_opt"    value="2000"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
             
-        <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles [m]-->
+        <param name="distance_obstacle_ugv"         value="0.8"/> <!-- bound distance UGV to obstacles [m]-->
         <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles [m]-->
         <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
         <param name="initial_velocity_uav"  value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->

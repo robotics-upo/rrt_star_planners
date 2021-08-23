@@ -595,6 +595,7 @@ protected:
 
 	std::vector<RRTNodeLink3D> discrete_world; // Occupancy Matrix and its size
 
+	int count_qnew_fail; // count times that fail get a new q_new;
 	int matrix_size;
 	int K, n_iter, n_loop, count_graph;
 	int ws_x_max, ws_y_max, ws_z_max; // WorkSpace lenghts from origin (0,0,0)

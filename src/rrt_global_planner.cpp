@@ -446,7 +446,9 @@ void RRTGlobalPlanner::sendPathToLocalPlannerServer()
             goal_action.length_catenary.push_back(rrtplanner.length_catenary[n_]);
         }
     // }
-    rrtplanner.~RRTPlanner();
+
+    // rrtplanner.~RRTPlanner(); // Destroy the global planner, grid and vector to free memory
+    
     execute_path_client_ptr->sendGoal(goal_action);
 }
 

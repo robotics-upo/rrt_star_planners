@@ -197,8 +197,8 @@ void RRTGraphMarkers::getPathMarker(std::list<RRTNode*> pt_, ros::Publisher line
 			// lines_ugv_marker.markers[i].scale.y = 0.3;
 			// lines_ugv_marker.markers[i].scale.z = 0.1;
 			lines_ugv_marker.markers[i_-1].color.a = 1.0;
-			lines_ugv_marker.markers[i_-1].color.r = 0.0;
-			lines_ugv_marker.markers[i_-1].color.g = 0.0;
+			lines_ugv_marker.markers[i_-1].color.r = 1.0;
+			lines_ugv_marker.markers[i_-1].color.g = 1.0;
 			lines_ugv_marker.markers[i_-1].color.b = 1.0;
 		}
 		_p1.x = p_->point.x*step;
@@ -234,9 +234,9 @@ void RRTGraphMarkers::getPathMarker(std::list<RRTNode*> pt_, ros::Publisher line
 				// lines_uav_marker.markers[i].scale.y = 0.3;
 				// lines_uav_marker.markers[i].scale.z = 0.1;
 				lines_uav_marker.markers[i_-1].color.a = 1.0;
-				lines_uav_marker.markers[i_-1].color.r = 1.0;
-				lines_uav_marker.markers[i_-1].color.g = 1.0;
-				lines_uav_marker.markers[i_-1].color.b = 1.0;
+				lines_uav_marker.markers[i_-1].color.r = 0.0;
+				lines_uav_marker.markers[i_-1].color.g = 0.0;
+				lines_uav_marker.markers[i_-1].color.b = 0.0;
 			}
 			_p1.x = p_->point_uav.x*step;
 			_p1.y = p_->point_uav.y*step;

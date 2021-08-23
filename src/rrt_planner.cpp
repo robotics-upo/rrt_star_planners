@@ -221,6 +221,7 @@ int RRTPlanner::computeTreesIndependent()
  	double ret_val = -1.0; 
     int count = 0; 
 	int count_loop = 0; 
+	count_qnew_fail = 0;
     
 	while (count < n_iter) { // n_iter Max. number of nodes to expand for each round
       	
@@ -402,15 +403,16 @@ bool RRTPlanner::extendGraph(const RRTNode q_rand_)
 		/******************************************************************/
 
 		bool exist_q_new_ = steering(*q_nearest, q_rand_, step_steer, q_new);
-		printf(" q_new:  UGV[%f %f %f / %f %f %f %f]  UAV[%f %f %f / %f %f %f %f]  q_new.catenary=[%s]  cost=[%f] \n", 
-				q_new.point.x*step,q_new.point.y*step,q_new .point.z*step, q_new.rot_ugv.x, q_new.rot_ugv.y, q_new.rot_ugv.z, q_new.rot_ugv.w,
-				q_new.point_uav.x*step,q_new.point_uav.y*step,q_new.point_uav.z*step, q_new.rot_uav.x, q_new.rot_uav.y, q_new.rot_uav.z, q_new.rot_uav.w,
-				q_new.catenary ? "true" : "false",q_new.cost);
+		// printf(" q_new:  UGV[%f %f %f / %f %f %f %f]  UAV[%f %f %f / %f %f %f %f]  q_new.catenary=[%s]  cost=[%f] \n", 
+		// 		q_new.point.x*step,q_new.point.y*step,q_new .point.z*step, q_new.rot_ugv.x, q_new.rot_ugv.y, q_new.rot_ugv.z, q_new.rot_ugv.w,
+		// 		q_new.point_uav.x*step,q_new.point_uav.y*step,q_new.point_uav.z*step, q_new.rot_uav.x, q_new.rot_uav.y, q_new.rot_uav.z, q_new.rot_uav.w,
+		// 		q_new.catenary ? "true" : "false",q_new.cost);
 
 		if (!exist_q_new_){
-			ROS_INFO( PRINTF_CYAN"  RRTPlanner::extendGraph : Not new point q_new=[%f %f %f / %f %f %f]  q_nearest=[%f %f %f / %f %f %f]",
-				q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_new.point_uav.x*step, q_new.point_uav.y*step, q_new.point_uav.z*step,
-				q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step, q_nearest->point_uav.x*step, q_nearest->point_uav.y*step, q_nearest->point_uav.z*step);
+			// ROS_INFO( PRINTF_CYAN"  RRTPlanner::extendGraph : Not new point q_new=[%f %f %f / %f %f %f]  q_nearest=[%f %f %f / %f %f %f]",
+				// q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_new.point_uav.x*step, q_new.point_uav.y*step, q_new.point_uav.z*step,
+				// q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step, q_nearest->point_uav.x*step, q_nearest->point_uav.y*step, q_nearest->point_uav.z*step);
+			count_qnew_fail++;
 			return false;
 		}
 
@@ -433,12 +435,13 @@ bool RRTPlanner::extendGraph(const RRTNode q_rand_)
 				q_min = q_nearest;
 			}
 			else{
-				ROS_INFO(PRINTF_BLUE"  RRTPlanner::extendGraph : Not Obstacle Free q_new=[%f %f %f / %f %f %f]  q_nearest=[%f %f %f / %f %f %f]",
-				q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_new.point_uav.x*step, q_new.point_uav.y*step, q_new.point_uav.z*step,
-				q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step, q_nearest->point_uav.x*step, q_nearest->point_uav.y*step, q_nearest->point_uav.z*step);
+				// ROS_INFO(PRINTF_BLUE"  RRTPlanner::extendGraph : Not Obstacle Free q_new=[%f %f %f / %f %f %f]  q_nearest=[%f %f %f / %f %f %f]",
+				// q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_new.point_uav.x*step, q_new.point_uav.y*step, q_new.point_uav.z*step,
+				// q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step, q_nearest->point_uav.x*step, q_nearest->point_uav.y*step, q_nearest->point_uav.z*step);
 				// std::string y_ ;
 				// std::cin >> y_ ;
 				// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;
+				count_qnew_fail++;
 				return false;
 			}
 			// std::string y_;
@@ -520,6 +523,7 @@ bool RRTPlanner::extendGraph(const RRTNode q_rand_)
 			rrtgm.getGraphMarker(new_node, count_graph, tree_rrt_star_ugv_pub_, tree_rrt_star_uav_pub_);
 		}
 
+		count_qnew_fail = 0;
 		return true;
 	}
 }
@@ -775,35 +779,37 @@ bool RRTPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, flo
 				&& q1_.length_cat < min_dist_for_steer_ugv) {
 				q_new_ = q1_;
 				do_steer_ugv = false;
-				ROS_INFO(PRINTF_YELLOW"New position: UGV fix and moving UAV position q1_.length_cat = %f", q1_.length_cat);
+				// ROS_INFO(PRINTF_YELLOW"New position: UGV fix and moving UAV position q1_.length_cat = %f", q1_.length_cat);
 				return true;
 
 			}
 			else if (checkNodeFeasibility(q_new_,false) && checkNodeFeasibility(q_new_,true) && checkCatenary(q_new_, 2, points_catenary_new_node)){
-				ROS_INFO(PRINTF_RED"New position steer using random node");
+				// ROS_INFO(PRINTF_RED"New position steer using random node");
 				return true;
 			}
-			std::vector<float> nearest_uav_to_ugv_  = getNearestUAVNode(q_new_);
-			RRTNode q2_;
-			q2_.point.x = q_new_.point.x;
-			q2_.point.y = q_new_.point.y;
-			q2_.point.z = q_new_.point.z;
-			q2_.rot_ugv.x =  q_new_.rot_ugv.x; 
-			q2_.rot_ugv.y =  q_new_.rot_ugv.y; 
-			q2_.rot_ugv.z =  q_new_.rot_ugv.z;
-			q2_.rot_ugv.w =  q_new_.rot_ugv.w;
-			q2_.point_uav.x = (int)nearest_uav_to_ugv_[0];
-			q2_.point_uav.y = (int)nearest_uav_to_ugv_[1];
-			q2_.point_uav.z = (int)nearest_uav_to_ugv_[2];
-			q2_.rot_uav.x = nearest_uav_to_ugv_[3];
-			q2_.rot_uav.y = nearest_uav_to_ugv_[4];
-			q2_.rot_uav.z = nearest_uav_to_ugv_[5];
-			q2_.rot_uav.w = nearest_uav_to_ugv_[6];
-			if (checkNodeFeasibility(q2_,false) && checkNodeFeasibility(q2_,true) && checkCatenary(q2_, 2, points_catenary_new_node) 
-				&& q2_.length_cat < min_dist_for_steer_ugv) {
-				q_new_ = q2_;
-				ROS_INFO(PRINTF_ORANGE"New position: UAV fix and moving UGV position q1_.length_cat = %f", q2_.length_cat);
-				return true;
+			if (count_qnew_fail > 4){
+				std::vector<float> nearest_uav_to_ugv_  = getNearestUAVNode(q_new_);
+				RRTNode q2_;
+				q2_.point.x = q_new_.point.x;
+				q2_.point.y = q_new_.point.y;
+				q2_.point.z = q_new_.point.z;
+				q2_.rot_ugv.x =  q_new_.rot_ugv.x; 
+				q2_.rot_ugv.y =  q_new_.rot_ugv.y; 
+				q2_.rot_ugv.z =  q_new_.rot_ugv.z;
+				q2_.rot_ugv.w =  q_new_.rot_ugv.w;
+				q2_.point_uav.x = (int)nearest_uav_to_ugv_[0];
+				q2_.point_uav.y = (int)nearest_uav_to_ugv_[1];
+				q2_.point_uav.z = (int)nearest_uav_to_ugv_[2];
+				q2_.rot_uav.x = nearest_uav_to_ugv_[3];
+				q2_.rot_uav.y = nearest_uav_to_ugv_[4];
+				q2_.rot_uav.z = nearest_uav_to_ugv_[5];
+				q2_.rot_uav.w = nearest_uav_to_ugv_[6];
+				if (checkNodeFeasibility(q2_,false) && checkNodeFeasibility(q2_,true) && checkCatenary(q2_, 2, points_catenary_new_node) 
+					&& q2_.length_cat < min_dist_for_steer_ugv) {
+					q_new_ = q2_;
+					// ROS_INFO(PRINTF_ORANGE"New position: UAV fix and moving UGV position q1_.length_cat = %f", q2_.length_cat);
+					return true;
+				}
 			}
 		}
 		return false;
