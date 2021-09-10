@@ -133,9 +133,9 @@
         <param name="w_zeta"      value="0.0006"/>   # acceleration 
         
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.010"/>   # catenary Obstacles collision
-        <param name="w_eta_2"    value="0.005"/>   # catenary length
-        <param name="w_eta_3"    value="0.010"/>   # catenary Z collision
+        <param name="w_eta_1"    value="0.002"/>   # catenary Obstacles collision
+        <param name="w_eta_2"    value="0.0012"/>   # catenary length
+        <param name="w_eta_3"    value="0.0012"/>   # catenary Z collision
 
 
         <param name="n_iter_opt"    value="10000"/>   <!-- number max. of iterations per optimization --> 
@@ -150,7 +150,7 @@
         <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> 
         <param name="min_distance_add_new_point" value="1.0"/>  
         #Parameter for Edge Catenary
-        <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_catenary_obstacle"  value="0.10"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="true"/>     
@@ -159,6 +159,9 @@
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="num_goal"   value="$(arg num_goal)"/>     
         <param name="path"   value="$(arg path_files)"/>     
+        <param name="pos_reel_x"    value="$(arg pos_reel_x)"/>     
+        <param name="pos_reel_y"    value="$(arg pos_reel_y)"/>     
+        <param name="pos_reel_z"    value="$(arg pos_reel_z)"/>   
 
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
