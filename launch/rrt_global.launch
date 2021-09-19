@@ -79,7 +79,7 @@
     </node>
 
     <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
+    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen" launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
@@ -92,7 +92,6 @@
         <param name="use_octomap_local" value="true"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
-       
        
         <param name="fix_last_position_ugv"   value="false"/> 
         <param name="optimize_ugv"   value="true"/>  # UGV
@@ -116,7 +115,7 @@
 
 
         <!-- UGV Constraint Parameters -->
-        <param name="w_alpha_ugv"   value="0.080"/>   # equi-distance ugv
+        <param name="w_alpha_ugv"   value="0.040"/>   # equi-distance ugv
         <param name="w_beta_ugv"    value="0.140"/>   # obstacles ugv
         <param name="w_theta_ugv"   value="0.100"/>   # traversability ugv
         <param name="w_gamma_ugv"   value="0.120"/>   # kinematics ugv 
@@ -133,9 +132,9 @@
         <param name="w_zeta"      value="0.0006"/>   # acceleration 
         
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.002"/>   # catenary Obstacles collision
-        <param name="w_eta_2"    value="0.0012"/>   # catenary length
-        <param name="w_eta_3"    value="0.0012"/>   # catenary Z collision
+        <param name="w_eta_1"    value="0.00002"/>   # catenary Obstacles collision
+        <param name="w_eta_2"    value="0.00006"/>   # catenary length
+        <param name="w_eta_3"    value="0.00005"/>   # catenary Z collision
 
 
         <param name="n_iter_opt"    value="10000"/>   <!-- number max. of iterations per optimization --> 
