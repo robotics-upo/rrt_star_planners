@@ -263,9 +263,6 @@ namespace PathPlanners
             double map_resolution;
             double map_h_inflaction;
             double map_v_inflaction; //JAC: Hasta aquí todo cero.
-            double goal_weight;
-            double z_weight_cost;
-            double z_not_inflate;
             double traj_dxy_max;
             double traj_dz_max;
             double traj_vxy_m;

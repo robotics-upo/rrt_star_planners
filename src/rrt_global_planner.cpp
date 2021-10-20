@@ -141,9 +141,6 @@ void RRTGlobalPlanner::configParams()
     nh->param("map_h_inflaction", map_h_inflaction, (double)0.05);
     nh->param("map_v_inflaction", map_v_inflaction, (double)0.05);
 
-    nh->param("z_weight_cost", z_weight_cost, (double)1.2);
-    nh->param("z_not_inflate", z_not_inflate, (double)8);
-    nh->param("goal_weight", goal_weight, (double)1.1);
 
     nh->param("traj_dxy_max", traj_dxy_max, (double)1);
     nh->param("traj_pos_tol", traj_pos_tol, (double)1);
@@ -192,7 +189,6 @@ void RRTGlobalPlanner::configParams()
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
     ROS_INFO_COND(showConfig, PRINTF_GREEN "   Workspace = X: [%.2f, %.2f]\t Y: [%.2f, %.2f]\t Z: [%.2f, %.2f]  ", ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min);
 
-    ROS_INFO_COND(showConfig, PRINTF_GREEN "   rrtplanner* with optim.: goal_weight = [%.2f]", goal_weight);
     ROS_INFO_COND(showConfig, PRINTF_GREEN "   Trajectory Position Increments = [%.2f], Tolerance: [%.2f]", traj_dxy_max, traj_pos_tol);
     ROS_INFO_COND(showConfig, PRINTF_GREEN "   World frame: %s, UGV base frame: %s, UAV base frame: %s ", world_frame.c_str(), ugv_base_frame.c_str(), uav_base_frame.c_str());
 
@@ -202,8 +198,7 @@ void RRTGlobalPlanner::configParams()
 void RRTGlobalPlanner::configRRTStar()
 {
     rrtplanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
-                    goal_weight, z_weight_cost, z_not_inflate, nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid3D);
-    rrtplanner.setTimeOut(timeout);
+                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid3D);
 }
 
 void RRTGlobalPlanner::configTopics()
@@ -224,14 +219,8 @@ void RRTGlobalPlanner::configTopics()
     bool useOctomap;
     nh->param("use_octomap", useOctomap, (bool)false);
 
-    if (useOctomap)
-    {
-        sub_map = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary", 1, &RRTGlobalPlanner::collisionMapCallBack, this);
-    }
-    else
-    {
-        sub_map = nh->subscribe<PointCloud>("/points", 1, &RRTGlobalPlanner::pointsSub, this);
-    }
+    sub_map = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary", 1, &RRTGlobalPlanner::collisionMapCallBack, this);
+
     // point_cloud_map_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &RRTGlobalPlanner::readPointCloudMapCallback, this);
     point_cloud_map_trav_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &RRTGlobalPlanner::readPointCloudTraversabilityMapCallback, this);
     point_cloud_map_ugv_sub_ = nh->subscribe( "/region_growing_obstacles_pc_map", 1,  &RRTGlobalPlanner::readPointCloudUGVObstaclesMapCallback, this);
@@ -267,45 +256,6 @@ void RRTGlobalPlanner::readPointCloudUAVObstaclesMapCallback(const sensor_msgs::
 {
     rrtplanner.readPointCloudMapForUAV(msg);
     ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UAV Obstacles Map Navigation Received");
-}
-
-void RRTGlobalPlanner::pointsSub(const PointCloud::ConstPtr &points)
-{
-    if(mapRec){
-        return;
-    }
-        
-    std::string *error;
-    if(!tf_list_ptr->canTransform(world_frame, points->header.frame_id,ros::Time::now(), error)){
-        ROS_ERROR("Can't transform map: %s", error->c_str());
-        return;
-    }
-    
-    if (points->header.frame_id != world_frame)
-    {
-        PointCloud out;
-        try
-        {
-            tf_list_ptr->waitForTransform(points->header.frame_id, world_frame, ros::Time::now(), ros::Duration(5));
-            pcl_ros::transformPointCloud(world_frame, *points, out, *tf_list_ptr);
-            ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner 3D: Collision Map Received after transform from %s to %s", points->header.frame_id.c_str(), world_frame.c_str());
-        }
-        catch (tf::TransformException &ex)
-        {
-            ROS_WARN("Transform exception: %s", ex.what());
-            return;
-        }
-        rrtplanner.updateMap(out);
-        mapRec = true;
-
-    }
-    else
-    {
-        rrtplanner.updateMap(*points);
-        mapRec = true;
-        ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner 3D: Collision Map Received");
-    }
-    rrtplanner.publishOccupationMarkersMap();
 }
 
 void RRTGlobalPlanner::configServices()
