@@ -611,11 +611,11 @@ protected:
 	bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
-	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV 
+	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value. 
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
     double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
-
+	int id_ugv_init, id_uav_init;
 
 	visualization_msgs::MarkerArray catenary_marker;
 	

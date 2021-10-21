@@ -553,7 +553,7 @@ void RRTGlobalPlanner::makePlanGoalCB()
 
     if (calculatePath())
     {
-        ROS_INFO_COND(debug, "Global Planner: Succesfully calculated path");
+        ROS_INFO_COND(debug, PRINTF_RED "\n\n\n     Global Planner: Succesfully calculated path\n\n\n");
         sendPathToLocalPlannerServer();
     }
     else
@@ -633,9 +633,11 @@ void RRTGlobalPlanner::plan()
         return;
     }
 
+    // printf(PRINTF_CYAN"execute_path_client_ptr->getState().isDone()=[%s]\n",execute_path_client_ptr->getState().isDone()? "true":"false");    
     if (execute_path_client_ptr->getState().isDone())
     {
         // clearMarkers();
+        // printf(PRINTF_ORANGE"I AM HERE: Inside  IF Loop  RRTGlobalPlanner::plan()\n");
 
         if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         {
@@ -770,11 +772,11 @@ bool RRTGlobalPlanner::calculatePath()
                     
                 publishTrajectory();
 
-                if (pathLength < minPathLenght)
+                /*if (pathLength < minPathLenght)
                 {
                     execute_path_client_ptr->cancelAllGoals();
                     make_plan_server_ptr->setSucceeded();
-                }
+                }*/
                 //Reset the counter of the number of times the planner tried to calculate a path without success
                 countImpossible = 0;
                 //If it was replanning before, reset flag

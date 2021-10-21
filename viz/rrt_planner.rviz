@@ -27,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: region_growing_traversability
+    SyncSource: PC Octomap
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -73,7 +73,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 6.025000095367432
+        Max Value: 9.274999618530273
         Min Value: 0.02500000037252903
         Value: true
       Axis: Z
@@ -85,9 +85,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: PC Octomap
       Position Transformer: XYZ
       Queue Size: 10
@@ -205,22 +203,8 @@ Visualization Manager:
         catenary_15: true
         catenary_16: true
         catenary_17: true
-        catenary_18: true
-        catenary_19: true
         catenary_2: true
-        catenary_20: true
-        catenary_21: true
-        catenary_22: true
-        catenary_23: true
-        catenary_24: true
-        catenary_25: true
-        catenary_26: true
-        catenary_27: true
-        catenary_28: true
-        catenary_29: true
         catenary_3: true
-        catenary_30: true
-        catenary_31: true
         catenary_4: true
         catenary_5: true
         catenary_6: true
@@ -230,21 +214,21 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_planner_node/tree_rrt_star_ugv
       Name: RRTStar_nodes_ugv
       Namespaces:
-        {}
+        tree_RRTStar_ugv: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_planner_node/tree_rrt_star_uav
       Name: RRTStar_nodes_uav
       Namespaces:
-        {}
+        tree_RRTStar_uav: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /siar_marker_node/siar_model
@@ -321,12 +305,10 @@ Visualization Manager:
       Color: 252; 175; 62
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: region_growing_traversability
       Position Transformer: XYZ
       Queue Size: 10
@@ -338,7 +320,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -354,9 +336,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: region_growing_obstacles
       Position Transformer: XYZ
       Queue Size: 10
@@ -392,9 +372,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: GP_PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -526,9 +504,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: PC Grid3D
       Position Transformer: XYZ
       Queue Size: 10
@@ -585,25 +561,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 10.211028099060059
+      Distance: 9.419673919677734
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.575249195098877
-        Y: -1.567312240600586
-        Z: 2.3416801013809163e-6
+        X: -0.9671764373779297
+        Y: -0.1346447467803955
+        Z: -2.2129515855340287e-6
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.16039828956127167
+      Pitch: 0.1902065873146057
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 4.628559112548828
+      Yaw: 1.6018613576889038
     Saved: ~
 Window Geometry:
   Displays:
