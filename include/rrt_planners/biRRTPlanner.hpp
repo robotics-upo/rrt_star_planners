@@ -1,5 +1,5 @@
-#ifndef _RRT_STAR_HPP__
-#define _RRT_STAR_HPP__
+#ifndef _BIRRT_PLANNER_HPP__
+#define _BIRRT_PLANNER_HPP__
 
 #include <math.h>
 #include <random>
@@ -77,13 +77,13 @@ typedef visualization_msgs::Marker RVizMarker;
 
 
 //*****************************************************************
-// 				RRTPlanner Algoritm Class Declaration
+// 				biRRTPlanner Algoritm Class Declaration
 //*****************************************************************
 
-class RRTPlanner
+class biRRTPlanner
 {
 public:
-	RRTPlanner();
+	biRRTPlanner();
 
 	/**
 		  Constructor with arguments
@@ -97,8 +97,8 @@ public:
 		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
-	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
-			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, 
+	biRRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
+			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 			   double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
 
 	/**
@@ -114,10 +114,10 @@ public:
 		   @param NodeHandle 
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
-			float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, 
+			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 			double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
 
-  	~RRTPlanner();
+  	~biRRTPlanner();
   
   	virtual int computeTreeCoupled();      
   	virtual int computeTreesIndependent();      
@@ -202,13 +202,13 @@ public:
 			{
 				if (!isInitialPositionUGVOccupied())
 				{
-					ROS_INFO("RRTPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
+					ROS_INFO("biRRTPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
 					return true;
 				}
 			}
 			else
 			{
-				ROS_WARN("RRTPlanner: Initial position UGV Coupled outside the workspace attempt!!");
+				ROS_WARN("biRRTPlanner: Initial position UGV Coupled outside the workspace attempt!!");
 			}
 
 			return false;
@@ -219,19 +219,19 @@ public:
 					if (!isInitialPositionUGVOccupied())
 					{
 						if(!isInitialPositionUAVOccupied()){
-							ROS_INFO("RRTPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
+							ROS_INFO("biRRTPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
 									n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
 							return true;
 						}
 						else{
-							ROS_WARN("RRTPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
+							ROS_WARN("biRRTPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
 						}
 					}
 					else
-						ROS_WARN("RRTPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
+						ROS_WARN("biRRTPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
 				}		
 				else
-					ROS_WARN("RRTPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
+					ROS_WARN("biRRTPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
 
 			return false;
 		}
@@ -274,13 +274,13 @@ public:
 		{
 			if (!isFinalPositionOccupied())
 			{
-				ROS_INFO("RRTPlanner: Final discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
+				ROS_INFO("biRRTPlanner: Final discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
 				return true;
 			}
 		}
 		else
 		{
-			ROS_WARN("RRTPlanner: Final position outside the workspace attempt!! [%d, %d, %d]", p.x, p.y, p.z);
+			ROS_WARN("biRRTPlanner: Final position outside the workspace attempt!! [%d, %d, %d]", p.x, p.y, p.z);
 		}
 
 		return false;
@@ -353,8 +353,9 @@ public:
 
 	void setInitialCostGoal(RRTNode* n_);
 
+	bool checkTraversablePointInsideCircle(Vector3 point_);
 
-
+	octomap::OcTree *map_circle;
 	/** Variables **/
 
 	float step; // Resolution of the Matrix and its inverse
@@ -573,9 +574,6 @@ protected:
 
 	// bool got_to_goal = false;
 	int got_to_goal = 1;
-	float goal_weight;   // Reduction of the initial position distance weight C(s) = factor * g(s) + h(s)
-	float z_weight_cost; // Weight for height changes
-	float z_not_inflate; // Altitude to not be inflated
 	double minR;
 
 	octomap::OcTree *map;
@@ -611,11 +609,11 @@ protected:
 	bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
-	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV 
+	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
     double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
-
+	int id_ugv_init, id_uav_init;
 
 	visualization_msgs::MarkerArray catenary_marker;
 	

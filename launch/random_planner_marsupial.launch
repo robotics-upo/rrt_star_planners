@@ -1,0 +1,72 @@
+<launch>
+
+    <!-- Loading Arguments -->
+    <arg name="planner_type"        default="rrt_star"/>
+    <arg name="scenario_number"        default="1"/>
+    <arg name="num_pos_initial"         default="1"/>
+    <arg name="num_goal"         default="0"/>
+    <arg name="pos_uav_above_ugv"     default="1.0"/> #meters UAV above UGV
+    <arg name="pos_uav_x_ugv"         default="0.0"/> #meters UAV in X axe UGV
+    <arg name="pos_uav_y_ugv"         default="0.0"/> #meters UAV in Y axe UGV
+    <arg name="use_catenary_planning" default="true"/>
+    <arg name="rviz"    default="true"/> 
+    <arg name="viz_file"    default="marsupial"/>
+    <arg name="is_coupled"    default="false"/>
+    <arg name="sample_mode"    default="1"/>
+    
+    <arg name="pos_reel_x"    default="0.0"/>
+    <arg name="pos_reel_y"    default="0.0"/>
+    <arg name="pos_reel_z"    default="0.3"/>
+
+
+    <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number).yaml" />
+    <arg name="map_file" default="stage_$(arg scenario_number)"/>
+
+    <!-- Publishing UGV and UAV tf -->
+    <node pkg="marsupial_optimizer" type="optimizer_publisher_tf_node" name="optimizer_publisher_tf_node" output="screen">
+        <param name="num_pos_initial" value="$(arg num_pos_initial)"/>
+        <param name="pos_uav_above_ugv" value="$(arg pos_uav_above_ugv)"/>
+        <param name="pos_uav_x_ugv" value="$(arg pos_uav_x_ugv)"/>
+        <param name="pos_uav_y_ugv" value="$(arg pos_uav_y_ugv)"/>
+        <param name="uav_base_frame" value="uav_base_link"/>
+        <param name="ugv_base_frame" value="ugv_base_link"/>
+    </node>
+
+    <!-- Publishing static tf -->
+    <node pkg="tf" type="static_transform_publisher" name="map_tf_node" args="0 0 0 0 0 0  world /map 10"/> # x y z y p r
+    <!-- <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="0.4 0.0 0.22 -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r -->
+    <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="$(arg pos_reel_x) $(arg pos_reel_y) $(arg pos_reel_z) -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r
+
+    <!-- Launch Octomap of Scenario -->
+    <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
+        <arg name="map_file"  value="stage_$(arg scenario_number)"/>    
+    </include>
+
+    <!-- Launch  region_growing-->
+    <!-- <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="region_growing_time" output="screen" 
+    args="0 rrt_planners region_growing.launch  "/> -->
+    <include file="$(find rrt_planners)/launch/region_growing.launch">
+    </include> 
+
+    <!-- Launch Optimizer and Global Planner-->
+    <!-- <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="global_planner_time" output="screen" 
+    args="0 rrt_planners rrt_global.launch planner_type:=$(arg planner_type) use_catenary_planning:=$(arg use_catenary_planning) coupled:=$(arg is_coupled) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal) sample_mode:=$(arg sample_mode) "/>  -->
+    <include file="$(find rrt_planners)/launch/random_global_planner.launch">
+        <arg name="use_catenary_planning" value="$(arg use_catenary_planning)"/>  
+        <arg name="coupled" value="$(arg is_coupled)"/> 
+        <arg name="scenario_number" value="$(arg scenario_number)"/> 
+        <arg name="num_pos_initial" value="$(arg num_pos_initial)" /> 
+        <arg name="num_goal"  value="$(arg num_goal)"/> 
+        <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
+        <arg name="planner_type" value="$(arg planner_type)" /> 
+        <arg name="pos_reel_x" value="$(arg pos_reel_x)" /> 
+        <arg name="pos_reel_y" value="$(arg pos_reel_y)" /> 
+        <arg name="pos_reel_z" value="$(arg pos_reel_z)" /> 
+    </include>    
+
+    
+
+    <!-- RViz -->
+    <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_optimizer)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/> -->
+
+</launch>

@@ -3,7 +3,7 @@ project(rrt_planners)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 if($ENV{ROS_DISTRO} STREQUAL "melodic" )
 add_definitions(-DMELODIC)
@@ -160,9 +160,9 @@ include_directories(
 #   src/${PROJECT_NAME}/rrt_planners.cpp
 # )
 
-add_executable(rrt_global_planner_node src/rrt_global_planner_node.cpp src/rrt_global_planner.cpp src/rrt_planner.cpp src/kdtree.cpp src/rrt_graph_markers.cpp)
-target_link_libraries(rrt_global_planner_node  marsupial_optimizer ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
-add_dependencies(rrt_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp src/rrt_graph_markers.cpp)
+target_link_libraries(random_global_planner_node  marsupial_optimizer ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+add_dependencies(random_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

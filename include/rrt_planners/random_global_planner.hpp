@@ -1,10 +1,10 @@
 /*
 Simon Martinez Rozas, 2021 UPO
 
-Global Planner Class using RRT Algorithms
+Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 */
-#ifndef RRTSTAR_GLOBALPLANNER__HPP__
-#define RRTSTAR_GLOBALPLANNER__HPP__
+#ifndef RANDOM_GLOBALPLANNER__HPP__
+#define RANDOM_GLOBALPLANNER__HPP__
 
 #include <iostream>
 #include <cstdlib>
@@ -12,7 +12,7 @@ Global Planner Class using RRT Algorithms
 #include <math.h>
 #include <ros/ros.h>
 #include <memory>
-#include <rrt_planners/rrt_planner.hpp>
+#include <rrt_planners/random_planner.hpp>
 
 #include <std_srvs/Trigger.h>
 #include <std_srvs/Empty.h>
@@ -66,7 +66,7 @@ Global Planner Class using RRT Algorithms
 
 namespace PathPlanners
 {
-    class RRTGlobalPlanner 
+    class RandomGlobalPlanner 
     {
         typedef actionlib::SimpleActionClient<upo_actions::ExecutePathAction> ExecutePathClient;
         typedef actionlib::SimpleActionServer<upo_actions::MakePlanAction> MakePlanServer;
@@ -74,7 +74,7 @@ namespace PathPlanners
 
         public:
             //Default constructor
-            RRTGlobalPlanner(std::string node_name);
+            RandomGlobalPlanner(std::string node_name);
 
             void printfTrajectory(Trajectory trajectory, string trajectory_name);
 
@@ -82,7 +82,7 @@ namespace PathPlanners
             /**
                 Default destructor
             **/
-            // ~RRTGlobalPlanner();
+            // ~RandomGlobalPlanner();
 
             /*
             @brief: This is the main function that should be executed in loop by the node
@@ -166,7 +166,7 @@ namespace PathPlanners
             @brief: Get tf reel tether to compute catenary.
             */
             geometry_msgs::Vector3 tfListenerReel();
-            void configRRTPlanner();
+            void configRandomPlanner();
             
             /*              Class Variables                 */
             ros::NodeHandlePtr nh;
@@ -247,7 +247,7 @@ namespace PathPlanners
 
             //! 3D specific variables
             bool mapRec;
-            RRTPlanner rrtplanner;
+            RandomPlanner randPlanner;
 	        RRTGraphMarkers rrtgm;
             
             bool use3d;
@@ -289,7 +289,7 @@ namespace PathPlanners
             std::string planner_type;
 
             Grid3d *grid3D;
-    }; //class RRTGlobalPlanner
+    }; //class RandomGlobalPlanner
 
 } //namespace PathPlanners
 

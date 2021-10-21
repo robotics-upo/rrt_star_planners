@@ -1,5 +1,5 @@
-#ifndef _biRRT_STAR_HPP__
-#define _biRRT_STAR_HPP__
+#ifndef _RANDOM_PLANNER_HPP__
+#define _RANDOM_PLANNER_HPP__
 
 #include <math.h>
 #include <random>
@@ -64,7 +64,6 @@
 #define PRINTF_GRAY    "\x1B[38;2;176;174;174m"
 
 // Uncomment to set length catenary in nodes
-#define USE_CATENARY_COMPUTE
 
 namespace PathPlanners
 {
@@ -77,13 +76,13 @@ typedef visualization_msgs::Marker RVizMarker;
 
 
 //*****************************************************************
-// 				RRTPlanner Algoritm Class Declaration
+// 				RandomPlanner Algoritm Class Declaration
 //*****************************************************************
 
-class RRTPlanner
+class RandomPlanner
 {
 public:
-	RRTPlanner();
+	RandomPlanner();
 
 	/**
 		  Constructor with arguments
@@ -97,7 +96,7 @@ public:
 		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
-	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
+	RandomPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
 			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 			   double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
 
@@ -117,7 +116,7 @@ public:
 			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 			double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
 
-  	~RRTPlanner();
+  	~RandomPlanner();
   
   	virtual int computeTreeCoupled();      
   	virtual int computeTreesIndependent();      
@@ -202,13 +201,13 @@ public:
 			{
 				if (!isInitialPositionUGVOccupied())
 				{
-					ROS_INFO("RRTPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
+					ROS_INFO("RandomPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
 					return true;
 				}
 			}
 			else
 			{
-				ROS_WARN("RRTPlanner: Initial position UGV Coupled outside the workspace attempt!!");
+				ROS_WARN("RandomPlanner: Initial position UGV Coupled outside the workspace attempt!!");
 			}
 
 			return false;
@@ -219,19 +218,19 @@ public:
 					if (!isInitialPositionUGVOccupied())
 					{
 						if(!isInitialPositionUAVOccupied()){
-							ROS_INFO("RRTPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
+							ROS_INFO("RandomPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
 									n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
 							return true;
 						}
 						else{
-							ROS_WARN("RRTPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
+							ROS_WARN("RandomPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
 						}
 					}
 					else
-						ROS_WARN("RRTPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
+						ROS_WARN("RandomPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
 				}		
 				else
-					ROS_WARN("RRTPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
+					ROS_WARN("RandomPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
 
 			return false;
 		}
@@ -274,13 +273,13 @@ public:
 		{
 			if (!isFinalPositionOccupied())
 			{
-				ROS_INFO("RRTPlanner: Final discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
+				ROS_INFO("RandomPlanner: Final discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
 				return true;
 			}
 		}
 		else
 		{
-			ROS_WARN("RRTPlanner: Final position outside the workspace attempt!! [%d, %d, %d]", p.x, p.y, p.z);
+			ROS_WARN("RandomPlanner: Final position outside the workspace attempt!! [%d, %d, %d]", p.x, p.y, p.z);
 		}
 
 		return false;
@@ -306,6 +305,17 @@ public:
 		**/
 	void updateMap(octomap_msgs::OctomapConstPtr message);
 
+	/**
+		  Add a cloud to the actual occupancy matrix
+		   @param pcl pointCloud 
+		**/
+	void updateMap(PointCloud cloud);
+	/**
+		 * 
+		 * 
+		**/
+	void updateMap(const PointCloud::ConstPtr &map);
+
 	/** 
 		   Clear occupancy discrete matrix
 		**/
@@ -314,6 +324,11 @@ public:
 		   Clear occupancy discrete matrix reduced
 		**/
 	void clearMapReduced(size_t _size);
+		/**
+		  Set timeout to calculate the solution
+			@param Natural number with time in seconds
+		**/
+	void setTimeOut(int sec);
 	/**
 		  Publish via topic the discrete map constructed
 		**/
@@ -337,7 +352,7 @@ public:
 
 	void setInitialCostGoal(RRTNode* n_);
 
-
+	octomap::OcTree checkTraversablePointInsideCircle(Vector3 point_);
 
 	/** Variables **/
 
@@ -368,8 +383,6 @@ public:
 	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
 	RRTGraphMarkers rrtgm;
 	Grid3d *grid_3D;
-	octomap::OcTree map_circle (0.05f);
-
 
 protected:
 	
@@ -452,6 +465,66 @@ protected:
   	bool isUGVOccupied(RRTNode n_);
 
 	/**
+		  Inflate a occupied cells filling all cells around in the occupancy matrix
+		  Improvement: fast version using memset() to set to zero (.notOccupied) all 
+		  occupation matrix nodes that have to be inflated
+			@param discrete position of the cell to inflate		
+		**/
+	inline void inflateNodeAsCube(int &x_, int &y_, int &z_)
+	{
+		// Inflation limits around the node
+		int x_inflated_max = (x_ + h_inflation) + 1;
+		int x_inflated_min = (x_ - h_inflation) - 1;
+		int y_inflated_max = (y_ + h_inflation) + 1;
+		int y_inflated_min = (y_ - h_inflation) - 1;
+		int z_inflated_max = (z_ + v_inflation) + 1;
+		int z_inflated_min = (z_ - v_inflation) - 1;
+
+		// Loop 'x axis' by 'x axis' for all discrete occupancy matrix cube around the node that must be inflated
+
+		// Due to the inflated occupancy matrix size increment, the inside checking is not neccesary
+		for (int i = x_inflated_min; i < x_inflated_max; i++)
+			for (int j = y_inflated_min; j <= y_inflated_max; j++)
+				for (int k = z_inflated_min; k <= z_inflated_max; k++)
+				{
+					unsigned int world_index_ = getWorldIndex(i, j, k);
+					discrete_world[world_index_].notOccupied = false;
+				}
+	}
+
+	/**
+		  Inflate a occupied cells filling all cells inside the around cylinder in 
+		  the occupancy matrix. 
+			@param discrete position of the cell to inflate
+		**/
+	inline void inflateNodeAsCylinder(int &x_, int &y_, int &z_)
+	{
+		// Get discretized radius of the inflation cylinder
+		int R = h_inflation;
+
+		// Inflation limits around the node
+		int x_inflated_max = (x_ + h_inflation) + 1;
+		int x_inflated_min = (x_ - h_inflation) - 1;
+		int y_inflated_max = (y_ + h_inflation) + 1;
+		int y_inflated_min = (y_ - h_inflation) - 1;
+		int z_inflated_max = (z_ + v_inflation) + 1;
+		int z_inflated_min = (z_ - v_inflation) - 1;
+
+		// Loop throug inflation limits checking if it is inside the cylinder
+		// Due to the inflated occupancy matrix size increment, the inside checking is not neccesary
+		for (int i = x_inflated_min; i <= x_inflated_max; i++)
+			for (int j = y_inflated_min; j <= y_inflated_max; j++)
+				for (int k = z_inflated_min; k <= z_inflated_max; k++)
+				{
+					if (isInsideTheCylinder(i, j, x_, y_, R))
+					{
+						unsigned int world_index_ = getWorldIndex(i, j, k);
+						discrete_world[world_index_].notOccupied = false;
+					}
+				}
+	}
+
+	/**
 		  Inflate a occupied cells filling all cells around in the occupancy matrix ONLY HORIZONTALLY
 			@param discrete position of the cell to inflate
 		**/
@@ -506,9 +579,9 @@ protected:
 	std::vector<geometry_msgs::Point> v_points_ws_ugv;
   	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_ugv_marker_pub_, lines_uav_marker_pub_, catenary_marker_pub_, all_catenary_marker_pub_;
   	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
-	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_;
+	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_, reducedMapPublisher;
 
-	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous values
+	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	double goal_gap_m;
 
 	std::list<RRTNode*> rrt_path;
@@ -534,11 +607,11 @@ protected:
 	bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
-	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV 
+	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
     double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
-
+	int id_ugv_init, id_uav_init;
 
 	visualization_msgs::MarkerArray catenary_marker;
 	
