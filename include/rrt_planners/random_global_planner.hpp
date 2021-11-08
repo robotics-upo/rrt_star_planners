@@ -26,12 +26,12 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Transform.h>
 #include <geometry_msgs/Vector3.h>
+
 #include <std_msgs/Bool.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
 
 //Dynamic reconfigure auto generated libraries
 #include <dynamic_reconfigure/server.h>
@@ -56,13 +56,13 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include <pcl_ros/transforms.h>
 
 #include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
+
 #include "misc/bisection_catenary_3D.h"
 #include "misc/grid3d.hpp"
 #include "misc/catenary_solver_ceres.hpp"
 #include "misc/near_neighbor.hpp"
-#include "rrt_planners/rrt_graph_markers.h"
-
-
+#include "rrt_planners/random_graph_markers.h"
 
 namespace PathPlanners
 {
@@ -76,9 +76,6 @@ namespace PathPlanners
             //Default constructor
             RandomGlobalPlanner(std::string node_name);
 
-            void printfTrajectory(Trajectory trajectory, string trajectory_name);
-
-            bool isMarsupialCoupled();
             /**
                 Default destructor
             **/
@@ -90,23 +87,18 @@ namespace PathPlanners
             void plan();
             
         private:
-            void clearMarkers();
-            void clearMarkersRayCast();
             void sendPathToLocalPlannerServer();
-            void publishMakePlanFeedback();
 
             //Action server
             void makePlanPreemptCB();
             void makePlanGoalCB();
 
-            int getClosestWaypoint();
             bool replan();
             
             /*
             @brief: Loads parameters from ros param server, if they are not present, load defaults ones
                     It also configure markers and global map geometry 
             */
-            void configMarkers(std::string ns);
             void configParams();
             /*
             @brief: Load topics names from param server and if they are not present, set defaults topics names for 
@@ -127,10 +119,9 @@ namespace PathPlanners
 
             //get UAV pose to know from where to plan
             geometry_msgs::TransformStamped getRobotPoseUAV();
-            
-            // This method graph the catenary for the initial position.
-            void graphMarker();
 
+            //get Local Reel pose on UGV
+            geometry_msgs::TransformStamped getLocalPoseReel();
             /*
             @brief: 
             */
@@ -138,11 +129,13 @@ namespace PathPlanners
             void readPointCloudTraversabilityMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
             void readPointCloudUGVObstaclesMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
             void readPointCloudUAVObstaclesMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+            void deleteNodesMarkersCallBack(const std_msgs::BoolConstPtr &msg);
+            void deleteCatenaryGPCallBack(const std_msgs::BoolConstPtr &msg);
             void pointsSub(const PointCloud::ConstPtr &points);
             /*
             @brief: 
             */
-            void publishTrajectory();
+            void publishPath();
 
             bool calculatePath();
 
@@ -152,72 +145,58 @@ namespace PathPlanners
             */
             bool setGoal();
             bool setStart();
-            // bool setStartUGV();
-            // bool setStartUAV();
-
-            /*
-            @brief: 
-            */
-            void calculatePathLength();
-            float getYawFromQuat(Quaternion quat);
-           
 
             /*
             @brief: Get tf reel tether to compute catenary.
             */
-            geometry_msgs::Vector3 tfListenerReel();
             void configRandomPlanner();
-            
+
+            void interpolatePointsGlobalPath(Trajectory &trajectory_, std::vector<double> l_catenary_);
+
+            geometry_msgs::Point getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_);
+
             /*              Class Variables                 */
             ros::NodeHandlePtr nh;
 
-            //!New Markers(Line strip + waypoints)
-            visualization_msgs::Marker lineMarker, waypointsMarker, fullrayMarker, raycastfreeMarker, raycastfreereducedMarker, raycastcollMarker, raycastnofreeMarker;
+            visualization_msgs::Marker lineMarker, waypointsMarker;
 
             geometry_msgs::PoseStamped goalPoseStamped;
             geometry_msgs::Vector3Stamped goal;
             geometry_msgs::Vector3 start_rpy;
+            geometry_msgs::Vector3 pos_reel_ugv;
 
             //Publishers and Subscribers
-            ros::Publisher replan_status_pub,visMarkersPublisher, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
-            ros::Publisher rayCastNoFreePublisher, reducedMapPublisher, cleanMarkersOptimizerPublisher, initial_catenary_pub_;
-            ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_, point_cloud_map_trav_sub_;
-
-            //Listener tf reel
-            tf::TransformListener listener;
+            ros::Publisher replan_status_pub, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
+            ros::Publisher cleanMarkersOptimizerPublisher, initial_catenary_pub_;
+            ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_, point_cloud_map_trav_sub_, clean_nodes_marker_gp_sub_,clean_catenary_marker_gp_sub_;
 
             //Services servers
             ros::ServiceServer global_replanning_service, reset_global_costmap_service, plan_request_service;
             ros::ServiceClient recovery_rot_srv_client;
-            //ThetaStar object
 
             //tf buffer used to get the base_link position on the map(i.e. tf base_link-map)
             std::shared_ptr<tf2_ros::Buffer> tfBuffer;
             std::unique_ptr<tf2_ros::TransformListener> tf2_list;
 
             std::unique_ptr<tf::TransformListener> tf_list_ptr;
-            std::unique_ptr<costmap_2d::Costmap2DROS> global_costmap_ptr;
 
             std_msgs::Bool flg_replan_status;
 
-            float cost_weight;
-            float occ_threshold;
-            float lof_distance;
-
-            string ugv_base_frame, uav_base_frame, world_frame, node_name;
+            string ugv_base_frame, uav_base_frame, reel_base_frame, world_frame, node_name;
             double pos_reel_x, pos_reel_y, pos_reel_z;
 
             //Output variables
             int number_of_points;
             int seq;
-            float pathLength;
             Trajectory trajectory;
 
+	        Grid3d *grid_3D;
+
             //These two flags can be configured as parameters
-            bool showConfig, debug, debug_rrt;
+            bool showConfig, debug, debug_rrt, nodes_marker_debug;
 
 	        std::string path, name_output_file;
-	        int scenario_number, num_pos_initial, num_goal;
+	        int scenario_number, num_pos_initial;
             int countImpossible = 0;
 
             //Action client stuff
@@ -232,25 +211,17 @@ namespace PathPlanners
             upo_actions::RotationInPlaceGoal rot_in_place_goal;
 
             //
-            //Vairables to fill up the result MakePlan result field
-            std_msgs::Duration  time_spent;
             //Variables to fill up the feedback 
-            std_msgs::Float32 dist2Goal;
             std_msgs::Duration travel_time;
-            std_msgs::String percent_achieved, ETA;
-            std_msgs::UInt8 globalWaypoint;
             int timesReplaned;
             struct timeb start, finish;
             float seconds, milliseconds;
-            float minPathLenght;
             ros::Time start_time;
 
             //! 3D specific variables
-            bool mapRec;
+            bool mapRec, use3d;
             RandomPlanner randPlanner;
 	        RRTGraphMarkers rrtgm;
-            
-            bool use3d;
 
             octomap_msgs::OctomapConstPtr map;
 
@@ -263,17 +234,6 @@ namespace PathPlanners
             double map_resolution;
             double map_h_inflaction;
             double map_v_inflaction; //JAC: Hasta aquí todo cero.
-            double traj_dxy_max;
-            double traj_dz_max;
-            double traj_vxy_m;
-            double traj_vz_m;
-            double traj_vxy_m_1;
-            double traj_vz_m_1;
-            double traj_wyaw_m;
-            double traj_pos_tol;
-            double traj_yaw_tol;
-            double timeout;
-            double initialSearchAround;
 
             bool write_data_for_analysis;
             double length_tether_max, radius_near_nodes, step_steer;
@@ -285,10 +245,11 @@ namespace PathPlanners
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 
             bool coupled;
+            
+            double min_distance_add_new_point;
+            std::vector<double> length_catenary;
 
             std::string planner_type;
-
-            Grid3d *grid3D;
     }; //class RandomGlobalPlanner
 
 } //namespace PathPlanners

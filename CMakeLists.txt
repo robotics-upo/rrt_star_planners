@@ -160,7 +160,7 @@ include_directories(
 #   src/${PROJECT_NAME}/rrt_planners.cpp
 # )
 
-add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp src/rrt_graph_markers.cpp)
+add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp src/random_graph_markers.cpp)
 target_link_libraries(random_global_planner_node  marsupial_optimizer ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 add_dependencies(random_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 

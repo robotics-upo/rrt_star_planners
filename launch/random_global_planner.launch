@@ -2,8 +2,15 @@
     <arg name="planner_type" default="rrt_star"/>
     <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
+
+    <arg name="graph_traj_in_rviz" default="true"/>
+    <arg name="pause_optimization" default="true"/>
+
+    <arg name="world_frame" default="map"/> 
+    <arg name="ugv_frame" default="ugv_base_link"/> 
+    <arg name="uav_frame" default="uav_base_link"/>
+    <arg name="reel_frame" default="reel_base_link"/>
     
-    <arg name="lidar_topic" default="os1_cloud_node/points"/>
     <arg name="use_octomap" default="true"/>
     <arg name="verbose_optimizer" default="false"/>
     <arg name="debug_msgs" default="true"/>
@@ -13,42 +20,38 @@
     <arg name="use_search_pyramid_planning" default="false"/>
     <arg name="length_tether_max"    default="20.0"/>   
 
+    <!-- To wirte Files -->
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
-    <arg name="name_output_file"    default="results_optimization"/>     
+    <arg name="name_output_file"    default="method"/>     
     <arg name="path_files"    default="/home/simon/results_marsupial_optimizer/"/>     
-    <arg name="num_goal"         default="0"/>
-    <arg name="pos_reel_x"    default="0.4"/>
-    <arg name="pos_reel_y"    default="0.0"/>
-    <arg name="pos_reel_z"    default="0.22"/>
-
     <!-- RRT Parameters -->
-    <arg name="n_iter_rrt"         default="500"/>
-    <arg name="n_loop_rrt"         default="100"/>
-    <arg name="radius_near_nodes"         default="1.0"/> 
-    <arg name="goal_gap_m"         default="0.8"/>
-    <arg name="step_steer"         default="0.4"/>
-    <arg name="min_l_steer_ugv"         default="100.0"/>
-    <arg name="coupled"         default="true"/>
-    <arg name="samp_goal_rate"         default="15"/>
-    <arg name="sample_mode_rrt"         default="1"/>
+    <arg name="n_iter_rrt"          default="500"/>
+    <arg name="n_loop_rrt"          default="100"/>
+    <arg name="radius_near_nodes"   default="1.0"/> 
+    <arg name="goal_gap_m"          default="0.8"/>
+    <arg name="step_steer"          default="0.4"/>
+    <arg name="min_l_steer_ugv"     default="8.0"/>
+    <arg name="coupled"             default="true"/>
+    <arg name="samp_goal_rate"      default="15"/>
+    <arg name="sample_mode_rrt"     default="1"/>
     
 
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" launch-prefix="gdb -ex run --args">
+    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <param name="planner_type" value="$(arg planner_type)"/> 
-        <param name="ugv_base_frame" value="ugv_base_link"/> 
-        <param name="uav_base_frame" value="uav_base_link"/>
+        <param name="world_frame" value="$(arg world_frame)"/> 
+        <param name="ugv_base_frame" value="$(arg ugv_frame)"/> 
+        <param name="uav_base_frame" value="$(arg uav_frame)"/>
+        <param name="reel_base_frame" value="$(arg reel_frame)"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
-        <remap from="/points" to="mcl3d_node/map_point_cloud" if="$(eval arg('use_dron') and not arg('use_octomap'))" />
         <param name="mode3d" value="$(arg use_dron)"/>
-        <param name="use_octomap" value="$(arg use_octomap)"/>
         <param name="debug" value="$(arg debug_msgs)"/>
+        <param name="showConfig" value="true"/>
         <param name="robot_base_frame" value="uav_base_link"/>
-        <param name="timeout" value="10"/>
         <param name="use_catenary" value="$(arg use_catenary_planning)"/>  
         <param name="use_search_pyramid" value="$(arg use_search_pyramid_planning)"/>   
         <param name="n_iter" value="$(arg n_iter_rrt)"/>   
@@ -62,17 +65,15 @@
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
-        <param name="num_goal"   value="$(arg num_goal)"/>     
         <param name="coupled"   value="$(arg coupled)"/>     
         <param name="goal_gap_m"   value="$(arg goal_gap_m)"/>    
         <param name="samp_goal_rate"   value="$(arg samp_goal_rate)"/>  
         <param name="debug_rrt"    value="false"/>     
+        <param name="nodes_marker_debug"    value="true"/>     
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>     
-        <param name="pos_reel_x"    value="$(arg pos_reel_x)"/>     
-        <param name="pos_reel_y"    value="$(arg pos_reel_y)"/>     
-        <param name="pos_reel_z"    value="$(arg pos_reel_z)"/>     
-        <param name="distance_obstacle_ugv"         value="0.2"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_obstacle_uav"         value="0.2"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
+        <param name="min_distance_add_new_point" value="1.0"/>  
+        <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
+        <param name="distance_obstacle_uav"         value="0.5"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_catenary_obstacle"  value="0.05"/> <!--bound distance catenary to obstacles [m] -->   
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
@@ -81,24 +82,29 @@
     </node>
 
     <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen" launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
+    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <remap from="/Navigation" to="Navigation"/>
-        <remap from="/points" to="$(arg lidar_topic)" if="$(eval not arg('use_octomap') and arg('use_dron'))" />
         <remap from="/octomap_binary_local" to="/octomap_binary"/>
+        <param name="world_frame" value="$(arg world_frame)"/> 
+        <param name="ugv_base_frame" value="$(arg ugv_frame)"/> 
+        <param name="uav_base_frame" value="$(arg uav_frame)"/>
+        <param name="reel_base_frame" value="$(arg reel_frame)"/>
         <param name="debug" value="$(arg debug_msgs)"/>
         <param name="show_config" value="$(arg show_config_msgs)"/>
         <param name="traj_dest_frame" value="uav_base_link"/>
-        <param name="use_octomap_local" value="true"/>
+
+        <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
+        <param name="pause_end_optimization" value="$(arg pause_optimization)"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
        
         <param name="fix_last_position_ugv"   value="false"/> 
         <param name="optimize_ugv"   value="true"/>  # UGV
         <param name="optimize_uav"   value="true"/>  # UAV
-        <param name="optimize_cat"   value="true"/>  # CAT
+        <param name="optimize_cat"   value="false"/>  # CAT
 
         <param name="equidistance_ugv_constraint"   value="1"/>   # equidistance_ugv_constraint
         <param name="obstacles_ugv_constraint"      value="1"/>   # obstacles_ugv_constraint
@@ -118,7 +124,7 @@
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.040"/>   # equi-distance ugv
         <param name="w_beta_ugv"    value="0.140"/>   # obstacles ugv
-        <param name="w_theta_ugv"   value="0.100"/>   # traversability ugv
+        <param name="w_theta_ugv"   value="0.200"/>   # traversability ugv
         <param name="w_gamma_ugv"   value="0.120"/>   # kinematics ugv 
         <param name="w_delta_ugv"     value="0.003"/>  # time 
         <param name="w_epsilon_ugv"   value="0.008"/>   # velocity 
@@ -133,9 +139,9 @@
         <param name="w_zeta"      value="0.0006"/>   # acceleration 
         
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.00030"/>   # catenary Obstacles collision
-        <param name="w_eta_2"    value="0.00050"/>   # catenary length
-        <param name="w_eta_3"    value="0.00085"/>   # catenary Z collision
+        <param name="w_eta_1"    value="0.00000"/>   # catenary Obstacles collision 0.00100
+        <param name="w_eta_2"    value="0.00000"/>   # catenary length 0.00150
+        <param name="w_eta_3"    value="0.00000"/>   # catenary Z collision 0.00105
 
         <param name="n_iter_opt"    value="10000"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
@@ -147,7 +153,6 @@
         <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
         <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> 
-        <param name="min_distance_add_new_point" value="1.0"/>  
         #Parameter for Edge Catenary
         <param name="distance_catenary_obstacle"  value="0.1"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
@@ -156,11 +161,7 @@
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
-        <param name="num_goal"   value="$(arg num_goal)"/>     
         <param name="path"   value="$(arg path_files)"/>     
-        <param name="pos_reel_x"    value="$(arg pos_reel_x)"/>     
-        <param name="pos_reel_y"    value="$(arg pos_reel_y)"/>     
-        <param name="pos_reel_z"    value="$(arg pos_reel_z)"/>   
 
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
@@ -170,23 +171,23 @@
 
     <!-- Robot Marker -->
     <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
-        <param name="frame_id" value="ugv_base_link"/>
+        <param name="frame_id" value="$(arg ugv_frame)"/>
         <param name="scale" value="2.0"/>
     </node>
 
      <!-- Robot Marker -->
     <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
-        <param name="base_frame_id" value="uav_base_link"/>
+        <param name="base_frame_id" value="$(arg uav_frame)"/>
         <param name="model" value="m100"/> <!-- m600 or m100 -->
         <param name="color" value="0.0"/> 
         <param name="color_r" value="0.0"/> 
         <param name="color_g" value="0.0"/> 
         <param name="color_b" value="0.0"/> 
-        <param name="scale" value="1.0"/>
+        <param name="scale" value="1.5"/>
     </node>
 
     <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
-        <param name="base_frame_id" value="uav_base_link"/>
+        <param name="base_frame_id" value="$(arg uav_frame)"/>
         <param name="model" value="circle"/> 
         <param name="radius" value="0.6"/> 
         <param name="color" value="0.5"/> 

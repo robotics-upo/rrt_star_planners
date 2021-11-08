@@ -1,5 +1,5 @@
-#ifndef _RRT_GRAPH_MARKERS_H_
-#define _RRT_GRAPH_MARKERS_H_
+#ifndef _RANDOM_GRAPH_MARKERS_H_
+#define _RANDOM_GRAPH_MARKERS_H_
 
 
 #include <list>
@@ -13,6 +13,7 @@
 #include <geometry_msgs/Vector3.h>
 
 #include "misc/catenary_solver_ceres.hpp"
+#include "misc/bisection_catenary_3D.h"
 #include <rrt_planners/RRTNode.h>
 
 using namespace std;
@@ -37,7 +38,8 @@ class RRTGraphMarkers
 		void newNodeMarker(RRTNode rn_, ros::Publisher new_point_pub_);
 		void nearestNodeMarker(RRTNode rn_, ros::Publisher nearest_point_pub_);
 		void getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_, ros::Publisher points_marker_pub_);
-		void clearMarkers(ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_, ros::Publisher take_off_nodes_pub_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_);
+		void clearMarkers(ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_);
+		void clearMarkersNodesTree(ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_, ros::Publisher take_off_nodes_pub_);
 		void clearCatenaryMarker(ros::Publisher c_m_pub_);
 
 		geometry_msgs::Point getReelNode(const RRTNode node_);
