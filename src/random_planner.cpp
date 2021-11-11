@@ -1032,17 +1032,11 @@ void RandomPlanner::getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_)
 	else {
 		yaw_ = atan2(n_.point_uav.y - p_.point_uav.y, n_.point_uav.x - p_.point_uav.x);
 		_quat.setRPY(0.0, 0.0, yaw_);
-		if (_quat.x() != 0.0 || _quat.y() != 0.0 || _quat.z() != 0.0){
-			n_.rot_uav.x = _quat.x();
-			n_.rot_uav.y = _quat.y();
-			n_.rot_uav.z = _quat.z();
-			n_.rot_uav.w = _quat.w();
-		}else{
-			n_.rot_uav.x = _quat.x();
-			n_.rot_uav.y = _quat.y();
-			n_.rot_uav.z = 0.001;
-			n_.rot_uav.w = 1.0;
-		}
+		n_.rot_uav.x = _quat.x();
+		n_.rot_uav.y = _quat.y();
+		n_.rot_uav.z = _quat.z();
+		n_.rot_uav.w = _quat.w();
+
 	}
 }
 
@@ -1496,6 +1490,11 @@ void RandomPlanner::clearCatenaryGPMarker()
 	rrtgm.clearCatenaryMarker(catenary_marker_pub_); 
 }
 
+void RandomPlanner::clearLinesGPMarker()
+{
+	rrtgm.clearMarkers(lines_ugv_marker_pub_, lines_uav_marker_pub_);
+}
+
 std::list<RRTNode*> RandomPlanner::getPath()
 {
 	std::list<RRTNode*> path_;
@@ -1684,12 +1683,10 @@ bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)
 
 bool RandomPlanner::setInitialPositionIndependent(RRTNode n_)
 {
-	if (isUGVInside(n_.point.x, n_.point.y, n_.point.z) && isInside(n_.point_uav.x, n_.point_uav.y, n_.point_uav.z))
-	{
+	if (isUGVInside(n_.point.x, n_.point.y, n_.point.z) && isInside(n_.point_uav.x, n_.point_uav.y, n_.point_uav.z)){
 		RRTNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(n_.point.x, n_.point.y, n_.point.z)];
 
-		if (initialNodeInWorld->node == NULL)
-		{
+		if (initialNodeInWorld->node == NULL){
 			initialNodeInWorld->node = new RRTNode();
 			initialNodeInWorld->node->point.x = n_.point.x;
 			initialNodeInWorld->node->point.y = n_.point.y;
@@ -1735,8 +1732,7 @@ bool RandomPlanner::setInitialPositionIndependent(RRTNode n_)
 							disc_initial->rot_uav.x, disc_initial->rot_uav.y, disc_initial->rot_uav.z, disc_initial->rot_uav.w);
 		return true;
 	}
-	else
-	{
+	else{
 		disc_initial = NULL;
 		return false;
 	}
@@ -1744,8 +1740,7 @@ bool RandomPlanner::setInitialPositionIndependent(RRTNode n_)
 
 bool RandomPlanner::setFinalPosition(DiscretePosition p_)
 {
-	if (isInside(p_.x, p_.y, p_.z))
-	{
+	if (isInside(p_.x, p_.y, p_.z)){
 		RRTNodeLink3D *finalNodeInWorld = &discrete_world[getWorldIndex(p_.x, p_.y, p_.z)];
 
 		Eigen::Vector3d p_node_, trav_point_ugv_;
@@ -1754,9 +1749,7 @@ bool RandomPlanner::setFinalPosition(DiscretePosition p_)
 		p_node_.z() = p_.z * step;
 		trav_point_ugv_ = nn_trav_ugv.nearestObstacleMarsupial(nn_trav_ugv.kdtree, p_node_, nn_trav_ugv.obs_points);
 		
-		if (finalNodeInWorld->node == NULL)
-		{
-			
+		if (finalNodeInWorld->node == NULL){
 			finalNodeInWorld->node = new RRTNode();
 			finalNodeInWorld->node->point.x = p_.x;
 			finalNodeInWorld->node->point.x = p_.y;
@@ -1776,7 +1769,6 @@ bool RandomPlanner::setFinalPosition(DiscretePosition p_)
 		final_position.x = disc_final->point_uav.x*step;
 		final_position.y = disc_final->point_uav.y*step;
 		final_position.z = disc_final->point_uav.z*step;
-		
 
 		ROS_INFO(PRINTF_BLUE "RandomPlanner::setFinalPosition -->  disc_final [%f %f %f /%f %f %f]",disc_final->point.x*step,disc_final->point.y*step,disc_final->point.z*step,
 												disc_final->point_uav.x*step,disc_final->point_uav.y*step,disc_final->point_uav.z*step);
@@ -1794,8 +1786,7 @@ bool RandomPlanner::setFinalPosition(DiscretePosition p_)
 		}
 		return true;
 	}
-	else
-	{
+	else{
 		disc_final = NULL;
 		return false;
 	}
@@ -1869,61 +1860,20 @@ bool RandomPlanner::isUGVOccupied(RRTNode n_)
 	return !discrete_world[getWorldIndex(n_z_displace_.point.x, n_z_displace_.point.y, n_z_displace_.point.z)].notOccupied;
 }
 
-// void RandomPlanner::publishOccupationMarkersMap()
-// {
-// 	markerRviz.header.frame_id = frame_id;
-// 	markerRviz.header.stamp = ros::Time();
-// 	markerRviz.ns = "debug";
-// 	markerRviz.id = 66;
-// 	markerRviz.type = RVizMarker::CUBE_LIST;
-// 	markerRviz.action = RVizMarker::ADD;
-// 	markerRviz.pose.orientation.w = 1.0;
-// 	markerRviz.scale.x = 1.0 * step;
-// 	markerRviz.scale.y = 1.0 * step;
-// 	markerRviz.scale.z = 1.0 * step;
-// 	markerRviz.color.a = 1.0;
-// 	markerRviz.color.r = 0.0;
-// 	markerRviz.color.g = 1.0;
-// 	markerRviz.color.b = 0.0;
-// 	occupancy_marker.clear();
-// 	occupancy_marker.header.frame_id = frame_id; // "world";
-// 	for (int i = ws_x_min_inflated; i <= ws_x_max_inflated; i++)
-// 		for (int j = ws_y_min_inflated; j <= ws_y_max_inflated; j++)
-// 			for (int k = ws_z_min_inflated; k <= ws_z_max_inflated; k++)
-// 			{
-// 				unsigned int matrixIndex = getWorldIndex(i, j, k);
-// 				if (!discrete_world[matrixIndex].notOccupied)
-// 				{
-// 					//~ geometry_msgs::Point point;
-// 					pcl::PointXYZ point;
-// 					point.x = i * step;
-// 					point.y = j * step;
-// 					point.z = k * step;
-// 					occupancy_marker.push_back(point);
-// 				}
-// 			}
-// 	occupancy_marker_pub_.publish(occupancy_marker);
-// }
-
-
 void RandomPlanner::updateMap(octomap_msgs::OctomapConstPtr message)
 {
 	// Clear current map in the discrete occupancy
 	clearMap();
 
 	// Read occupation data from the octomap_server
-	//octomap_msgs::binaryMsgToMap(message));
 	map = (octomap::OcTree *)octomap_msgs::binaryMsgToMap(*message);
-	/*
-     * Update discrete world with the read octomap data
-     */
-
+	
+	/* Update discrete world with the read octomap data*/
 	// Occupied and not occupied points, only for debug
 	u_int64_t occupied_leafs = 0, free_leafs = 0;
 	int nit = 0;
 
 	// Read from first to the last leaf of the tree set its xyz (discretized) if it is occupied into the occupancy matrix
-
 	if (map->begin_leafs() != NULL)
 	{
 		for (octomap::OcTree::leaf_iterator it = map->begin_leafs(), end = map->end_leafs(); it != end; ++it)
@@ -1959,8 +1909,7 @@ void RandomPlanner::updateMap(octomap_msgs::OctomapConstPtr message)
 
 void RandomPlanner::clearMap()
 {
-	for (int i = 0; i < matrix_size; i++)
-	{
+	for (int i = 0; i < matrix_size; i++){
 		discrete_world[i].notOccupied = true;
 	}
 }

@@ -152,7 +152,9 @@ namespace PathPlanners
             void configRandomPlanner();
 
             void interpolatePointsGlobalPath(Trajectory &trajectory_, std::vector<double> l_catenary_);
-
+            void clearCatenaryGPMarker();
+	        void clearLinesGPMarker();
+            
             geometry_msgs::Point getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_);
 
             /*              Class Variables                 */
@@ -167,7 +169,7 @@ namespace PathPlanners
 
             //Publishers and Subscribers
             ros::Publisher replan_status_pub, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
-            ros::Publisher cleanMarkersOptimizerPublisher, initial_catenary_pub_;
+            ros::Publisher clean_markers_optimizer_pub_, initial_catenary_pub_, interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_;
             ros::Subscriber goal_sub, sub_map, point_cloud_map_uav_sub_, point_cloud_map_ugv_sub_, point_cloud_map_trav_sub_, clean_nodes_marker_gp_sub_,clean_catenary_marker_gp_sub_;
 
             //Services servers
@@ -206,11 +208,9 @@ namespace PathPlanners
             upo_actions::MakePlanFeedback make_plan_fb;
             upo_actions::MakePlanResult make_plan_res;
 
-            //
             std::unique_ptr<RotationInPlaceClient> rot_in_place_client_ptr;
             upo_actions::RotationInPlaceGoal rot_in_place_goal;
 
-            //
             //Variables to fill up the feedback 
             std_msgs::Duration travel_time;
             int timesReplaned;
@@ -221,7 +221,7 @@ namespace PathPlanners
             //! 3D specific variables
             bool mapRec, use3d;
             RandomPlanner randPlanner;
-	        RRTGraphMarkers rrtgm;
+	        PlannerGraphMarkers rrtgm;
 
             octomap_msgs::OctomapConstPtr map;
 
@@ -236,6 +236,7 @@ namespace PathPlanners
             double map_v_inflaction; //JAC: Hasta aquí todo cero.
 
             bool write_data_for_analysis;
+            bool pause_execution;
             double length_tether_max, radius_near_nodes, step_steer;
             int n_iter, n_loop, samp_goal_rate;
             double goal_gap_m;

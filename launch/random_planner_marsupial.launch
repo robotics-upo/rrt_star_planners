@@ -5,15 +5,15 @@
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="pos_uav_above_ugv"     default="1.0"/> #meters UAV above UGV
-    <arg name="use_catenary_planning" default="true"/>
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="marsupial"/>
     <arg name="is_coupled"    default="false"/>
     <arg name="sample_mode"    default="1"/>
+    <arg name="write_data_files" default="true"/>
     
-    <arg name="pos_reel_x"    default="0.0"/>
-    <arg name="pos_reel_y"    default="0.0"/>
-    <arg name="pos_reel_z"    default="0.3"/>
+    <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
+    <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
+    <arg name="pos_reel_z"    default="0.5"/> #position reel on UGV
 
 
     <arg name="map_file" default="stage_$(arg scenario_number)"/>
@@ -45,12 +45,12 @@
 
     <!-- Launch Optimizer and Global Planner-->
     <include file="$(find rrt_planners)/launch/random_global_planner.launch">
-        <arg name="use_catenary_planning" value="$(arg use_catenary_planning)"/>  
         <arg name="coupled" value="$(arg is_coupled)"/> 
         <arg name="scenario_number" value="$(arg scenario_number)"/> 
         <arg name="num_pos_initial" value="$(arg num_pos_initial)" /> 
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
         <arg name="planner_type" value="$(arg planner_type)" /> 
+        <arg name="write_data_files" value="$(arg write_data_files)" /> 
     </include>    
 
     

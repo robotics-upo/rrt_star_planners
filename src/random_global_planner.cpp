@@ -73,6 +73,7 @@ void RandomGlobalPlanner::configParams()
     nh->param("samp_goal_rate", samp_goal_rate, (int)10);
     nh->param("debug_rrt", debug_rrt, (bool)true);
     nh->param("nodes_marker_debug", nodes_marker_debug, (bool)true);
+    nh->param("pause_execution", pause_execution, (bool)true);
      
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
     nh->param("scenario_number", scenario_number,(int)1);
@@ -92,7 +93,10 @@ void RandomGlobalPlanner::configRRTStar()
 void RandomGlobalPlanner::configTopics()
 {
     replan_status_pub = nh->advertise<std_msgs::Bool>("replanning_status", 1);
-    cleanMarkersOptimizerPublisher = nh->advertise<std_msgs::Bool>("/clean_marker_optimizer", 1);
+    clean_markers_optimizer_pub_ = nh->advertise<std_msgs::Bool>("/clean_marker_optimizer", 1);
+    interpolated_path_ugv_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_path_ugv_rrt_star", 2, true);
+	interpolated_path_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_path_uav_rrt_star", 2, true);
+    interpolated_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_catenary_marsupial", 1000, true);
 
     sub_map = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary", 1, &RandomGlobalPlanner::collisionMapCallBack, this);
     clean_nodes_marker_gp_sub_ = nh->subscribe("/clean_nodes_marker_gp", 1, &RandomGlobalPlanner::deleteNodesMarkersCallBack, this);
@@ -147,16 +151,14 @@ void RandomGlobalPlanner::readPointCloudUAVObstaclesMapCallback(const sensor_msg
 
 void RandomGlobalPlanner::deleteNodesMarkersCallBack(const std_msgs::Bool::ConstPtr &msg)
 {
-	if (msg->data == true){
+	if (msg->data == true)
 		randPlanner.clearNodesMarker();
-	}
 }
 
 void RandomGlobalPlanner::deleteCatenaryGPCallBack(const std_msgs::Bool::ConstPtr &msg)
 {
-	if (msg->data == true){
-		randPlanner.clearCatenaryGPMarker();
-	}
+	if (msg->data == true)
+		clearCatenaryGPMarker();
 }
 
 void RandomGlobalPlanner::makePlanGoalCB()
@@ -177,10 +179,19 @@ void RandomGlobalPlanner::makePlanGoalCB()
     goal.vector.z = goalPoseStamped.pose.position.z;
     goal.header = goalPoseStamped.header;
 
+    clearLinesGPMarker();
+
     ROS_INFO_COND(debug, "Global Planner: Called Make Plan");
 
     if (calculatePath()){
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n\n");
+        if(pause_execution){
+            /********************* To obligate pause method and check Planning result *********************/
+		    std::string y_ ;
+		    std::cout << " *** Press key to continue: " << std::endl;
+		    std::cin >> y_ ;
+		    /*************************************************************************************************/
+        }
         sendPathToLocalPlannerServer();
     }
     else{ 
@@ -226,12 +237,10 @@ void RandomGlobalPlanner::plan()
         if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::PREEMPTED){//!Maybe when the goal is inside the local workspace and occupied
             ROS_INFO("Global Planner: Path execution preempted by local planner");
             replan();
-            //Decide What to do next....
         }
         if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::REJECTED){//!Maybe when the goal is inside the local workspace and occupied
             ROS_INFO("Global Planner: Path execution rejected by local planner");
             replan();
-            //Decide What to do next....
         }
     }
 }
@@ -275,7 +284,7 @@ bool RandomGlobalPlanner::calculatePath()
     randPlanner.clearStatus(); 
     std_msgs::Bool clean_markers_optimizer_;
     clean_markers_optimizer_.data = true;
-    cleanMarkersOptimizerPublisher.publish(clean_markers_optimizer_); 
+    clean_markers_optimizer_pub_.publish(clean_markers_optimizer_); 
         if (setGoal() && setStart())
         {
             //Print succes start and goal points
@@ -355,7 +364,6 @@ bool RandomGlobalPlanner::calculatePath()
 
                 ROS_INFO_COND(debug, PRINTF_YELLOW "Global Planner: Publishing Global Path");
                 ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
-
                 
                 countImpossible = 0;    //Reset the counter of the number of times the planner tried to calculate a path without success
                 if (flg_replan_status.data)     //If it was replanning before, reset flag
@@ -377,19 +385,26 @@ void RandomGlobalPlanner::sendPathToLocalPlannerServer()
     upo_actions::ExecutePathGoal goal_action;
     goal_action.path = trajectory;
     for(int i= 0; i<length_catenary.size() ; i++){
-    // for(int i= 0; i<randPlanner.length_catenary.size() ; i++){
-        // int n_ = (int)(randPlanner.length_catenary.size() - i - 1);
-        // goal_action.length_catenary.push_back(randPlanner.length_catenary[n_]);
         goal_action.length_catenary.push_back(length_catenary[i]);
     }
-    
+
+    randPlanner.clearCatenaryGPMarker();
+    randPlanner.clearLinesGPMarker();
+    rrtgm.getPathMarker(trajectory,length_catenary,interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
+    ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n\n");
+    if(pause_execution){
+    /********************* To obligate stop method and check Optimization result *********************/
+		std::string y_ ;
+		std::cout << " *** Press key to continue: " << std::endl;
+		std::cin >> y_ ;
+	/*************************************************************************************************/
+    }
     execute_path_client_ptr->sendGoal(goal_action);
 }
 
 bool RandomGlobalPlanner::setGoal()
 {
     bool ret = false;
-
     if (randPlanner.setValidFinalPosition(goal.vector))
         ret = true;
     else
@@ -445,7 +460,6 @@ bool RandomGlobalPlanner::setStart()
 geometry_msgs::TransformStamped RandomGlobalPlanner::getRobotPoseUGV()
 {
     geometry_msgs::TransformStamped ret;
-
     try{
         ret = tfBuffer->lookupTransform(world_frame, ugv_base_frame, ros::Time(0));
     }    catch (tf2::TransformException &ex){
@@ -457,7 +471,6 @@ geometry_msgs::TransformStamped RandomGlobalPlanner::getRobotPoseUGV()
 geometry_msgs::TransformStamped RandomGlobalPlanner::getLocalPoseReel()
 {
     geometry_msgs::TransformStamped ret;
-
     try{
         ret = tfBuffer->lookupTransform(ugv_base_frame, reel_base_frame,ros::Time(0));
     }    catch (tf2::TransformException &ex){
@@ -469,7 +482,6 @@ geometry_msgs::TransformStamped RandomGlobalPlanner::getLocalPoseReel()
 geometry_msgs::TransformStamped RandomGlobalPlanner::getRobotPoseUAV()
 {
     geometry_msgs::TransformStamped ret;
-
     try{
         ret = tfBuffer->lookupTransform(world_frame, uav_base_frame, ros::Time(0));
     }catch (tf2::TransformException &ex){
@@ -489,6 +501,8 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
     t_.transforms.resize(2);
 	t_.velocities.resize(2);
 	t_.accelerations.resize(2);
+
+	bisectionCatenary bc;
 
     for (size_t i = 0; i < trajectory_.points.size()-1; i++)
     {
@@ -536,74 +550,82 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 				t_.transforms[1].rotation.z = trajectory_.points.at(i).transforms[1].rotation.z;
 				t_.transforms[1].rotation.w = trajectory_.points.at(i).transforms[1].rotation.w;
 		        trajectory_aux_.points.push_back(t_);
-                
-                geometry_msgs::Point p_reel_, p_final_;
-            	std::vector<geometry_msgs::Point> p_catenary_;
 
-                CatenarySolver cSolver_;
-                
-                cSolver_.setMaxNumIterations(200);
-                p_reel_ = getReelNode(t_.transforms[0].translation.x ,t_.transforms[0].translation.y ,t_.transforms[0].translation.z,
-                                      t_.transforms[0].rotation.x, t_.transforms[0].rotation.y, t_.transforms[0].rotation.z, t_.transforms[0].rotation.w);
-                
-                double dist_init_final_ = sqrt(pow(p_reel_.x - t_.transforms[1].translation.x,2) + 
-                                               pow(p_reel_.y - t_.transforms[1].translation.y,2) + 
-                                               pow(p_reel_.z - t_.transforms[1].translation.z,2));
-                double delta_ = 0.0;	//Initial Value
-                bool check_catenary = true;
-                bool increase_catenary;
-                double l_cat_;
-                double security_dis_ca_ = distance_catenary_obstacle;
-                
-                do{
-                    increase_catenary = false;
-                    p_catenary_.clear();
-                    l_cat_ = dist_init_final_* (1.01 + delta_);
-                    if (l_cat_ > length_tether_max){
-                        check_catenary = false;
-                        break;
-                    }
-                    cSolver_.solve(t_.transforms[0].translation.x, t_.transforms[0].translation.y, t_.transforms[0].translation.z, 
-                                   t_.transforms[1].translation.x, t_.transforms[1].translation.y, t_.transforms[1].translation.z, l_cat_, p_catenary_);
-                    double d_min_point_cat = 100000;
-                    if (p_catenary_.size() > 5){
-                        for (size_t i = 0 ; i < p_catenary_.size() ; i++){
-                            geometry_msgs::Point point_cat;
-                            Eigen::Vector3d p_in_cat_, obs_to_cat_;
-                            if (p_catenary_[i].z < ws_z_min*map_resolution + ((1*map_resolution)+security_dis_ca_)){
-                                check_catenary = false;
-                                break;
-                            }
-                            p_in_cat_.x() = p_catenary_[i].x;
-                            p_in_cat_.y() = p_catenary_[i].y;
-                            p_in_cat_.z() = p_catenary_[i].z;
-                            double dist_cat_obs;
-                            bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x(),p_in_cat_.y(),p_in_cat_.z());
-                            if(is_into_)
-                                dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x(),(double)p_in_cat_.y(),(double)p_in_cat_.z()) ;
-                            else
-                                dist_cat_obs = -1.0;
-                            if (d_min_point_cat > dist_cat_obs){
-                                d_min_point_cat = dist_cat_obs;
-                            }
-                            if (dist_cat_obs < security_dis_ca_){
-                                delta_ = delta_ + 0.005;
-                                increase_catenary = true;
-                                break;
-                            }
-                            point_cat.x = p_catenary_[i].x;
-                            point_cat.y = p_catenary_[i].y;
-                            point_cat.z = p_catenary_[i].z;
+                if(j != 0){                    
+                    geometry_msgs::Point p_reel_, p_final_;
+                    std::vector<geometry_msgs::Point> p_catenary_;
+                    // CatenarySolver cSolver_;
+                    // cSolver_.setMaxNumIterations(200);
+                    p_reel_ = getReelNode(t_.transforms[0].translation.x ,t_.transforms[0].translation.y ,t_.transforms[0].translation.z,
+                                        t_.transforms[0].rotation.x, t_.transforms[0].rotation.y, t_.transforms[0].rotation.z, t_.transforms[0].rotation.w);
+                    
+                    double dist_init_final_ = sqrt(pow(p_reel_.x - t_.transforms[1].translation.x,2) + 
+                                                pow(p_reel_.y - t_.transforms[1].translation.y,2) + 
+                                                pow(p_reel_.z - t_.transforms[1].translation.z,2));
+                    double delta_ = 0.0;	//Initial Value
+                    bool check_catenary = true;
+                    bool increase_catenary;
+                    double l_cat_;
+                    double security_dis_ca_ = distance_catenary_obstacle;
+                    
+                    do{
+                        increase_catenary = false;
+                        p_catenary_.clear();
+                        l_cat_ = dist_init_final_* (1.01 + delta_);
+                        if (l_cat_ > length_tether_max){
+                            check_catenary = false;
+                            break;
                         }
-                        if (check_catenary && !increase_catenary){
+                        // cSolver_.solve(p_reel_.x, p_reel_.y, p_reel_.z, 
+                        // t_.transforms[1].translation.x, t_.transforms[1].translation.y, t_.transforms[1].translation.z, l_cat_, p_catenary_);
+                        
+                        bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, t_.transforms[1].translation.x, 
+                                                                t_.transforms[1].translation.y, t_.transforms[1].translation.z, false);
+			            bc.getPointCatenary3D(p_catenary_);
+
+                        double d_min_point_cat = 100000;
+                        if (p_catenary_.size() > 5){
+                            for (size_t i = 0 ; i < p_catenary_.size() ; i++){
+                                geometry_msgs::Point point_cat;
+                                Eigen::Vector3d p_in_cat_, obs_to_cat_;
+                                if (p_catenary_[i].z < ws_z_min*map_resolution + ((1*map_resolution)+security_dis_ca_)){
+                                    check_catenary = false;
+                                    break;
+                                }
+                                p_in_cat_.x() = p_catenary_[i].x;
+                                p_in_cat_.y() = p_catenary_[i].y;
+                                p_in_cat_.z() = p_catenary_[i].z;
+                                double dist_cat_obs;
+                                bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x(),p_in_cat_.y(),p_in_cat_.z());
+                                if(is_into_)
+                                    dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x(),(double)p_in_cat_.y(),(double)p_in_cat_.z()) ;
+                                else
+                                    dist_cat_obs = -1.0;
+                                if (d_min_point_cat > dist_cat_obs){
+                                    d_min_point_cat = dist_cat_obs;
+                                }
+                                if (dist_cat_obs < security_dis_ca_){
+                                    delta_ = delta_ + 0.005;
+                                    increase_catenary = true;
+                                    break;
+                                }
+                                point_cat.x = p_catenary_[i].x;
+                                point_cat.y = p_catenary_[i].y;
+                                point_cat.z = p_catenary_[i].z;
+                            }
+                            if (check_catenary && !increase_catenary){
+                                check_catenary = false;
+                            }
+                        }
+                        else{
                             check_catenary = false;
                         }
-                    }
-                    else{
-                        check_catenary = false;
-                    }
-                }while (check_catenary);
-                length_catenary.push_back(l_cat_);
+                    }while (check_catenary);
+                    length_catenary.push_back(l_cat_);
+                }
+                else{
+                    length_catenary.push_back(l_catenary_[j_]);
+                }
             }//for loop
 		}
 		else{
@@ -686,8 +708,20 @@ void RandomGlobalPlanner::configRandomPlanner()
     randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, 
                                     radius_near_nodes, step_steer, samp_goal_rate, sample_mode, min_l_steer_ugv);
 
+    rrtgm.configGraphMarkers(world_frame, map_resolution, coupled, n_iter, pos_reel_ugv);
+
    	ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  length_tether_max: %f , sample_mode=%i !!", length_tether_max, sample_mode);
 	ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  is_coupled=[%s] debug_rrt=[%s] debug_msgs=[%s]", coupled? "true" : "false", debug_rrt? "true" : "false", debug? "true" : "false");
+}
+
+void RandomGlobalPlanner::clearLinesGPMarker()
+{
+	rrtgm.clearMarkers(interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_);
+}
+
+void RandomGlobalPlanner::clearCatenaryGPMarker()
+{ 
+	rrtgm.clearCatenaryMarker(interpolated_catenary_marker_pub_); 
 }
 
 } // namespace PathPlanners

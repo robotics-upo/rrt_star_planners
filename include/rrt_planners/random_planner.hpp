@@ -305,6 +305,7 @@ public:
 
 	void clearNodesMarker();
 	void clearCatenaryGPMarker();
+	void clearLinesGPMarker();
 	/** Variables **/
 	float step; // Resolution of the Matrix and its inverse
 	float step_inv;
@@ -329,7 +330,7 @@ public:
 	std::string node_name, path_name;
 
 	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
-	RRTGraphMarkers rrtgm;
+	PlannerGraphMarkers rrtgm;
 	Grid3d *grid_3D;
 
 protected:
@@ -516,7 +517,6 @@ protected:
 	ros::Publisher occupancy_marker_pub_;
 
 	RVizMarker markerRviz;	 // Explored nodes by ThetaStar
-
 
 	// bool got_to_goal = false;
 	int got_to_goal = 1;

@@ -1,12 +1,12 @@
 #include <rrt_planners/random_graph_markers.h>
 
 
-RRTGraphMarkers::RRTGraphMarkers()
+PlannerGraphMarkers::PlannerGraphMarkers()
 {
 
 }
 
-void RRTGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv_)
+void PlannerGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv_)
 {
     frame_id = frame_id_;
     step = step_;
@@ -15,7 +15,7 @@ void RRTGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, boo
 	pos_reel_ugv = pos_reel_ugv_;
 }
 
-void RRTGraphMarkers::getGraphMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_)
+void PlannerGraphMarkers::getGraphMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_)
 {
     pointTreeMarkerUGV.markers.resize(count+1);
 
@@ -71,7 +71,7 @@ void RRTGraphMarkers::getGraphMarker(RRTNode* nodes_tree_, int count, ros::Publi
 	}
 }
 
-void RRTGraphMarkers::getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_, ros::Publisher take_off_nodes_pub_)
+void PlannerGraphMarkers::getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_, ros::Publisher take_off_nodes_pub_)
 { 
 	pointTakeOffMarker.markers.resize(take_off_nodes_.size());
 
@@ -103,7 +103,7 @@ void RRTGraphMarkers::getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_,
 	take_off_nodes_pub_.publish(pointTakeOffMarker);
 }
 
-void RRTGraphMarkers::getPathMarker(std::list<RRTNode*> pt_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_)
+void PlannerGraphMarkers::getPathMarker(std::list<RRTNode*> pt_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_)
 {
 	geometry_msgs::Point _p1, _p2; 
 
@@ -182,7 +182,149 @@ void RRTGraphMarkers::getPathMarker(std::list<RRTNode*> pt_, ros::Publisher line
 	}
 }
 
-void RRTGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Point> points_catenary_, ros::Publisher one_catenary_marker_pub_){
+void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory mt_, std::vector<double> ct_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_, ros::Publisher catenary_marker_pub_)
+{
+	geometry_msgs::Point _p1, _p2, _p1_uav, _p2_uav; 
+
+	std::string string_marker, ns_marker;
+	double c_color1, c_color2, c_color3;
+	double x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_;
+	std::vector<geometry_msgs::Point> points_catenary_;
+	geometry_msgs::Point p_reel_;
+	int count = 0; 
+
+	bisectionCatenary bc;
+
+	lines_ugv_marker.markers.resize(mt_.points.size()-1);
+	lines_uav_marker.markers.resize(mt_.points.size()-1);
+	
+	for (size_t i= 0 ; i <  mt_.points.size(); i++){
+		_p2.x = mt_.points.at(i).transforms[0].translation.x;
+		_p2.y = mt_.points.at(i).transforms[0].translation.y;
+		_p2.z = mt_.points.at(i).transforms[0].translation.z+0.1;
+		_p2_uav.x = mt_.points.at(i).transforms[1].translation.x;
+		_p2_uav.y = mt_.points.at(i).transforms[1].translation.y;
+		_p2_uav.z = mt_.points.at(i).transforms[1].translation.z;
+		if (i > 0){
+			lines_ugv_marker.markers[i-1].header.frame_id = frame_id;
+			lines_ugv_marker.markers[i-1].header.stamp = ros::Time::now();
+			lines_ugv_marker.markers[i-1].ns = "Line_ugv_Global_Path";
+			lines_ugv_marker.markers[i-1].id = i + mt_.points.size();
+			lines_ugv_marker.markers[i-1].action = visualization_msgs::Marker::ADD;
+			lines_ugv_marker.markers[i-1].type = visualization_msgs::Marker::LINE_STRIP;
+			lines_ugv_marker.markers[i-1].lifetime = ros::Duration(0);
+			lines_ugv_marker.markers[i-1].points.push_back(_p1);
+			lines_ugv_marker.markers[i-1].points.push_back(_p2);
+			lines_ugv_marker.markers[i-1].pose.orientation.x = 0.0;
+			lines_ugv_marker.markers[i-1].pose.orientation.y = 0.0;
+			lines_ugv_marker.markers[i-1].pose.orientation.z = 0.0;
+			lines_ugv_marker.markers[i-1].pose.orientation.w = 1.0;
+			lines_ugv_marker.markers[i-1].scale.x = 0.1;
+			// lines_ugv_marker.markers[i].scale.y = 0.3;
+			// lines_ugv_marker.markers[i].scale.z = 0.1;
+			lines_ugv_marker.markers[i-1].color.a = 1.0;
+			lines_ugv_marker.markers[i-1].color.r = 1.0;
+			lines_ugv_marker.markers[i-1].color.g = 1.0;
+			lines_ugv_marker.markers[i-1].color.b = 1.0;
+
+			lines_uav_marker.markers[i-1].header.frame_id = frame_id;
+			lines_uav_marker.markers[i-1].header.stamp = ros::Time::now();
+			lines_uav_marker.markers[i-1].ns = "Line_uav_Global_Path";
+			lines_uav_marker.markers[i-1].id = i + mt_.points.size();
+			lines_uav_marker.markers[i-1].action = visualization_msgs::Marker::ADD;
+			lines_uav_marker.markers[i-1].type = visualization_msgs::Marker::LINE_STRIP;
+			lines_uav_marker.markers[i-1].lifetime = ros::Duration(0);
+			lines_uav_marker.markers[i-1].points.push_back(_p1_uav);
+			lines_uav_marker.markers[i-1].points.push_back(_p2_uav);
+			lines_uav_marker.markers[i-1].pose.orientation.x = 0.0;
+			lines_uav_marker.markers[i-1].pose.orientation.y = 0.0;
+			lines_uav_marker.markers[i-1].pose.orientation.z = 0.0;
+			lines_uav_marker.markers[i-1].pose.orientation.w = 1.0;
+			lines_uav_marker.markers[i-1].scale.x = 0.1;
+			// lines_uav_marker.markers[i].scale.y = 0.3;
+			// lines_uav_marker.markers[i].scale.z = 0.1;
+			lines_uav_marker.markers[i-1].color.a = 1.0;
+			lines_uav_marker.markers[i-1].color.r = 0.0;
+			lines_uav_marker.markers[i-1].color.g = 0.0;
+			lines_uav_marker.markers[i-1].color.b = 0.0;
+		}
+		_p1.x = mt_.points.at(i).transforms[0].translation.x;
+		_p1.y = mt_.points.at(i).transforms[0].translation.y;
+		_p1.z = mt_.points.at(i).transforms[0].translation.z+0.1;	//Move in Z to see the point over the map surface
+		geometry_msgs::Quaternion _q1;
+		_q1.x = mt_.points.at(i).transforms[0].rotation.x;
+		_q1.y = mt_.points.at(i).transforms[0].rotation.y;
+		_q1.z = mt_.points.at(i).transforms[0].rotation.z;
+		_q1.w = mt_.points.at(i).transforms[0].rotation.w;
+		_p1_uav.x = mt_.points.at(i).transforms[1].translation.x;
+		_p1_uav.y = mt_.points.at(i).transforms[1].translation.y;
+		_p1_uav.z = mt_.points.at(i).transforms[1].translation.z;
+
+		// Catenary Graph
+		p_reel_ = getReelNode(_p1,_q1);
+
+		x_ugv_ = p_reel_.x; 
+		y_ugv_ = p_reel_.y; 
+		z_ugv_ = p_reel_.z; 
+		x_uav_ = mt_.points.at(i).transforms[1].translation.x; 
+		y_uav_ = mt_.points.at(i).transforms[1].translation.y; 
+		z_uav_ = mt_.points.at(i).transforms[1].translation.z; 
+		len_cat_ = ct_[i];
+
+		points_catenary_.clear();
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, false);
+		bc.getPointCatenary3D(points_catenary_);
+
+		int id_ = i;
+		
+		if (count%2 == 0)
+			c_color3 = 0.5;
+		else
+			c_color3 = 0.0;
+		string_marker = std::to_string(count);
+		ns_marker = "catenary_"+ string_marker;
+	
+		catenaryMarker.markers.clear();
+		catenaryMarker.markers.resize(points_catenary_.size());
+
+		for (size_t i = 0 ; i < points_catenary_.size() ; i++ ) {
+			c_color1 = ((double)i / (double)points_catenary_.size())*0.5;
+			c_color2 = ((double)i / (double)points_catenary_.size())*0.5;
+
+			catenaryMarker.markers[i].header.frame_id = frame_id;
+			catenaryMarker.markers[i].header.stamp = ros::Time::now();
+			catenaryMarker.markers[i].ns = ns_marker;
+			catenaryMarker.markers[i].id = id_ + i*10.0;
+			catenaryMarker.markers[i].action = visualization_msgs::Marker::ADD;
+			 if (i % 5 == 0)
+            catenaryMarker.markers[i].type = visualization_msgs::Marker::CUBE;
+        	else
+            catenaryMarker.markers[i].type = visualization_msgs::Marker::SPHERE;
+			catenaryMarker.markers[i].lifetime = ros::Duration(180);
+			catenaryMarker.markers[i].pose.position.x = points_catenary_[i].x; 
+			catenaryMarker.markers[i].pose.position.y = points_catenary_[i].y; 
+			catenaryMarker.markers[i].pose.position.z = points_catenary_[i].z; //Move in Z to see the point over the map surface
+			catenaryMarker.markers[i].pose.orientation.x = 0.0;
+			catenaryMarker.markers[i].pose.orientation.y = 0.0;
+			catenaryMarker.markers[i].pose.orientation.z = 0.0;
+			catenaryMarker.markers[i].pose.orientation.w = 1.0;
+			catenaryMarker.markers[i].scale.x = 0.06;
+			catenaryMarker.markers[i].scale.y = 0.06;
+			catenaryMarker.markers[i].scale.z = 0.06;
+			catenaryMarker.markers[i].color.r = 1.0 - c_color1;
+			catenaryMarker.markers[i].color.g = c_color2;
+			catenaryMarker.markers[i].color.b = c_color3;
+			catenaryMarker.markers[i].color.a = 1.0; 
+		}
+		count++;
+		catenary_marker_pub_.publish(catenaryMarker);
+	}
+	lines_ugv_marker_pub_.publish(lines_ugv_marker);
+	lines_uav_marker_pub_.publish(lines_uav_marker);
+			
+}
+
+void PlannerGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Point> points_catenary_, ros::Publisher one_catenary_marker_pub_){
 	std::string string_marker;
     std::string ns_marker;
 
@@ -224,7 +366,7 @@ void RRTGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Point> points_cate
 	one_catenary_marker_pub_.publish(oneCatenaryMarker);
 }
 
-void RRTGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publisher catenary_marker_pub_)
+void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publisher catenary_marker_pub_)
 {
     std::string string_marker;
     std::string ns_marker;
@@ -239,9 +381,6 @@ void RRTGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publis
 
 		bisectionCatenary bc;
 
-		// CatenarySolver cS_;
-		// cS_.setMaxNumIterations(100);
-		
 		double x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_;
 		x_ugv_ = p_reel_.x; 
 		y_ugv_ = p_reel_.y; 
@@ -250,17 +389,9 @@ void RRTGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publis
 		y_uav_ = nt_->point_uav.y*step; 
 		z_uav_ = nt_->point_uav.z*step; 
 		len_cat_ = nt_->length_cat;
-		// printf("Values to Compute Catenary: ugv[%f %f %f]  uav[%f %f %f] len_cat[%f]\n",x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_);
-		// cS_.solve(x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_, points_catenary_);
 
-
-		// bc.readDataForCollisionAnalisys(g_3D_, sb_, o_full_, kdT_trav_, pc_trav_);
 		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, false);
 		bc.getPointCatenary3D(points_catenary_);
-		// bc.getMinPointZCat(min_point_z_cat, pos_in_cat_z_min);
-		// bc.getMidPointCat(mid_point_cat, mid_p_cat);
-		// bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
-
 
 		int id_ = nt_->id;
 		
@@ -308,7 +439,7 @@ void RRTGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publis
 	}	
 }
 
-void RRTGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher all_catenary_marker_pub_)
+void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher all_catenary_marker_pub_)
 {
 	std::string string_marker;
     std::string ns_marker;
@@ -379,7 +510,7 @@ void RRTGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, ros:
 	}
 }
 
-void RRTGraphMarkers::goalPointMarker(geometry_msgs::Vector3 final_position_, ros::Publisher goal_point_pub_)
+void PlannerGraphMarkers::goalPointMarker(geometry_msgs::Vector3 final_position_, ros::Publisher goal_point_pub_)
 {
 	visualization_msgs::Marker marker_;
 	marker_.header.frame_id = frame_id;
@@ -407,7 +538,7 @@ void RRTGraphMarkers::goalPointMarker(geometry_msgs::Vector3 final_position_, ro
 	goal_point_pub_.publish(marker_);
 }
 
-void RRTGraphMarkers::reelPointMarker1(geometry_msgs::Point p_, ros::Publisher reel1_point_pub_)
+void PlannerGraphMarkers::reelPointMarker1(geometry_msgs::Point p_, ros::Publisher reel1_point_pub_)
 {
 	visualization_msgs::Marker marker_;
 	marker_.header.frame_id = frame_id;
@@ -435,7 +566,7 @@ void RRTGraphMarkers::reelPointMarker1(geometry_msgs::Point p_, ros::Publisher r
 	reel1_point_pub_.publish(marker_);
 }
 
-void RRTGraphMarkers::reelPointMarker2(geometry_msgs::Point p_, ros::Publisher reel2_point_pub_)
+void PlannerGraphMarkers::reelPointMarker2(geometry_msgs::Point p_, ros::Publisher reel2_point_pub_)
 {
 	visualization_msgs::Marker marker_;
 	marker_.header.frame_id = frame_id;
@@ -463,7 +594,7 @@ void RRTGraphMarkers::reelPointMarker2(geometry_msgs::Point p_, ros::Publisher r
 	reel2_point_pub_.publish(marker_);
 }
 
-void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_, int color_)
+void PlannerGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_, int color_)
 {
 	//color: 0 = red , 1 = green , 2 = blue
 	double color_r1, color_g1, color_b1, color_r2, color_g2, color_b2, scale_;
@@ -531,7 +662,7 @@ void RRTGraphMarkers::randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_
 	rand_point_pub_.publish(marker_rand);
 }
 
-void RRTGraphMarkers::newNodeMarker(RRTNode rn_, ros::Publisher new_point_pub_)
+void PlannerGraphMarkers::newNodeMarker(RRTNode rn_, ros::Publisher new_point_pub_)
 {
 	visualization_msgs::MarkerArray marker_new;
 	marker_new.markers.resize(2);
@@ -582,7 +713,7 @@ void RRTGraphMarkers::newNodeMarker(RRTNode rn_, ros::Publisher new_point_pub_)
 	new_point_pub_.publish(marker_new);
 }
 
-void RRTGraphMarkers::nearestNodeMarker(RRTNode rn_, ros::Publisher nearest_point_pub_)
+void PlannerGraphMarkers::nearestNodeMarker(RRTNode rn_, ros::Publisher nearest_point_pub_)
 {
 	visualization_msgs::MarkerArray marker_nearest;
 	marker_nearest.markers.resize(2);
@@ -633,7 +764,7 @@ void RRTGraphMarkers::nearestNodeMarker(RRTNode rn_, ros::Publisher nearest_poin
 	nearest_point_pub_.publish(marker_nearest);
 }
 
-void RRTGraphMarkers::getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_, ros::Publisher points_marker_pub_){
+void PlannerGraphMarkers::getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_, ros::Publisher points_marker_pub_){
 	std::string string_marker;
     std::string ns_marker;
 
@@ -675,7 +806,7 @@ void RRTGraphMarkers::getPointsObsMarker(std::vector<geometry_msgs::Point> point
 	points_marker_pub_.publish(pointsMarker);
 }
 
-void RRTGraphMarkers::clearMarkers(ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_)
+void PlannerGraphMarkers::clearMarkers(ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_)
 {
 	auto size_ = n_iter;
     lines_ugv_marker.markers.clear();
@@ -694,7 +825,7 @@ void RRTGraphMarkers::clearMarkers(ros::Publisher lines_ugv_marker_pub_, ros::Pu
     lines_uav_marker_pub_.publish(lines_uav_marker);
 }
 
-void RRTGraphMarkers::clearMarkersNodesTree(ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_, ros::Publisher take_off_nodes_pub_)
+void PlannerGraphMarkers::clearMarkersNodesTree(ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_, ros::Publisher take_off_nodes_pub_)
 {
 	auto size_ = pointTreeMarkerUGV.markers.size();
 
@@ -721,7 +852,7 @@ void RRTGraphMarkers::clearMarkersNodesTree(ros::Publisher tree_rrt_star_ugv_pub
     take_off_nodes_pub_.publish(pointTakeOffMarker);
 }
 
-void RRTGraphMarkers::clearCatenaryMarker(ros::Publisher c_m_pub_)
+void PlannerGraphMarkers::clearCatenaryMarker(ros::Publisher c_m_pub_)
 {
 	auto size_ = catenaryMarker.markers.size();
 	catenaryMarker.markers.clear();
@@ -732,12 +863,12 @@ void RRTGraphMarkers::clearCatenaryMarker(ros::Publisher c_m_pub_)
     c_m_pub_.publish(catenaryMarker);
 }
 
-geometry_msgs::Point RRTGraphMarkers::getReelNode(const RRTNode node_)
+geometry_msgs::Point PlannerGraphMarkers::getReelNode(const RRTNode node_)
 {
 	geometry_msgs::Point pos_reel;
 	float yaw_ugv;
 
-	yaw_ugv = getYawFromQuaternion(node_,false);
+	yaw_ugv = getYawFromQuaternion(node_.rot_ugv.x, node_.rot_ugv.y, node_.rot_ugv.z, node_.rot_ugv.w);
 	double lengt_vec =  sqrt(pos_reel_ugv.x*pos_reel_ugv.x + pos_reel_ugv.y*pos_reel_ugv.y);
 	pos_reel.x = node_.point.x*step + lengt_vec *cos(yaw_ugv); 
 	pos_reel.y = node_.point.y*step + lengt_vec *sin(yaw_ugv);
@@ -746,20 +877,26 @@ geometry_msgs::Point RRTGraphMarkers::getReelNode(const RRTNode node_)
 	return pos_reel;
 }
 
-float RRTGraphMarkers::getYawFromQuaternion(RRTNode n_, bool is_uav_)
+geometry_msgs::Point PlannerGraphMarkers::getReelNode(const geometry_msgs::Point p_, const geometry_msgs::Quaternion q_)
 {
-	double r_, p_, y_;
+	geometry_msgs::Point pos_reel;
+	float yaw_ugv;
 
-	if (!is_uav_){
-		tf::Quaternion q(n_.rot_ugv.x, n_.rot_ugv.y, n_.rot_ugv.z, n_.rot_ugv.w);
-		tf::Matrix3x3 M(q);	
-		M.getRPY(r_, p_, y_);
-	}
-	else{
-		tf::Quaternion q(n_.rot_uav.x, n_.rot_uav.y, n_.rot_uav.z, n_.rot_uav.w);
-		tf::Matrix3x3 M(q);	
-		M.getRPY(r_, p_, y_);
-	}
+	yaw_ugv = getYawFromQuaternion(q_.x, q_.y, q_.z, q_.w);
+	double lengt_vec =  sqrt(pos_reel_ugv.x*pos_reel_ugv.x + pos_reel_ugv.y*pos_reel_ugv.y);
+	pos_reel.x = p_.x + lengt_vec *cos(yaw_ugv); 
+	pos_reel.y = p_.y + lengt_vec *sin(yaw_ugv);
+	pos_reel.z = p_.z + pos_reel_ugv.z ; 
+	return pos_reel;
+}
 
-	return y_;
+float PlannerGraphMarkers::getYawFromQuaternion(double x_, double y_, double z_, double w_)
+{
+	double roll_, pitch_, yaw_;
+
+	tf::Quaternion q( x_, y_, z_, w_);
+	tf::Matrix3x3 M(q);	
+	M.getRPY(roll_, pitch_, yaw_);
+
+	return yaw_;
 }

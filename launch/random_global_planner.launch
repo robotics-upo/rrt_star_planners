@@ -3,8 +3,9 @@
     <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
 
-    <arg name="graph_traj_in_rviz" default="true"/>
-    <arg name="pause_optimization" default="true"/>
+    <arg name="graph_traj_in_rviz" default="false"/>
+    <arg name="pause_execution" default="true"/>
+    <arg name="write_data_files" default="true"/>
 
     <arg name="world_frame" default="map"/> 
     <arg name="ugv_frame" default="ugv_base_link"/> 
@@ -16,7 +17,6 @@
     <arg name="debug_msgs" default="true"/>
     <arg name="show_config_msgs" default="true"/>
 
-    <arg name="use_catenary_planning" default="true"/>
     <arg name="use_search_pyramid_planning" default="false"/>
     <arg name="length_tether_max"    default="20.0"/>   
 
@@ -41,35 +41,32 @@
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
+        <remap from="/Make_Plan" to="Make_Plan"/>
+        <remap from="/Execute_Plan" to="Execute_Plan"/>
+        <param name="path"   value="$(arg path_files)"/>  
+        <param name="name_output_file"    value="$(arg name_output_file)"/>     
+        <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="planner_type" value="$(arg planner_type)"/> 
         <param name="world_frame" value="$(arg world_frame)"/> 
         <param name="ugv_base_frame" value="$(arg ugv_frame)"/> 
         <param name="uav_base_frame" value="$(arg uav_frame)"/>
         <param name="reel_base_frame" value="$(arg reel_frame)"/>
-        <remap from="/Make_Plan" to="Make_Plan"/>
-        <remap from="/Execute_Plan" to="Execute_Plan"/>
-        <param name="mode3d" value="$(arg use_dron)"/>
+        <param name="pause_execution" value="$(arg pause_execution)"/>
+        <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
+        <param name="debug_rrt"    value="false"/>     
+        <param name="nodes_marker_debug"    value="true"/>     
         <param name="debug" value="$(arg debug_msgs)"/>
         <param name="showConfig" value="true"/>
-        <param name="robot_base_frame" value="uav_base_link"/>
-        <param name="use_catenary" value="$(arg use_catenary_planning)"/>  
-        <param name="use_search_pyramid" value="$(arg use_search_pyramid_planning)"/>   
+        <param name="coupled"   value="$(arg coupled)"/>     
         <param name="n_iter" value="$(arg n_iter_rrt)"/>   
         <param name="n_loop" value="$(arg n_loop_rrt)"/>   
         <param name="radius_near_nodes" value="$(arg radius_near_nodes)"/>   
         <param name="step_steer" value="$(arg step_steer)"/>   
         <param name="min_l_steer_ugv" value="$(arg min_l_steer_ugv)"/>   
         <param name="length_tether_max" value="$(arg length_tether_max)"/>   
-        <param name="write_data_for_analysis"    value="true"/>     
-        <param name="path"   value="$(arg path_files)"/>  
-        <param name="name_output_file"    value="$(arg name_output_file)"/>     
-        <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
-        <param name="coupled"   value="$(arg coupled)"/>     
         <param name="goal_gap_m"   value="$(arg goal_gap_m)"/>    
         <param name="samp_goal_rate"   value="$(arg samp_goal_rate)"/>  
-        <param name="debug_rrt"    value="false"/>     
-        <param name="nodes_marker_debug"    value="true"/>     
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
         <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
@@ -97,14 +94,14 @@
         <param name="traj_dest_frame" value="uav_base_link"/>
 
         <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
-        <param name="pause_end_optimization" value="$(arg pause_optimization)"/>
+        <param name="pause_end_optimization" value="$(arg pause_execution)"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
        
         <param name="fix_last_position_ugv"   value="false"/> 
         <param name="optimize_ugv"   value="true"/>  # UGV
         <param name="optimize_uav"   value="true"/>  # UAV
-        <param name="optimize_cat"   value="false"/>  # CAT
+        <param name="optimize_cat"   value="true"/>  # CAT
 
         <param name="equidistance_ugv_constraint"   value="1"/>   # equidistance_ugv_constraint
         <param name="obstacles_ugv_constraint"      value="1"/>   # obstacles_ugv_constraint
@@ -139,11 +136,11 @@
         <param name="w_zeta"      value="0.0006"/>   # acceleration 
         
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.00000"/>   # catenary Obstacles collision 0.00100
-        <param name="w_eta_2"    value="0.00000"/>   # catenary length 0.00150
-        <param name="w_eta_3"    value="0.00000"/>   # catenary Z collision 0.00105
+        <param name="w_eta_1"    value="0.000001"/>   # catenary Obstacles collision 0.00100
+        <param name="w_eta_2"    value="0.00001"/>   # catenary length 0.00150
+        <param name="w_eta_3"    value="0.00001"/>   # catenary Z collision 0.00105
 
-        <param name="n_iter_opt"    value="10000"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
             
         <param name="distance_obstacle_ugv"         value="0.8"/> <!-- bound distance UGV to obstacles [m]-->
@@ -157,7 +154,7 @@
         <param name="distance_catenary_obstacle"  value="0.1"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
         #Parameter to write file 
-        <param name="write_data_for_analysis"    value="true"/>     
+        <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
