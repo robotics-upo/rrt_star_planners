@@ -181,7 +181,7 @@ int RandomPlanner::computeTreesIndependent()
 	rrtgm.clearMarkers(lines_ugv_marker_pub_, lines_uav_marker_pub_);
 
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
-	printf("RandomPlanner::computeTreesIndependent -->  STARTING --> star_point_ugv[%.2f %.2f %.2f/%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n", 
+	printf("RandomPlanner::computeTreesIndependent -->  STARTING --> star_point_ugv[%.2f %.2f %.2f/%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n", 
 			initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z, initial_position_uav.x, initial_position_uav.y, initial_position_uav.z, 
 			final_position.x, final_position.y, final_position.z);  
 
@@ -210,7 +210,8 @@ int RandomPlanner::computeTreesIndependent()
     
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
       	
-		printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\n",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
+		printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
+		
 		RRTNode q_rand;
 		
 		if ((count_loop%samp_goal_rate)!=0){
@@ -231,7 +232,7 @@ int RandomPlanner::computeTreesIndependent()
 			 ( (num_goal_finded>0) && (planner_type == "rrt_star") && (count_loop == n_iter) ) ||
 			 ( (num_goal_finded>0) && (planner_type == "birrt") ) ){
 
-			printf("\nRandomPlanner::computeTreesIndependent -->  finded goal for Coupled Marsupial Configuration.\n")	; 
+			printf("\n\n\nRandomPlanner::computeTreesIndependent -->  finded goal for Coupled Marsupial Configuration.\n")	; 
 			rrt_path = getPath(); 
 			printf("RandomPlanner::computeTreesIndependent -->  finded path for Coupled Marsupial Configuration--> (path size: %lu , iteration numbers: %i) : \n",rrt_path.size(), (count_loop)+(500*count_total_loop)); 
 			if (planner_type == "rrt_star")
@@ -239,7 +240,7 @@ int RandomPlanner::computeTreesIndependent()
 			int i_=0;   
 			printf("\tPrinting the Path Nodes obteinded through planner (%s) : \n",planner_type.c_str());
 			for (auto pt_: rrt_path){
-				printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%f    cost=%f\n", i_, rrt_path.size(),
+				printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f    cost=%.3f\n", i_, rrt_path.size(),
 				pt_->point.x*step, pt_->point.y*step, pt_->point.z*step, pt_->rot_ugv.x, pt_->rot_ugv.y, pt_->rot_ugv.z, pt_->rot_ugv.w, pt_->point_uav.x*step, 
 				pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, pt_->cost);
 				i_++;
@@ -259,7 +260,7 @@ int RandomPlanner::computeTreesIndependent()
 				break;
 			}
 			else
-				printf("\n\t\t       Planner (%s) :: computeTreeIndependent: Starting new Loop      \n\n",planner_type.c_str());
+				printf("\n\t\t       Planner (%s) :: computeTreeIndependent: Starting new Loop      \n",planner_type.c_str());
 		}
 	}
 
@@ -448,7 +449,8 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		if (got_to_goal != got_goal_aux_){
 			saveNode(new_node);
 			if(new_node->cost < disc_goal->cost){
-				ROS_INFO(PRINTF_ROSE"\n\n\n\t\t !!!!!!!!!!!!!  Got it GOAL position quien new node->point : [%f %f %f/%f %f %f]  !!!!!!!!!!!!! \n\n\n",
+				printf("\n");
+				ROS_INFO(PRINTF_ROSE"\n\n\n\t\t !!!!!!!!!!!!!  Got it GOAL position quien new node->point : [%f %f %f/%f %f %f]  !!!!!!!!!!!!! \n\n",
 						  new_node->point.x*step, new_node->point.y*step, new_node->point.z*step,
 						  new_node->point_uav.x*step, new_node->point_uav.y*step, new_node->point_uav.z*step);
 				disc_goal = new_node;
@@ -463,7 +465,6 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			rrtgm.getGraphMarker(new_node, count_graph, tree_rrt_star_ugv_pub_, tree_rrt_star_uav_pub_);
 		}
 
-		count_qnew_fail = 0;
 		return true;
 	}
 }
@@ -539,9 +540,12 @@ RRTNode* RandomPlanner::getNearestNode(const RRTNode q_rand_)
 	double p_ugv_x_, p_ugv_y_, p_ugv_z_, p_ugv_parent_x_, p_ugv_parent_y_, p_ugv_parent_z_, p_uav_x_, p_uav_y_, p_uav_z_; 
 	double d_ugv_ , d_uav_, l_cat_, cos_angle;
 	double k0_ ,k1_, k2_ ;
-	k0_ = 12.0; // 5.0
-    k1_ = 6.0;  // 15.0
-	k2_ = 5.0;  // 5.0
+	// k0_ = 12.0; // 5.0 UGV
+    // k1_ = 6.0;  // 15.0 UAV
+	// k2_ = 10.0;  // 5.0 Smoothness
+	k0_ = w_nearest_ugv; //  UGV
+    k1_ = w_nearest_uav;  // UAV
+	k2_ = w_nearest_smooth;  // Smoothness
 
 	double cost_nearest_ = 10000000;
 	for (auto nt_:nodes_tree) {
@@ -723,9 +727,10 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 
 			// mode I: just steer UAV
 			if (checkNodeFeasibility(q1_,false) && checkNodeFeasibility(q1_,true) && checkCatenary(q1_, 2, points_catenary_new_node) 
-				&& q1_.length_cat < min_dist_for_steer_ugv && count_qnew_fail < 5) {
+				&& q1_.length_cat < min_dist_for_steer_ugv) {
 				if(obstacleFreeBetweenNodes(q_nearest_, q1_)){
 					q_new_ = q1_;
+					count_qnew_fail = 0;
 					// ROS_INFO(PRINTF_YELLOW"New position: UGV fix and moving UAV position q1_.length_cat = %f", q1_.length_cat);
 					return true;
 				}
@@ -749,36 +754,39 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 			else{
 				// ROS_INFO(PRINTF_RED"NOT POSSIBLE New position: Steer using random node");
 			}
-			RRTNode q2_;
-			q2_.point.x = q_new_.point.x;
-			q2_.point.y = q_new_.point.y;
-			q2_.point.z = q_new_.point.z;
-			q2_.rot_ugv.x =  q_new_.rot_ugv.x; 
-			q2_.rot_ugv.y =  q_new_.rot_ugv.y; 
-			q2_.rot_ugv.z =  q_new_.rot_ugv.z;
-			q2_.rot_ugv.w =  q_new_.rot_ugv.w;
-			std::vector<float> nearest_uav_to_ugv_  = getNearestUAVNode(q_new_);
-			q2_.point_uav.x = (int)nearest_uav_to_ugv_[0];
-			q2_.point_uav.y = (int)nearest_uav_to_ugv_[1];
-			q2_.point_uav.z = (int)nearest_uav_to_ugv_[2];
-			q2_.rot_uav.x = nearest_uav_to_ugv_[3];
-			q2_.rot_uav.y = nearest_uav_to_ugv_[4];
-			q2_.rot_uav.z = nearest_uav_to_ugv_[5];
-			q2_.rot_uav.w = nearest_uav_to_ugv_[6];
-			if (checkNodeFeasibility(q2_,false) && checkNodeFeasibility(q2_,true) && checkCatenary(q2_, 2, points_catenary_new_node) 
-				&& q2_.length_cat < min_dist_for_steer_ugv) {
-				if(obstacleFreeBetweenNodes(q_nearest_, q2_)){
-					q_new_ = q2_;
-					count_qnew_fail = 0;
-					// ROS_INFO(PRINTF_ORANGE"New position: UAV fix and moving UGV position q1_.length_cat = %f", q2_.length_cat);
-					return true;
+			count_qnew_fail++;
+			if  (count_qnew_fail > 5){
+				RRTNode q2_;
+				q2_.point.x = q_new_.point.x;
+				q2_.point.y = q_new_.point.y;
+				q2_.point.z = q_new_.point.z;
+				q2_.rot_ugv.x =  q_new_.rot_ugv.x; 
+				q2_.rot_ugv.y =  q_new_.rot_ugv.y; 
+				q2_.rot_ugv.z =  q_new_.rot_ugv.z;
+				q2_.rot_ugv.w =  q_new_.rot_ugv.w;
+				std::vector<float> nearest_uav_to_ugv_  = getNearestUAVNode(q_new_);
+				q2_.point_uav.x = (int)nearest_uav_to_ugv_[0];
+				q2_.point_uav.y = (int)nearest_uav_to_ugv_[1];
+				q2_.point_uav.z = (int)nearest_uav_to_ugv_[2];
+				q2_.rot_uav.x = nearest_uav_to_ugv_[3];
+				q2_.rot_uav.y = nearest_uav_to_ugv_[4];
+				q2_.rot_uav.z = nearest_uav_to_ugv_[5];
+				q2_.rot_uav.w = nearest_uav_to_ugv_[6];
+				if (checkNodeFeasibility(q2_,false) && checkNodeFeasibility(q2_,true) && checkCatenary(q2_, 2, points_catenary_new_node) 
+					&& q2_.length_cat < min_dist_for_steer_ugv) {
+					if(obstacleFreeBetweenNodes(q_nearest_, q2_)){
+						q_new_ = q2_;
+						count_qnew_fail = 0;
+						// ROS_INFO(PRINTF_ORANGE"New position: UAV fix and moving UGV position q1_.length_cat = %f", q2_.length_cat);
+						return true;
+					}
+					else{
+						// ROS_INFO(PRINTF_ORANGE"NOT POSSIBLE New position: COLLISION TO UAV fix and moving UGV");
+					}
 				}
 				else{
-					// ROS_INFO(PRINTF_ORANGE"NOT POSSIBLE New position: COLLISION TO UAV fix and moving UGV");
+					// ROS_INFO(PRINTF_ORANGE"NOT POSSIBLE New position: UAV fix and moving UGV");
 				}
-			}
-			else{
-				// ROS_INFO(PRINTF_ORANGE"NOT POSSIBLE New position: UAV fix and moving UGV");
 			}
 		}
 		return false;
@@ -1614,7 +1622,8 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 }
 
 void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv, 
-									bool coupled_, int n_iter_ , int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_)
+									bool coupled_, int n_iter_ , int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
+									double w_n_ugv_, double w_n_uav_, double w_n_smooth_)
 {
 	length_tether_max = _l_m;
 	pos_reel_ugv.x = _p_reel.x;
@@ -1637,6 +1646,9 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 	sample_mode = sample_m_; 
 
 	min_dist_for_steer_ugv = min_l_steer_ugv_;
+	w_nearest_ugv = w_n_ugv_ ;
+	w_nearest_uav = w_n_uav_ ;
+	w_nearest_smooth = w_n_smooth_ ;
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
 }
@@ -1773,17 +1785,17 @@ bool RandomPlanner::setFinalPosition(DiscretePosition p_)
 		ROS_INFO(PRINTF_BLUE "RandomPlanner::setFinalPosition -->  disc_final [%f %f %f /%f %f %f]",disc_final->point.x*step,disc_final->point.y*step,disc_final->point.z*step,
 												disc_final->point_uav.x*step,disc_final->point_uav.y*step,disc_final->point_uav.z*step);
 		
-		if (planner_type == "birrt"){
-			octomap::OcTree map_goal_pos_feasible = checkTraversablePointInsideCircle(final_position);
-			octomap_msgs::Octomap octomap_reduced;
-			octomap_reduced.binary = 1 ;
-			octomap_reduced.id = 1 ;
-			octomap_reduced.resolution =0.2 ;
-			octomap_reduced.header.frame_id = "/map";
-			octomap_reduced.header.stamp = ros::Time::now();
-			octomap_msgs::fullMapToMsg(map_goal_pos_feasible, octomap_reduced);
-			reducedMapPublisher.publish(octomap_reduced);
-		}
+		// if (planner_type == "birrt"){
+		// 	octomap::OcTree map_goal_pos_feasible = checkTraversablePointInsideCircle(final_position);
+		// 	octomap_msgs::Octomap octomap_reduced;
+		// 	octomap_reduced.binary = 1 ;
+		// 	octomap_reduced.id = 1 ;
+		// 	octomap_reduced.resolution =0.2 ;
+		// 	octomap_reduced.header.frame_id = "/map";
+		// 	octomap_reduced.header.stamp = ros::Time::now();
+		// 	octomap_msgs::fullMapToMsg(map_goal_pos_feasible, octomap_reduced);
+		// 	reducedMapPublisher.publish(octomap_reduced);
+		// }
 		return true;
 	}
 	else{

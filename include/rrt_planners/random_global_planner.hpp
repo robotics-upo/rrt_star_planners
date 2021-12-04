@@ -7,6 +7,7 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #define RANDOM_GLOBALPLANNER__HPP__
 
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <string>
 #include <math.h>
@@ -244,6 +245,7 @@ namespace PathPlanners
             double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
             int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
+            double w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth;
 
             bool coupled;
             

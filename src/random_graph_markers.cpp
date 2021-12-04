@@ -445,16 +445,12 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
     std::string ns_marker;
 
 	double c_color1, c_color2, c_color3;
-	
 	int count = 0; 
-
+	bisectionCatenary bc;
+	std::vector<geometry_msgs::Point> points_catenary_;
+	geometry_msgs::Point p_reel_, p_uav_;
+	
 	for (auto nt_:nodes_tree_) {		
-		std::vector<geometry_msgs::Point> points_catenary_;
-		geometry_msgs::Point p_reel_, p_uav_;
-
-		CatenarySolver cSolver_;
-		cSolver_.setMaxNumIterations(100);
-
 		p_reel_ = getReelNode(*nt_);
 
 		p_uav_.x = nt_->point_uav.x*step; 
@@ -462,7 +458,9 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
 		p_uav_.z = nt_->point_uav.z*step;
 		double l_cat_ = nt_->length_cat;
 
-		cSolver_.solve(p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z, l_cat_, points_catenary_);
+		bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z, false);
+		bc.getPointCatenary3D(points_catenary_);
+
 
 		int id_ = nt_->id;
 

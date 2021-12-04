@@ -64,6 +64,10 @@ void RandomGlobalPlanner::configParams()
 
 	nh->param("min_distance_add_new_point", min_distance_add_new_point, (double)1.0);
 
+	nh->param("w_nearest_ugv", w_nearest_ugv, (double)1.0);
+	nh->param("w_nearest_uav", w_nearest_uav, (double)1.0);
+	nh->param("w_nearest_smooth", w_nearest_smooth, (double)1.0);
+
   	nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
 	nh->param("path", path, (std::string) "~/");
 
@@ -184,7 +188,7 @@ void RandomGlobalPlanner::makePlanGoalCB()
     ROS_INFO_COND(debug, "Global Planner: Called Make Plan");
 
     if (calculatePath()){
-        ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n\n");
+        ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n");
         if(pause_execution){
             /********************* To obligate pause method and check Planning result *********************/
 		    std::string y_ ;
@@ -192,6 +196,21 @@ void RandomGlobalPlanner::makePlanGoalCB()
 		    std::cin >> y_ ;
 		    /*************************************************************************************************/
         }
+
+        interpolatePointsGlobalPath(trajectory,randPlanner.length_catenary);
+        ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
+        randPlanner.clearCatenaryGPMarker();
+        randPlanner.clearLinesGPMarker();
+        rrtgm.getPathMarker(trajectory,length_catenary,interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
+        ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
+        if(pause_execution){
+        /********************* To obligate stop method and check Optimization result *********************/
+            std::string y_ ;
+            std::cout << " *** Press key to continue: " << std::endl;
+            std::cin >> y_ ;
+        /*************************************************************************************************/
+        }
+
         sendPathToLocalPlannerServer();
     }
     else{ 
@@ -310,13 +329,13 @@ bool RandomGlobalPlanner::calculatePath()
                 std::string output_file_ugv, output_file_uav, time_random_planner;
 	            output_file_ugv = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UGV"+".txt";
 	            output_file_uav = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
-                time_random_planner = path+"results" +"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_time_random_planner"+".txt";
+                // time_random_planner = path+"results" +"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_time_random_planner"+".txt";
 
                 //Save Time to compute Global planner
                 float time_compute_GP = (milliseconds + seconds * 1000.0)/1000.0;
                 ifs_time.open(time_random_planner);
                 if(ifs_time) 
-                    std::cout << time_random_planner <<" : Global PLaber Time File exists !!!!!!!!!! " << std::endl;
+                    std::cout << time_random_planner <<" : Global Planner Time File exists !!!!!!!!!! " << std::endl;
                 else {
                     ofs_time.open(time_random_planner.c_str(), std::ofstream::app);
                     ofs_time << "/time_GP/"<<std::endl;
@@ -331,6 +350,17 @@ bool RandomGlobalPlanner::calculatePath()
 	            ofs_time.close();
 
                 //Save Time in UGV analize Path and Trajectory
+                std::ifstream ifile1;
+                ifile1.open(output_file_ugv);
+                if(ifile1) {
+                    std::cout << output_file_ugv <<" : File exists !!!!!!!!!! " << std::endl;
+                } else {
+                ofs_ugv.open(output_file_ugv.c_str(), std::ofstream::app);
+                ofs_ugv <<"tCGP;tCO;dTI;dTO;tTI;tTO;mean_doI;min_doI;mean_doO;min_doO;mean_dcI;min_dcI;mean_dcO;min_dcO;mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;count_c;count_coll_U;pos_coll_I;count_coll_O;pos_coll_O"<<std::endl;
+                ofs_ugv.close();
+                std::cout << output_file_ugv <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+                }
+                
                 ofs_ugv.open(output_file_ugv.c_str(), std::ofstream::app);
                 if (ofs_ugv.is_open()) {
                     std::cout << "Saving time initial planning data in output file ugv: " << output_file_ugv << std::endl;
@@ -341,6 +371,16 @@ bool RandomGlobalPlanner::calculatePath()
                 ofs_ugv.close();
 
                 //Save Time in UAV analize Path and Trajectory
+                std::ifstream ifile2;
+                ifile2.open(output_file_uav);
+                if(ifile2) {
+                    std::cout << output_file_uav <<" : File exists !!!!!!!!!! " << std::endl;
+                } else {
+                ofs_uav.open(output_file_uav.c_str(), std::ofstream::app);
+                ofs_uav <<"tCGP;tCO;dTI;dTO;tTI;tTO;mean_doI;min_doI;mean_doO;min_doO;mean_dcI;min_dcI;mean_dcO;min_dcO;mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;count_coll_I;pos_coll_I;count_coll_O;pos_coll_O"<<std::endl;
+                ofs_uav.close();
+                std::cout << output_file_uav <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+                }
                 ofs_uav.open(output_file_uav.c_str(), std::ofstream::app);
                 if (ofs_uav.is_open()) {
                     std::cout << "Saving time initial planning data in output file uav: " << output_file_uav << std::endl;
@@ -360,10 +400,6 @@ bool RandomGlobalPlanner::calculatePath()
                 trajectory.points.clear();
 
                 randPlanner.getGlobalPath(trajectory);    
-                interpolatePointsGlobalPath(trajectory,randPlanner.length_catenary);
-
-                ROS_INFO_COND(debug, PRINTF_YELLOW "Global Planner: Publishing Global Path");
-                ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
                 
                 countImpossible = 0;    //Reset the counter of the number of times the planner tried to calculate a path without success
                 if (flg_replan_status.data)     //If it was replanning before, reset flag
@@ -388,17 +424,6 @@ void RandomGlobalPlanner::sendPathToLocalPlannerServer()
         goal_action.length_catenary.push_back(length_catenary[i]);
     }
 
-    randPlanner.clearCatenaryGPMarker();
-    randPlanner.clearLinesGPMarker();
-    rrtgm.getPathMarker(trajectory,length_catenary,interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
-    ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n\n");
-    if(pause_execution){
-    /********************* To obligate stop method and check Optimization result *********************/
-		std::string y_ ;
-		std::cout << " *** Press key to continue: " << std::endl;
-		std::cin >> y_ ;
-	/*************************************************************************************************/
-    }
     execute_path_client_ptr->sendGoal(goal_action);
 }
 
@@ -441,9 +466,9 @@ bool RandomGlobalPlanner::setStart()
     q_start_uav_.quaternion.y = position_uav_.transform.rotation.y;
     q_start_uav_.quaternion.z = position_uav_.transform.rotation.z;
     q_start_uav_.header = position_uav_.header;
-    printf("setStart position:  ugv[%f %f %f / %f %f %f %f]  uav[%f %f %f / %f %f %f %f]\n",start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z, 
-    q_start_ugv_.quaternion.x , q_start_ugv_.quaternion.y, q_start_ugv_.quaternion.z, q_start_ugv_.quaternion.w, start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z, 
-    q_start_uav_.quaternion.x, q_start_uav_.quaternion.y, q_start_uav_.quaternion.z, q_start_uav_.quaternion.w);
+    // printf("setStart position:  ugv[%f %f %f / %f %f %f %f]  uav[%f %f %f / %f %f %f %f]\n",start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z, 
+    // q_start_ugv_.quaternion.x , q_start_ugv_.quaternion.y, q_start_ugv_.quaternion.z, q_start_ugv_.quaternion.w, start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z, 
+    // q_start_uav_.quaternion.x, q_start_uav_.quaternion.y, q_start_uav_.quaternion.z, q_start_uav_.quaternion.w);
 
     // if (start_ugv_.vector.z <= ws_z_min)
     //     start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
@@ -554,8 +579,6 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
                 if(j != 0){                    
                     geometry_msgs::Point p_reel_, p_final_;
                     std::vector<geometry_msgs::Point> p_catenary_;
-                    // CatenarySolver cSolver_;
-                    // cSolver_.setMaxNumIterations(200);
                     p_reel_ = getReelNode(t_.transforms[0].translation.x ,t_.transforms[0].translation.y ,t_.transforms[0].translation.z,
                                         t_.transforms[0].rotation.x, t_.transforms[0].rotation.y, t_.transforms[0].rotation.z, t_.transforms[0].rotation.w);
                     
@@ -576,8 +599,6 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
                             check_catenary = false;
                             break;
                         }
-                        // cSolver_.solve(p_reel_.x, p_reel_.y, p_reel_.z, 
-                        // t_.transforms[1].translation.x, t_.transforms[1].translation.y, t_.transforms[1].translation.z, l_cat_, p_catenary_);
                         
                         bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, t_.transforms[1].translation.x, 
                                                                 t_.transforms[1].translation.y, t_.transforms[1].translation.z, false);
@@ -706,7 +727,7 @@ void RandomGlobalPlanner::configRandomPlanner()
     reel_ = getLocalPoseReel();
     pos_reel_ugv = reel_.transform.translation;
     randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, 
-                                    radius_near_nodes, step_steer, samp_goal_rate, sample_mode, min_l_steer_ugv);
+                                    radius_near_nodes, step_steer, samp_goal_rate, sample_mode, min_l_steer_ugv, w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth);
 
     rrtgm.configGraphMarkers(world_frame, map_resolution, coupled, n_iter, pos_reel_ugv);
 

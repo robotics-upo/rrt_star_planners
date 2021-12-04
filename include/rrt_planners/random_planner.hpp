@@ -285,7 +285,8 @@ public:
 	// virtual void publishOccupationMarkersMap();
 	
 	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
-							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_);
+							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
+							double w_n_ugv_, double w_n_uav_, double w_n_smooth_);
 	/** 
 	   Receive segmented PointCloud2 for UGV traversability
 	**/
@@ -329,6 +330,7 @@ public:
 
 	std::string node_name, path_name;
 
+	double w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth;
 	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
 	PlannerGraphMarkers rrtgm;
 	Grid3d *grid_3D;

@@ -4,8 +4,10 @@
     <arg name="launch_robot_marker" default="true"/>
 
     <arg name="graph_traj_in_rviz" default="false"/>
-    <arg name="pause_execution" default="true"/>
+    <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="true"/>
+
+    <arg name="write_data_residual" default="true"/> # Parameter to write the residual value for each optimizer Functor
 
     <arg name="world_frame" default="map"/> 
     <arg name="ugv_frame" default="ugv_base_link"/> 
@@ -72,6 +74,10 @@
         <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_obstacle_uav"         value="0.5"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_catenary_obstacle"  value="0.05"/> <!--bound distance catenary to obstacles [m] -->   
+
+        <param name="w_nearest_ugv"    value="12"/>   # catenary Obstacles collision 0.00100
+        <param name="w_nearest_uav"    value="6"/>   # catenary length 0.00150
+        <param name="w_nearest_smooth"    value="10"/>   # catenary Z collision 0.00105
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
         <param name="global_frame_id"   value="map"/>
@@ -94,7 +100,9 @@
         <param name="traj_dest_frame" value="uav_base_link"/>
 
         <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
-        <param name="pause_end_optimization" value="$(arg pause_execution)"/>
+        <!-- <param name="pause_end_optimization" value="$(arg pause_execution)"/> -->
+        <param name="pause_end_optimization" value="true"/>
+        <param name="write_data_residual" value="$(arg write_data_residual)"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
        
@@ -122,36 +130,37 @@
         <param name="w_alpha_ugv"   value="0.040"/>   # equi-distance ugv
         <param name="w_beta_ugv"    value="0.140"/>   # obstacles ugv
         <param name="w_theta_ugv"   value="0.200"/>   # traversability ugv
-        <param name="w_gamma_ugv"   value="0.120"/>   # kinematics ugv 
-        <param name="w_delta_ugv"     value="0.003"/>  # time 
-        <param name="w_epsilon_ugv"   value="0.008"/>   # velocity 
-        <param name="w_zeta_ugv"      value="0.0006"/>   # acceleration 
+        <param name="w_gamma_ugv"   value="0.320"/>   # Smoothness ugv 
+        <param name="w_epsilon_ugv"   value="0.05"/>   # velocity 
+        <param name="w_zeta_ugv"      value="0.005"/>   # acceleration 
         
         <!-- UAV Constraint Parameters -->
         <param name="w_alpha_uav"   value="0.100"/>   # equi-distance uav Automatic
         <param name="w_beta_uav"    value="0.100"/>   # obstacles uav Automatic
-        <param name="w_gamma_uav"   value="0.320"/>   # kinematics uav Automatic
-        <param name="w_delta"     value="0.003"/>  # time 
-        <param name="w_epsilon"   value="0.008"/>   # velocity 
-        <param name="w_zeta"      value="0.0006"/>   # acceleration 
+        <param name="w_gamma_uav"   value="0.320"/>   # smoothness uav Automatic
+        <param name="w_epsilon"   value="0.05"/>   # velocity 
+        <param name="w_zeta"      value="0.005"/>   # acceleration 
         
+        <!-- Time Constraint Parameters -->
+        <param name="w_delta"     value="0.001"/>  # time 
+
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.000001"/>   # catenary Obstacles collision 0.00100
-        <param name="w_eta_2"    value="0.00001"/>   # catenary length 0.00150
+        <param name="w_eta_1"    value="0.01000"/>   # catenary Obstacles collision 0.00100
+        <param name="w_eta_2"    value="0.0100"/>   # catenary length 0.00150
         <param name="w_eta_3"    value="0.00001"/>   # catenary Z collision 0.00105
 
-        <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="1000"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
             
-        <param name="distance_obstacle_ugv"         value="0.8"/> <!-- bound distance UGV to obstacles [m]-->
-        <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles [m]-->
+        <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
+        <param name="distance_obstacle_uav"         value="1.2"/> <!-- bound distance UAV to obstacles [m]-->
         <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
         <param name="initial_velocity_uav"  value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
         <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
-        <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> 
+        <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
         #Parameter for Edge Catenary
-        <param name="distance_catenary_obstacle"  value="0.1"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_catenary_obstacle"  value="0.15"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     

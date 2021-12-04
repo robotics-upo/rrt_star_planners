@@ -15,7 +15,6 @@
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
     <arg name="pos_reel_z"    default="0.5"/> #position reel on UGV
 
-
     <arg name="map_file" default="stage_$(arg scenario_number)"/>
 
     <!-- Publishing UGV and UAV tf -->
@@ -52,8 +51,6 @@
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
     </include>    
-
-    
 
     <!-- RViz -->
     <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_optimizer)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/> -->
