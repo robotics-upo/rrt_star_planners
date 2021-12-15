@@ -186,6 +186,7 @@ int RandomPlanner::computeTreesIndependent()
 			final_position.x, final_position.y, final_position.z);  
 
 	// publishOccupationMarkersMap();
+
 	setInitialCostGoal(disc_final);
 	
 	if(!saveNode(disc_initial,true)){
@@ -207,7 +208,6 @@ int RandomPlanner::computeTreesIndependent()
     count_loop = 0; 
 	int count_total_loop = 0; 
 	count_qnew_fail = count_fail_connect_goal = 0;
-    
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
       	
 		printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
@@ -220,6 +220,7 @@ int RandomPlanner::computeTreesIndependent()
 		else{
 			q_rand = getRandomNode(true);	
 		}
+
 		if (debug_rrt)
 			printf(" q_rand = [%f %f %f / %f %f %f] \n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
 		
@@ -227,6 +228,7 @@ int RandomPlanner::computeTreesIndependent()
 
 		extendGraph(q_rand);
 		count_loop++;
+
 
 		if ( ( (num_goal_finded>0) && (planner_type == "rrt") ) || 
 			 ( (num_goal_finded>0) && (planner_type == "rrt_star") && (count_loop == n_iter) ) ||
@@ -483,7 +485,8 @@ RRTNode RandomPlanner::getRandomNode(bool go_to_goal_)
 	RRTNode randomState_;
 	bool finded_node = false;
 	bool catenary_state = false;
-		
+
+
 	// Get random position for UAV
 	if (!is_coupled){
 		if (!go_to_goal_){
@@ -503,6 +506,7 @@ RRTNode RandomPlanner::getRandomNode(bool go_to_goal_)
 			}while(finded_node == false);
 		}
 	}
+	
 	// Get random position for UGV
 	if (!go_to_goal_){
 		do{
@@ -514,8 +518,7 @@ RRTNode RandomPlanner::getRandomNode(bool go_to_goal_)
 				finded_node = checkUGVFeasibility(randomState_,false); 
 			else 	
 				finded_node = checkUGVFeasibility(randomState_,true); 
-		}while(finded_node == false);
-		
+		}while(finded_node == false);		
 	}
 	else{ // Instead to go to goal, UGV fallow UAV
 		if(sample_mode == 0){
@@ -632,7 +635,7 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 		p_node_.y() = q_rand_.point.y;
 		p_node_.z() = q_rand_.point.z;
 		trav_point_ugv_aux = nn_trav_ugv.nearestObstacleMarsupial(nn_trav_ugv.kdtree, p_node_, nn_trav_ugv.obs_points);
-		trav_point_ugv_ = nn_trav_ugv.nearestTraversabilityMarsupial(nn_trav_ugv.kdtree, trav_point_ugv_aux, nn_trav_ugv.obs_points, 0.15);
+		trav_point_ugv_ = nn_trav_ugv.nearestTraversabilityUGVMarsupial(nn_trav_ugv.kdtree, trav_point_ugv_aux, nn_trav_ugv.obs_points, 0.15);
 
 		q_new_.point.x = trav_point_ugv_.x() * step_inv; 
 		q_new_.point.y = trav_point_ugv_.y() * step_inv; 
@@ -644,7 +647,7 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 		p_node_.y() = y_ugv_;
 		p_node_.z() = z_ugv_;
 		trav_point_ugv_aux = nn_trav_ugv.nearestObstacleMarsupial(nn_trav_ugv.kdtree, p_node_, nn_trav_ugv.obs_points);
-		trav_point_ugv_ = nn_trav_ugv.nearestTraversabilityMarsupial(nn_trav_ugv.kdtree, trav_point_ugv_aux, nn_trav_ugv.obs_points, 0.15);
+		trav_point_ugv_ = nn_trav_ugv.nearestTraversabilityUGVMarsupial(nn_trav_ugv.kdtree, trav_point_ugv_aux, nn_trav_ugv.obs_points, 0.15);
 		
 		q_new_.point.x = trav_point_ugv_.x() * step_inv; 
 		q_new_.point.y = trav_point_ugv_.y() * step_inv; 
@@ -1245,10 +1248,12 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 			pos_uav.y() =pf_.point_uav.y * step ; 
 			pos_uav.z() =pf_.point_uav.z * step ; 
 			bool is_into_ = grid_3D->isIntoMap(pos_uav.x(),pos_uav.y(),pos_uav.z());
+
 			if (is_into_)
 				d_ = grid_3D->getPointDist((double)pos_uav.x(),(double)pos_uav.y(),(double)pos_uav.z());
 			else
 				return false;
+
 
 			if (d_ > distance_obstacle_uav)
 				ret = true;
@@ -1307,11 +1312,17 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 	double length_catenary_;
 	int n_points_cat_dis_;
 	double security_dis_ca_ = distance_catenary_obstacle;
+
+	double coef_safety;
+	if (dist_init_final_ < 4.0)
+		coef_safety = 1.010;
+	else
+		coef_safety = 1.005;
 	
 	do{
 		increase_catenary = false;
 		points_catenary_.clear();
-		length_catenary_ = dist_init_final_* (1.01 + delta_);
+		length_catenary_ = dist_init_final_* (coef_safety + delta_);
 		if (length_catenary_ > length_tether_max){
 			check_catenary = false;
 			break;
@@ -1590,7 +1601,10 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 	for(auto nt_ : rrt_path){
 		traj_marsupial_.transforms[0].translation.x = nt_->point.x*step;
 		traj_marsupial_.transforms[0].translation.y = nt_->point.y*step;
-		traj_marsupial_.transforms[0].translation.z = nt_->point.z*step;
+		if (nt_->point.z*step == 0.0)
+			traj_marsupial_.transforms[0].translation.z = nt_->point.z*step + step/2.0;
+		else
+			traj_marsupial_.transforms[0].translation.z = nt_->point.z*step;
 		traj_marsupial_.transforms[0].rotation.x = nt_->rot_ugv.x;
 		traj_marsupial_.transforms[0].rotation.y = nt_->rot_ugv.y;
 		traj_marsupial_.transforms[0].rotation.z = nt_->rot_ugv.z;

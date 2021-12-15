@@ -85,9 +85,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: PC Octomap
       Position Transformer: XYZ
       Queue Size: 10
@@ -143,7 +141,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/path_ugv_rrt_star
       Name: RRTStar_path_ugv
       Namespaces:
-        Line_ugv_RRTStar_Path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -151,7 +149,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/path_uav_rrt_star
       Name: RRTStar_path_uav
       Namespaces:
-        Line_uav_RRTStar_Path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -221,8 +219,30 @@ Visualization Manager:
         catenary_3: true
         catenary_30: true
         catenary_31: true
+        catenary_32: true
+        catenary_33: true
+        catenary_34: true
+        catenary_35: true
+        catenary_36: true
+        catenary_37: true
+        catenary_38: true
+        catenary_39: true
         catenary_4: true
+        catenary_40: true
+        catenary_41: true
+        catenary_42: true
+        catenary_43: true
+        catenary_44: true
+        catenary_45: true
+        catenary_46: true
+        catenary_47: true
+        catenary_48: true
         catenary_5: true
+        catenary_50: true
+        catenary_51: true
+        catenary_52: true
+        catenary_54: true
+        catenary_55: true
         catenary_6: true
         catenary_7: true
         catenary_8: true
@@ -230,29 +250,29 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_planner_node/tree_rrt_star_ugv
       Name: RRTStar_nodes_ugv
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_planner_node/tree_rrt_star_uav
       Name: RRTStar_nodes_uav
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /siar_marker_node/siar_model
       Name: UGV Robot
       Namespaces:
-        {}
+        siar_model: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /m100/marker
@@ -274,7 +294,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/goal_point
       Name: RRT_Goal_point
       Namespaces:
-        goal_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -282,7 +302,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/rand_point
       Name: RRT_Rand_node
       Namespaces:
-        rand_uav_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -290,7 +310,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/new_point
       Name: New_node
       Namespaces:
-        rand_uav_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -298,7 +318,7 @@ Visualization Manager:
       Marker Topic: /rrt_planner_node/nearest_point
       Name: Nearest_node
       Namespaces:
-        rand_uav_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -324,9 +344,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: region_growing_traversability
       Position Transformer: XYZ
       Queue Size: 10
@@ -354,9 +372,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: region_growing_obstacles
       Position Transformer: XYZ
       Queue Size: 10
@@ -392,9 +408,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: GP_PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -526,9 +540,7 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: PC Grid3D
       Position Transformer: XYZ
       Queue Size: 10
@@ -585,25 +597,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 10.211028099060059
+      Distance: 16.935033798217773
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.575249195098877
-        Y: -1.567312240600586
-        Z: 2.3416801013809163e-6
+        X: 6.471668243408203
+        Y: -0.8217804431915283
+        Z: 1.5072150745254476e-6
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.16039828956127167
+      Pitch: 0.35039791464805603
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 4.628559112548828
+      Yaw: 4.898559093475342
     Saved: ~
 Window Geometry:
   Displays:

@@ -13,8 +13,8 @@ RandomGlobalPlanner::RandomGlobalPlanner(std::string node_name_)
     tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
     tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
 
-    std::string node_name_grid_ = "grid3D_node";
-	grid_3D = new Grid3d(node_name_grid_);
+    // std::string node_name_grid_ = "grid3D_node";
+	grid_3D = new Grid3d(node_name);
     
     configParams();
     configTopics();
@@ -331,23 +331,24 @@ bool RandomGlobalPlanner::calculatePath()
 	            output_file_uav = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
                 // time_random_planner = path+"results" +"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_time_random_planner"+".txt";
 
-                //Save Time to compute Global planner
                 float time_compute_GP = (milliseconds + seconds * 1000.0)/1000.0;
-                ifs_time.open(time_random_planner);
-                if(ifs_time) 
-                    std::cout << time_random_planner <<" : Global Planner Time File exists !!!!!!!!!! " << std::endl;
-                else {
-                    ofs_time.open(time_random_planner.c_str(), std::ofstream::app);
-                    ofs_time << "/time_GP/"<<std::endl;
-                    ofs_time.close();
-                    std::cout << time_random_planner <<" : File doesn't exist !!!!!!!!!! " << std::endl;
-                }
-                ofs_time.open(time_random_planner.c_str(), std::ofstream::app);
-                if (ofs_time.is_open()) 
-                    ofs_time << time_compute_GP <<std::endl;
-                else 
-                    std::cout << "Couldn't be open time_random_planner.txt "<< std::endl;
-	            ofs_time.close();
+                
+                //Save Time to compute Global planner
+                // ifs_time.open(time_random_planner);
+                // if(ifs_time) 
+                //     std::cout << time_random_planner <<" : Global Planner Time File exists !!!!!!!!!! " << std::endl;
+                // else {
+                //     ofs_time.open(time_random_planner.c_str(), std::ofstream::app);
+                //     ofs_time << "/time_GP/"<<std::endl;
+                //     ofs_time.close();
+                //     std::cout << time_random_planner <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+                // }
+                // ofs_time.open(time_random_planner.c_str(), std::ofstream::app);
+                // if (ofs_time.is_open()) 
+                //     ofs_time << time_compute_GP <<std::endl;
+                // else 
+                //     std::cout << "Couldn't be open time_random_planner.txt "<< std::endl;
+	            // ofs_time.close();
 
                 //Save Time in UGV analize Path and Trajectory
                 std::ifstream ifile1;
