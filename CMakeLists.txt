@@ -22,7 +22,6 @@ find_package(catkin REQUIRED COMPONENTS
   upo_actions
   costmap_2d
   trajectory_msgs
-  kdtree_pkg
 )
 find_package(Boost REQUIRED COMPONENTS system)
 
@@ -123,7 +122,7 @@ find_package(Ceres REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
-  CATKIN_DEPENDS roscpp upo_actions message_runtime octomap_msgs octomap_ros pcl_conversions pcl_ros marsupial_optimizer kdtree_pkg
+  CATKIN_DEPENDS roscpp upo_actions message_runtime octomap_msgs octomap_ros pcl_conversions pcl_ros marsupial_optimizer
   DEPENDS octomap_msgs octomap_ros
   LIBRARIES ${EXTERNAL_LIBS} 
 )

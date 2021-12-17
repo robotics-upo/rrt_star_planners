@@ -138,7 +138,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/path_ugv_rrt_star
+      Marker Topic: /random_planner_node/path_ugv_rrt_star
       Name: RRTStar_path_ugv
       Namespaces:
         {}
@@ -146,7 +146,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/path_uav_rrt_star
+      Marker Topic: /random_planner_node/path_uav_rrt_star
       Name: RRTStar_path_uav
       Namespaces:
         {}
@@ -251,18 +251,18 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/tree_rrt_star_ugv
+      Marker Topic: /random_planner_node/tree_rrt_star_ugv
       Name: RRTStar_nodes_ugv
       Namespaces:
-        {}
+        tree_RRTStar_ugv: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/tree_rrt_star_uav
+      Marker Topic: /random_planner_node/tree_rrt_star_uav
       Name: RRTStar_nodes_uav
       Namespaces:
-        {}
+        tree_RRTStar_uav: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -291,39 +291,39 @@ Visualization Manager:
       Value: false
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /rrt_planner_node/goal_point
+      Marker Topic: /random_planner_node/goal_point
       Name: RRT_Goal_point
       Namespaces:
-        {}
+        goal_point: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/rand_point
+      Marker Topic: /random_planner_node/rand_point
       Name: RRT_Rand_node
       Namespaces:
-        {}
+        rand_uav_point: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/new_point
+      Marker Topic: /random_planner_node/new_point
       Name: New_node
       Namespaces:
-        {}
+        rand_uav_point: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/nearest_point
+      Marker Topic: /random_planner_node/nearest_point
       Name: Nearest_node
       Namespaces:
-        {}
+        rand_uav_point: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_planner_node/points_marker
+      Marker Topic: /random_planner_node/points_marker
       Name: Points_between_cat
       Namespaces:
         {}
@@ -597,25 +597,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 16.935033798217773
+      Distance: 11.458353042602539
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 6.471668243408203
-        Y: -0.8217804431915283
-        Z: 1.5072150745254476e-6
+        X: 4.637028694152832
+        Y: -1.6919279098510742
+        Z: -1.9783733478107024e-6
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.35039791464805603
+      Pitch: 0.03539813309907913
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 4.898559093475342
+      Yaw: 4.616267681121826
     Saved: ~
 Window Geometry:
   Displays:
