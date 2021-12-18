@@ -100,8 +100,8 @@
         <param name="traj_dest_frame" value="uav_base_link"/>
 
         <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
-        <param name="pause_end_optimization" value="$(arg pause_execution)"/>
-        <!-- <param name="pause_end_optimization" value="true"/> -->
+        <!-- <param name="pause_end_optimization" value="$(arg pause_execution)"/> -->
+        <param name="pause_end_optimization" value="true"/>
         <param name="write_data_residual" value="$(arg write_data_residual)"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
@@ -128,7 +128,7 @@
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
-        <param name="w_beta_ugv"    value="0.050"/>   # Obstacles ugv
+        <param name="w_beta_ugv"    value="0.080"/>   # Obstacles ugv
         <param name="w_gamma_ugv"   value="0.120"/>   # Smoothness ugv 
         <param name="w_epsilon_ugv"   value="0.05"/>   # Velocity 
         <param name="w_zeta_ugv"      value="0.005"/>   # Acceleration 
@@ -137,7 +137,7 @@
         
         <!-- UAV Constraint Parameters -->
         <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
-        <param name="w_beta_uav"    value="0.050"/>   # Obstacles uav 
+        <param name="w_beta_uav"    value="0.080"/>   # Obstacles uav 
         <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
         <param name="w_epsilon"   value="0.05"/>   # Velocity 
         <param name="w_zeta"      value="0.005"/>   # Acceleration 
