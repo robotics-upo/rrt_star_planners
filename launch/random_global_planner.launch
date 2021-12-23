@@ -146,9 +146,9 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.0120"/>   # catenary Obstacles collision 0.00100
-        <param name="w_eta_2"    value="0.0520"/>   # catenary length 0.00150
-        <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
+        <param name="w_eta_1"    value="0.0010"/>   # catenary Obstacles collision 0.00100
+        <!-- <param name="w_eta_3"    value="0.0080"/>   # catenary Z collision 0.00105 -->
+        <param name="w_eta_2"    value="0.0100"/>   # catenary length 0.00150
 
         <param name="n_iter_opt"    value="1000"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  

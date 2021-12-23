@@ -210,6 +210,7 @@ int RandomPlanner::computeTreesIndependent()
 	count_qnew_fail = count_fail_connect_goal = 0;
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
       	
+		// printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\n",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
 		printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
 		
 		RRTNode q_rand;
@@ -1242,15 +1243,16 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 	}
 	else{
 		if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
-			Eigen::Vector3d obs_to_uav, pos_uav;
+			// Eigen::Vector3d obs_to_uav, pos_uav;
+			geometry_msgs::Vector3 obs_to_uav, pos_uav; 
 			
-			pos_uav.x() =pf_.point_uav.x * step ;
-			pos_uav.y() =pf_.point_uav.y * step ; 
-			pos_uav.z() =pf_.point_uav.z * step ; 
-			bool is_into_ = grid_3D->isIntoMap(pos_uav.x(),pos_uav.y(),pos_uav.z());
+			pos_uav.x =pf_.point_uav.x * step ;
+			pos_uav.y =pf_.point_uav.y * step ; 
+			pos_uav.z =pf_.point_uav.z * step ; 
+			bool is_into_ = grid_3D->isIntoMap(pos_uav.x,pos_uav.y,pos_uav.z);
 
 			if (is_into_)
-				d_ = grid_3D->getPointDist((double)pos_uav.x(),(double)pos_uav.y(),(double)pos_uav.z());
+				d_ = grid_3D->getPointDist((double)pos_uav.x,(double)pos_uav.y,(double)pos_uav.z);
 			else
 				return false;
 
@@ -1335,20 +1337,20 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 				n_points_cat_dis_ = 5;
 			for (size_t i = 0 ; i < points_catenary_.size() ; i++){
 				geometry_msgs::Point point_cat;
-				Eigen::Vector3d p_in_cat_, obs_to_cat_;
+				geometry_msgs::Vector3 p_in_cat_;
 				if (points_catenary_[i].z < ws_z_min*step + ((1*step)+security_dis_ca_)){
 					check_catenary = false;
 					break;
 				}
 				// if ((i > n_points_cat_dis_ ) && (i < points_catenary_.size()-n_points_cat_dis_/2)){
 				if ((i > n_points_cat_dis_ ) ){
-					p_in_cat_.x() = points_catenary_[i].x;
-					p_in_cat_.y() = points_catenary_[i].y;
-					p_in_cat_.z() = points_catenary_[i].z;
+					p_in_cat_.x = points_catenary_[i].x;
+					p_in_cat_.y = points_catenary_[i].y;
+					p_in_cat_.z = points_catenary_[i].z;
 					double dist_cat_obs;
-					bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x(),p_in_cat_.y(),p_in_cat_.z());
+					bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x,p_in_cat_.y,p_in_cat_.z);
 					if(is_into_)
-						dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x(),(double)p_in_cat_.y(),(double)p_in_cat_.z()) ;
+						dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x,(double)p_in_cat_.y,(double)p_in_cat_.z) ;
 					else
 						dist_cat_obs = -1.0;
 
