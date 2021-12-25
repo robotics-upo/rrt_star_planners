@@ -139,8 +139,8 @@
         <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
         <param name="w_beta_uav"    value="0.080"/>   # Obstacles uav 
         <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
-        <param name="w_epsilon"   value="0.05"/>   # Velocity 
-        <param name="w_zeta"      value="0.005"/>   # Acceleration 
+        <param name="w_epsilon_uav"   value="0.05"/>   # Velocity 
+        <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
         
         <!-- Time Constraint Parameters -->
         <param name="w_delta"     value="0.001"/>  # time 
@@ -148,7 +148,7 @@
         <!-- Catenary Constraint Parameters -->
         <param name="w_eta_1"    value="0.0200"/>   # catenary Obstacles collision 0.00100
         <!-- <param name="w_eta_3"    value="0.0080"/>   # catenary Z collision 0.00105 -->
-        <param name="w_eta_2"    value="0.0400"/>   # catenary length 0.00150
+        <param name="w_eta_2"    value="0.1000"/>   # catenary length 0.00150
 
         <param name="n_iter_opt"    value="1000"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
