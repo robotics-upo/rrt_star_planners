@@ -38,7 +38,7 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include <dynamic_reconfigure/server.h>
 #include <theta_star_2d/GlobalPlannerConfig.h>
 
-#include <ctime>
+#include <time.h>
 #include <sys/timeb.h>
 
 #include <costmap_2d/costmap_2d.h>
@@ -94,7 +94,8 @@ namespace PathPlanners
             void makePlanPreemptCB();
             void makePlanGoalCB();
 
-            bool replan();
+            // bool replan();
+            void replan();
             
             /*
             @brief: Loads parameters from ros param server, if they are not present, load defaults ones
@@ -215,7 +216,7 @@ namespace PathPlanners
             //Variables to fill up the feedback 
             std_msgs::Duration travel_time;
             int timesReplaned;
-            struct timeb start, finish;
+            struct timespec start, finish;
             float seconds, milliseconds;
             ros::Time start_time;
 

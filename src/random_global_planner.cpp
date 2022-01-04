@@ -264,7 +264,7 @@ void RandomGlobalPlanner::plan()
     }
 }
 
-bool RandomGlobalPlanner::replan()
+void RandomGlobalPlanner::replan()
 {
     make_plan_res.replan_number.data++;
 
@@ -276,7 +276,7 @@ bool RandomGlobalPlanner::replan()
         ++timesReplaned;
         ROS_INFO_COND(debug, "Global Planner: Succesfully calculated path");
         sendPathToLocalPlannerServer();
-        return true;
+        // return true;
     }
     else if (timesReplaned > 5)
     {
@@ -289,7 +289,7 @@ bool RandomGlobalPlanner::replan()
 
         make_plan_server_ptr->setAborted(make_plan_res, "Tried to replan and aborted after replanning 5 times");
         execute_path_client_ptr->cancelAllGoals();
-        return false;
+        // return false;
     }
 }
 
@@ -310,18 +310,20 @@ bool RandomGlobalPlanner::calculatePath()
             ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal and start successfull set");
                 
             // Path calculation
-            ftime(&start);
+            // ftime(&start);
+            clock_gettime(CLOCK_REALTIME, &start);
            
             if (coupled)
                 number_of_points = randPlanner.computeTreeCoupled();
             else
                 number_of_points = randPlanner.computeTreesIndependent();
 
-            ftime(&finish);
+            // ftime(&finish);
+            clock_gettime(CLOCK_REALTIME, &finish);
         	ros::Duration(2.0).sleep();
 
-            seconds = finish.time - start.time - 1;
-            milliseconds = (1000 - start.millitm) + finish.millitm;
+            seconds = finish.tv_sec - start.tv_sec - 1;
+            milliseconds = (1000000000 - start.tv_nsec) + finish.tv_nsec;
 
             if (write_data_for_analysis){
                 std::ofstream ofs_ugv, ofs_uav, ofs_time;
@@ -331,7 +333,7 @@ bool RandomGlobalPlanner::calculatePath()
 	            output_file_uav = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
                 // time_random_planner = path+"results" +"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_time_random_planner"+".txt";
 
-                float time_compute_GP = (milliseconds + seconds * 1000.0)/1000.0;
+                float time_compute_GP = (milliseconds + seconds * 1000000000.0)/1000000000.0;
                 
                 //Save Time to compute Global planner
                 // ifs_time.open(time_random_planner);

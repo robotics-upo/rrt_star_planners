@@ -73,7 +73,7 @@
         <param name="min_distance_add_new_point" value="1.0"/>  
         <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_obstacle_uav"         value="0.5"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_catenary_obstacle"  value="0.15"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
 
         <param name="w_nearest_ugv"    value="12"/>   # catenary Obstacles collision 0.00100
         <param name="w_nearest_uav"    value="6"/>   # catenary length 0.00150
@@ -126,6 +126,9 @@
         <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
         <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
 
+        <param name="catenary_constraint"   value="1"/>    # catenary_constraint // 1= autodiff ; 0= numeric
+        <param name="catenary_length_constraint"   value="true"/>    # catenary_length_constraint // true = autodiff ; false = numeric
+
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
         <param name="w_beta_ugv"    value="0.080"/>   # Obstacles ugv
@@ -146,8 +149,10 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.0120"/>   # catenary Obstacles collision 0.00100
-        <param name="w_eta_2"    value="0.0520"/>   # catenary length 0.00150
+        <!-- <param name="w_eta_1"    value="0.0075"/>   # catenary Obstacles collision  -->
+        <param name="w_eta_1"    value="0.0500"/>   # catenary Obstacles collision 
+        <param name="w_eta_2"    value="0.2000"/>   # catenary length 0.00150
+
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
 
         <param name="n_iter_opt"    value="1000"/>   <!-- number max. of iterations per optimization --> 
