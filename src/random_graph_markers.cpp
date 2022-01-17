@@ -366,7 +366,8 @@ void PlannerGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Point> points_
 	one_catenary_marker_pub_.publish(oneCatenaryMarker);
 }
 
-void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publisher catenary_marker_pub_)
+void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publisher catenary_marker_pub_, Grid3d* g_3D_ , double bound_obst_,
+									octomap::OcTree* octotree_full_, pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT_, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc_)
 {
     std::string string_marker;
     std::string ns_marker;
@@ -390,8 +391,13 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
 		z_uav_ = nt_->point_uav.z*step; 
 		len_cat_ = nt_->length_cat;
 
-		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, false);
-		bc.getPointCatenary3D(points_catenary_);
+		bc.readDataForCollisionAnalisys(g_3D_ , bound_obst_, octotree_full_, trav_kdT_, trav_pc_);
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, true);
+		bc.getPointCatenary3D(points_catenary_, false);
+		// printf("Catenary[%i]: L=[%f] reel=[%f %f %f] uav=[%f %f %f] \n",count, len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
+		// for (int i=0 ; i < bc.dist_obst_cat.size() ;  i++){
+		// 	printf("Catenary[%i/%i]: Distance To Obstacle=[%f]\n",i,count, bc.dist_obst_cat[i]);
+		// }
 
 		int id_ = nt_->id;
 		

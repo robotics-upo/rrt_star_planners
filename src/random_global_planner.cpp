@@ -310,7 +310,6 @@ bool RandomGlobalPlanner::calculatePath()
             ROS_INFO_COND(debug, PRINTF_MAGENTA "Global Planner: Goal and start successfull set");
                 
             // Path calculation
-            // ftime(&start);
             clock_gettime(CLOCK_REALTIME, &start);
            
             if (coupled)
@@ -318,7 +317,6 @@ bool RandomGlobalPlanner::calculatePath()
             else
                 number_of_points = randPlanner.computeTreesIndependent();
 
-            // ftime(&finish);
             clock_gettime(CLOCK_REALTIME, &finish);
         	ros::Duration(2.0).sleep();
 
@@ -331,27 +329,9 @@ bool RandomGlobalPlanner::calculatePath()
                 std::string output_file_ugv, output_file_uav, time_random_planner;
 	            output_file_ugv = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UGV"+".txt";
 	            output_file_uav = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
-                // time_random_planner = path+"results" +"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_time_random_planner"+".txt";
 
                 float time_compute_GP = (milliseconds + seconds * 1000000000.0)/1000000000.0;
                 
-                //Save Time to compute Global planner
-                // ifs_time.open(time_random_planner);
-                // if(ifs_time) 
-                //     std::cout << time_random_planner <<" : Global Planner Time File exists !!!!!!!!!! " << std::endl;
-                // else {
-                //     ofs_time.open(time_random_planner.c_str(), std::ofstream::app);
-                //     ofs_time << "/time_GP/"<<std::endl;
-                //     ofs_time.close();
-                //     std::cout << time_random_planner <<" : File doesn't exist !!!!!!!!!! " << std::endl;
-                // }
-                // ofs_time.open(time_random_planner.c_str(), std::ofstream::app);
-                // if (ofs_time.is_open()) 
-                //     ofs_time << time_compute_GP <<std::endl;
-                // else 
-                //     std::cout << "Couldn't be open time_random_planner.txt "<< std::endl;
-	            // ofs_time.close();
-
                 //Save Time in UGV analize Path and Trajectory
                 std::ifstream ifile1;
                 ifile1.open(output_file_ugv);

@@ -85,7 +85,7 @@
     </node>
 
     <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
+    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen">#  launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
@@ -100,8 +100,8 @@
         <param name="traj_dest_frame" value="uav_base_link"/>
 
         <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
-        <param name="pause_end_optimization" value="$(arg pause_execution)"/>
-        <!-- <param name="pause_end_optimization" value="true"/> -->
+        <!-- <param name="pause_end_optimization" value="$(arg pause_execution)"/> -->
+        <param name="pause_end_optimization" value="true"/>
         <param name="write_data_residual" value="$(arg write_data_residual)"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
@@ -150,8 +150,8 @@
 
         <!-- Catenary Constraint Parameters -->
         <!-- <param name="w_eta_1"    value="0.0075"/>   # catenary Obstacles collision  -->
-        <param name="w_eta_1"    value="0.0500"/>   # catenary Obstacles collision 
-        <param name="w_eta_2"    value="0.2000"/>   # catenary length 0.00150
+        <param name="w_eta_1"    value="0.0200"/>   # catenary Obstacles collision 
+        <param name="w_eta_2"    value="0.1000"/>   # catenary length 0.00150
 
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
 

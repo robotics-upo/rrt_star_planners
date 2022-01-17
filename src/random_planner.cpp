@@ -249,7 +249,7 @@ int RandomPlanner::computeTreesIndependent()
 				i_++;
 			}
 			rrtgm.getPathMarker(rrt_path, lines_ugv_marker_pub_, lines_uav_marker_pub_);
-			rrtgm.getCatenaryPathMarker(rrt_path, catenary_marker_pub_);
+			rrtgm.getCatenaryPathMarker(rrt_path, catenary_marker_pub_, grid_3D, distance_catenary_obstacle, map, nn_trav_ugv.kdtree, nn_trav_ugv.obs_points);
 			ret_val = rrt_path.size();
 			break;
 		}
@@ -1295,6 +1295,9 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 	
 	cSolver_.setMaxNumIterations(200);
 	p_reel_ = getReelNode(q_init_);
+
+	bisectionCatenary bc;
+	
 	
 	if(mode_ == 1){ 	
 		p_final_.x = disc_final->point_uav.x * step ;
@@ -1306,6 +1309,7 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 		p_final_.y = q_init_.point_uav.y * step ;   
 		p_final_.z = q_init_.point_uav.z * step ;   
 	}
+
 	double dist_init_final_ = sqrt(pow(p_reel_.x - p_final_.x,2) + pow(p_reel_.y - p_final_.y,2) + pow(p_reel_.z - p_final_.z,2));
 	double delta_ = 0.0;	//Initial Value
 	bool check_catenary = true;
@@ -1329,9 +1333,17 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 			check_catenary = false;
 			break;
 		}
-		cSolver_.solve(p_reel_.x, p_reel_.y, p_reel_.z, p_final_.x, p_final_.y, p_final_.z, length_catenary_, points_catenary_);
+		// cSolver_.solve(p_reel_.x, p_reel_.y, p_reel_.z, p_final_.x, p_final_.y, p_final_.z, length_catenary_, points_catenary_);
+		// bc.readDataForCollisionAnalisys(grid_3D, distance_catenary_obstacle, map, nn_trav_ugv.kdtree, nn_trav_ugv.obs_points);
+		bool just_one_axe = bc.configBisection(length_catenary_, p_reel_.x, p_reel_.y, p_reel_.z, p_final_.x, p_final_.y, p_final_.z, false);
+		bc.getPointCatenary3D(points_catenary_);
+		// printf("points_catenary_.size()=%lu \n",points_catenary_.size());
+		// for(int i=0 ; i < points_catenary_.size(); i ++){
+		// 	printf("points_catenary[%f %f %f] \n",points_catenary_[i].x, points_catenary_[i].y, points_catenary_[i].z);
+		// }
+
 		double d_min_point_cat = 100000;
-		if (points_catenary_.size() > 5){
+		if (points_catenary_.size() > 2){
 			n_points_cat_dis_ = ceil(1.5*ceil(length_catenary_)); // parameter to ignore collsion points in the begining and in the end of catenary
 			if (n_points_cat_dis_ < 5)
 				n_points_cat_dis_ = 5;
@@ -1385,6 +1397,9 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 		points_catenary_.clear();
 	}
 	q_init_.catenary = founded_catenary;
+
+	// printf("founded_catenary[%s] \n", founded_catenary? "true":"false");
+
 	return founded_catenary;
 }
 

@@ -32,7 +32,8 @@ class PlannerGraphMarkers
 		void getPathMarker(std::list<RRTNode*> pt_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_);
 		void getPathMarker(trajectory_msgs::MultiDOFJointTrajectory mt_, std::vector<double> ct_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_, ros::Publisher catenary_marker_pub);
 		void getCatenaryMarker(vector<geometry_msgs::Point> points_catenary_, ros::Publisher one_catenary_marker_pub_);
-		void getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publisher catenary_marker_pub_);
+		void getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publisher catenary_marker_pub_, Grid3d* g_3D_ , double bound_obst_,
+									octomap::OcTree* octotree_full_, pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT_, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc_);
 		void getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher all_catenary_marker_pub_);
 		void goalPointMarker(geometry_msgs::Vector3 final_position_, ros::Publisher goal_point_pub_);
 		void reelPointMarker1(geometry_msgs::Point p_, ros::Publisher reel1_point_pub_);
