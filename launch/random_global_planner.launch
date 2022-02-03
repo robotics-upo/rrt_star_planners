@@ -6,7 +6,8 @@
     <arg name="graph_traj_in_rviz" default="false"/>
     <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="true"/>
-    <arg name="use_distance_function" default="false"/>     
+    <arg name="use_distance_function" default="false"/>  
+    <arg name="pc_user_name"    default="simon"/>     
 
     <arg name="write_data_residual" default="true"/> # Parameter to write the residual value for each optimizer Functor
 
@@ -27,7 +28,6 @@
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
-    <arg name="path_files"    default="/home/simon/"/>     
     <arg name="files_results"    default="results_marsupial_optimizer/"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
@@ -48,7 +48,7 @@
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
-        <param name="path"   value="$(arg path_files)$(arg files_results)"/>  
+        <param name="path"   value="/home/$(arg pc_user_name)/$(arg files_results)"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="planner_type" value="$(arg planner_type)"/> 
@@ -178,7 +178,7 @@
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
-        <param name="path"   value="$(arg path_files)"/>     
+        <param name="path"   value="/home/$(arg pc_user_name)/"/>     
         <param name="files_results"   value="$(arg files_results)"/>     
         <param name="files_residuals"   value="$(arg files_residuals)"/>     
 
