@@ -10,6 +10,7 @@
     <arg name="is_coupled"    default="false"/>
     <arg name="sample_mode"    default="1"/>
     <arg name="write_data_files" default="true"/>
+    <arg name="pc_user"    default="simon"/>     
     
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
@@ -50,6 +51,7 @@
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
+        <arg name="pc_user_name" value="$(arg pc_user)" /> 
     </include>    
 
     <!-- RViz -->

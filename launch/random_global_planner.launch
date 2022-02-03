@@ -40,7 +40,6 @@
     <arg name="coupled"             default="true"/>
     <arg name="samp_goal_rate"      default="15"/>
     <arg name="sample_mode_rrt"     default="1"/>
-    
 
     <!-- Global Planner: RRT* -->
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
