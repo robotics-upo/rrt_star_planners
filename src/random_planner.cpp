@@ -498,7 +498,7 @@ RRTNode RandomPlanner::getRandomNode(bool go_to_goal_)
 				randomState_.point_uav.y = distr_y_uav(eng);
 				randomState_.point_uav.z = distr_z_uav(eng);
 				finded_node = checkNodeFeasibility(randomState_,true);
-			}while(finded_node == false);
+			}while(finded_node == false);		
 		}
 		else{
 			do{
@@ -2013,9 +2013,9 @@ double RandomPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs
 	}
 	else{
 		Eigen::Vector3d obs_, pos_;
-		pos_.x() = p_.x * step ;
-		pos_.y() = p_.y * step ; 
-		pos_.z() = p_.z * step ; 
+		pos_.x() = p_.x;
+		pos_.y() = p_.y; 
+		pos_.z() = p_.z; 
 		obs_ = nn_obs_uav.nearestObstacleMarsupial(nn_obs_uav.kdtree, pos_, nn_obs_uav.obs_points);
 		dist = sqrt(pow(obs_.x()-pos_.x(),2) + pow(obs_.y()-pos_.y(),2) + pow(obs_.z()-pos_.z(),2));
 	}
