@@ -221,7 +221,8 @@ namespace PathPlanners
             ros::Time start_time;
 
             //! 3D specific variables
-            bool mapRec, use3d;
+            bool mapRec, use3d; 
+            bool use_distance_function; //Only related with tether and UAV distance
             RandomPlanner randPlanner;
 	        PlannerGraphMarkers rrtgm;
 

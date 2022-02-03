@@ -78,6 +78,7 @@ void RandomGlobalPlanner::configParams()
     nh->param("debug_rrt", debug_rrt, (bool)true);
     nh->param("nodes_marker_debug", nodes_marker_debug, (bool)true);
     nh->param("pause_execution", pause_execution, (bool)true);
+    nh->param("use_distance_function", use_distance_function, (bool)true); //Only related with tether and UAV distance
      
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
     nh->param("scenario_number", scenario_number,(int)1);
@@ -91,7 +92,7 @@ void RandomGlobalPlanner::configParams()
 void RandomGlobalPlanner::configRRTStar()
 {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
-                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug);
+                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function);
 }
 
 void RandomGlobalPlanner::configTopics()

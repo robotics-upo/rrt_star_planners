@@ -111,8 +111,8 @@ public:
 		   @param NodeHandle 
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
-			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
-			double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_);
+			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
+			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, bool use_distance_function_);
 
   	~RandomPlanner();
   
@@ -239,6 +239,7 @@ public:
 
 		return false;
 	}
+	
 	inline bool setValidFinalPosition(Vector3 p)
 	{
 		DiscretePosition pp = discretizePosition(p);
@@ -307,6 +308,8 @@ public:
 	void clearNodesMarker();
 	void clearCatenaryGPMarker();
 	void clearLinesGPMarker();
+	double getPointDistanceFullMap(bool use_distance_function, geometry_msgs::Vector3 p_);
+
 	/** Variables **/
 	float step; // Resolution of the Matrix and its inverse
 	float step_inv;
@@ -327,6 +330,7 @@ public:
 	std::vector<double> length_catenary;
 
 	bool debug_rrt;
+	bool use_distance_function; //Only related with tether and UAV distance
 
 	std::string node_name, path_name;
 

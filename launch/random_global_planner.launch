@@ -4,8 +4,9 @@
     <arg name="launch_robot_marker" default="true"/>
 
     <arg name="graph_traj_in_rviz" default="false"/>
-    <arg name="pause_execution" default="false"/>
+    <arg name="pause_execution" default="true"/>
     <arg name="write_data_files" default="true"/>
+    <arg name="use_distance_function" default="true"/>     
 
     <arg name="write_data_residual" default="true"/> # Parameter to write the residual value for each optimizer Functor
 
@@ -26,7 +27,9 @@
     <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
-    <arg name="path_files"    default="/home/simon/results_marsupial_optimizer/"/>     
+    <arg name="path_files"    default="/home/simon/"/>     
+    <arg name="files_results"    default="results_marsupial_optimizer/"/>     
+    <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
     <arg name="n_iter_rrt"          default="500"/>
     <arg name="n_loop_rrt"          default="100"/>
@@ -45,7 +48,7 @@
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
-        <param name="path"   value="$(arg path_files)"/>  
+        <param name="path"   value="$(arg path_files)$(arg files_results)"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="planner_type" value="$(arg planner_type)"/> 
@@ -69,7 +72,8 @@
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="goal_gap_m"   value="$(arg goal_gap_m)"/>    
         <param name="samp_goal_rate"   value="$(arg samp_goal_rate)"/>  
-        <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>     
+        <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>    
+        <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
         <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_obstacle_uav"         value="0.5"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
@@ -100,9 +104,10 @@
         <param name="traj_dest_frame" value="uav_base_link"/>
 
         <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
-        <!-- <param name="pause_end_optimization" value="$(arg pause_execution)"/> -->
-        <param name="pause_end_optimization" value="true"/>
+        <param name="pause_end_optimization" value="$(arg pause_execution)"/>
+        <!-- <param name="pause_end_optimization" value="true"/> -->
         <param name="write_data_residual" value="$(arg write_data_residual)"/>
+        <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
        
@@ -130,18 +135,18 @@
         <param name="catenary_length_constraint"   value="true"/>    # catenary_length_constraint // true = autodiff ; false = numeric
 
         <!-- UGV Constraint Parameters -->
-        <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
+        <param name="w_alpha_ugv"   value="0.250"/>   # Equi-distance ugv
         <param name="w_beta_ugv"    value="0.080"/>   # Obstacles ugv
-        <param name="w_gamma_ugv"   value="0.120"/>   # Smoothness ugv 
+        <param name="w_gamma_ugv"   value="0.220"/>   # Smoothness ugv 
         <param name="w_epsilon_ugv"   value="0.05"/>   # Velocity 
         <param name="w_zeta_ugv"      value="0.005"/>   # Acceleration 
 
         <param name="w_theta_ugv"   value="0.5000"/>   # Traversability ugv
         
         <!-- UAV Constraint Parameters -->
-        <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
+        <param name="w_alpha_uav"   value="0.300"/>   # Equi-distance uav 
         <param name="w_beta_uav"    value="0.080"/>   # Obstacles uav 
-        <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
+        <param name="w_gamma_uav"   value="0.240"/>   # Smoothness uav
         <param name="w_epsilon_uav"   value="0.05"/>   # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
         
@@ -150,7 +155,7 @@
 
         <!-- Catenary Constraint Parameters -->
         <!-- <param name="w_eta_1"    value="0.0075"/>   # catenary Obstacles collision  -->
-        <param name="w_eta_1"    value="0.0200"/>   # catenary Obstacles collision 
+        <param name="w_eta_1"    value="0.0250"/>   # catenary Obstacles collision 
         <param name="w_eta_2"    value="0.1000"/>   # catenary length 0.00150
 
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
@@ -174,6 +179,8 @@
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="path"   value="$(arg path_files)"/>     
+        <param name="files_results"   value="$(arg files_results)"/>     
+        <param name="files_residuals"   value="$(arg files_residuals)"/>     
 
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>

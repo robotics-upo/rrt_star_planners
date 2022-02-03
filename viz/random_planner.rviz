@@ -140,13 +140,13 @@ Visualization Manager:
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /random_planner_node/path_ugv_rrt_star
       Name: Random_path_ugv
       Namespaces:
-        Line_ugv_RRTStar_Path: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /random_planner_node/path_uav_rrt_star
@@ -238,9 +238,11 @@ Visualization Manager:
         catenary_3: true
         catenary_30: true
         catenary_31: true
+        catenary_32: true
         catenary_33: true
         catenary_34: true
         catenary_35: true
+        catenary_36: true
         catenary_4: true
         catenary_5: true
         catenary_6: true
@@ -250,21 +252,21 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /random_planner_node/tree_rrt_star_ugv
       Name: RRTStar_nodes_ugv
       Namespaces:
-        {}
+        tree_RRTStar_ugv: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /random_planner_node/tree_rrt_star_uav
       Name: RRTStar_nodes_uav
       Namespaces:
-        {}
+        tree_RRTStar_uav: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /random_planner_node/rand_point
@@ -329,6 +331,10 @@ Visualization Manager:
         catenary_30: true
         catenary_31: true
         catenary_32: true
+        catenary_33: true
+        catenary_34: true
+        catenary_35: true
+        catenary_36: true
         catenary_4: true
         catenary_5: true
         catenary_6: true
@@ -338,21 +344,21 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /siar_marker_node/siar_model
       Name: UGV Robot
       Namespaces:
-        {}
+        siar_model: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/Marker
-      Enabled: false
+      Enabled: true
       Marker Topic: /m100/marker
       Name: UAV Robot
       Namespaces:
-        {}
+        m100: true
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/Marker
       Enabled: false
       Marker Topic: /circle
@@ -633,6 +639,10 @@ Visualization Manager:
         catenary_30: true
         catenary_31: true
         catenary_32: true
+        catenary_33: true
+        catenary_34: true
+        catenary_35: true
+        catenary_36: true
         catenary_4: true
         catenary_5: true
         catenary_6: true
@@ -669,7 +679,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 12.001296043395996
+      Distance: 12.371026039123535
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -677,17 +687,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.7729383707046509
-        Y: 0.4023773670196533
-        Z: -3.688103242893703e-05
+        X: -1.029280185699463
+        Y: -1.4271612167358398
+        Z: -3.919644223060459e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.06979739665985107
+      Pitch: 0.319797545671463
       Target Frame: <Fixed Frame>
-      Yaw: 4.762940406799316
+      Yaw: 4.607950210571289
     Saved: ~
 Window Geometry:
   Displays:

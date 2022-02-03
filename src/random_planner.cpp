@@ -32,7 +32,7 @@ RandomPlanner::~RandomPlanner()
 void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
 				   float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
-				   bool nodes_marker_debug_)
+				   bool nodes_marker_debug_, bool use_distance_function_)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -75,7 +75,9 @@ void RandomPlanner::init(std::string plannerType, std::string frame_id_, float w
 	// Optimization
 	goal_gap_m = goal_gap_m_;
 	debug_rrt = debug_rrt_;
-	
+	use_distance_function = use_distance_function_;
+	printf("Global Planner %s Node : Using distance function: %s \n", plannerType.c_str(), use_distance_function?"true":"false");
+
 	markers_debug = false;
 	nodes_marker_debug = nodes_marker_debug_;
 
@@ -544,9 +546,6 @@ RRTNode* RandomPlanner::getNearestNode(const RRTNode q_rand_)
 	double p_ugv_x_, p_ugv_y_, p_ugv_z_, p_ugv_parent_x_, p_ugv_parent_y_, p_ugv_parent_z_, p_uav_x_, p_uav_y_, p_uav_z_; 
 	double d_ugv_ , d_uav_, l_cat_, cos_angle;
 	double k0_ ,k1_, k2_ ;
-	// k0_ = 12.0; // 5.0 UGV
-    // k1_ = 6.0;  // 15.0 UAV
-	// k2_ = 10.0;  // 5.0 Smoothness
 	k0_ = w_nearest_ugv; //  UGV
     k1_ = w_nearest_uav;  // UAV
 	k2_ = w_nearest_smooth;  // Smoothness
@@ -1162,14 +1161,19 @@ void RandomPlanner::getParamsNode(RRTNode &node_, bool is_init_)
 	obs_near_ugv_ = nn_obs_ugv.nearestObstacleMarsupial(nn_obs_ugv.kdtree, point_node_, nn_obs_ugv.obs_points);
 	double dist_obs_ugv = (point_node_ - obs_near_ugv_).norm();
 
-	Eigen::Vector3d obs_near_uav_;
-	point_node_.x() = node_.point_uav.x * step;
-	point_node_.y() = node_.point_uav.y * step;
-	point_node_.z() = node_.point_uav.z * step;
-	bool is_into_ = grid_3D->isIntoMap(point_node_.x(),point_node_.y(),point_node_.z());
-	double dist_obs_uav;
-	if (is_into_)
-		dist_obs_uav = grid_3D->getPointDist((double)point_node_.x(),(double)point_node_.y(),(double)point_node_.z());
+	geometry_msgs::Vector3 p_node_uav_;
+	p_node_uav_.x = node_.point_uav.x * step;
+	p_node_uav_.y = node_.point_uav.y * step;
+	p_node_uav_.z = node_.point_uav.z * step;
+	double dist_obs_uav = getPointDistanceFullMap(use_distance_function, p_node_uav_);
+	// Eigen::Vector3d obs_near_uav_;
+	// point_node_.x() = node_.point_uav.x * step;
+	// point_node_.y() = node_.point_uav.y * step;
+	// point_node_.z() = node_.point_uav.z * step;
+	// bool is_into_ = grid_3D->isIntoMap(point_node_.x(),point_node_.y(),point_node_.z());
+	// double dist_obs_uav;
+	// if (is_into_)
+	// 	dist_obs_uav = grid_3D->getPointDist((double)point_node_.x(),(double)point_node_.y(),(double)point_node_.z());
 
 	node_.id = getWorldIndex(node_.point.x, node_.point.y, node_.point.z);
 	node_.min_dist_obs_ugv = dist_obs_ugv;
@@ -1245,18 +1249,19 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 		if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
 			// Eigen::Vector3d obs_to_uav, pos_uav;
 			geometry_msgs::Vector3 obs_to_uav, pos_uav; 
-			
 			pos_uav.x =pf_.point_uav.x * step ;
 			pos_uav.y =pf_.point_uav.y * step ; 
 			pos_uav.z =pf_.point_uav.z * step ; 
-			bool is_into_ = grid_3D->isIntoMap(pos_uav.x,pos_uav.y,pos_uav.z);
-
-			if (is_into_)
-				d_ = grid_3D->getPointDist((double)pos_uav.x,(double)pos_uav.y,(double)pos_uav.z);
-			else
+			d_ = getPointDistanceFullMap(use_distance_function, pos_uav);
+			if (d_ == -1.0)
 				return false;
 
-
+			// bool is_into_ = grid_3D->isIntoMap(pos_uav.x,pos_uav.y,pos_uav.z);
+			// if (is_into_)
+			// 	d_ = grid_3D->getPointDist((double)pos_uav.x,(double)pos_uav.y,(double)pos_uav.z);
+			// else
+			// 	return false;
+			
 			if (d_ > distance_obstacle_uav)
 				ret = true;
 			else
@@ -1274,11 +1279,19 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	bool ret;
 	double d_;
 
-	bool is_into_ = grid_3D->isIntoMap(pf_.point.x*step,pf_.point.y*step,pf_.point.z*step);
-	if (is_into_)
-		d_ = grid_3D->getPointDist((double)pf_.point.x*step,(double)pf_.point.y*step,(double)pf_.point.z*step);
-	else
+	geometry_msgs::Vector3 obs_to_uav, pos_uav; 
+	pos_uav.x =pf_.point.x * step ;
+	pos_uav.y =pf_.point.y * step ; 
+	pos_uav.z =pf_.point.z * step ; 
+	d_ = getPointDistanceFullMap(use_distance_function, pos_uav);
+	if (d_ == -1.0)
 		return false;
+
+	// bool is_into_ = grid_3D->isIntoMap(pf_.point.x*step,pf_.point.y*step,pf_.point.z*step);
+	// if (is_into_)
+	// 	d_ = grid_3D->getPointDist((double)pf_.point.x*step,(double)pf_.point.y*step,(double)pf_.point.z*step);
+	// else
+	// 	return false;
 
 	if (d_ > distance_catenary_obstacle)
 		ret = true;
@@ -1337,10 +1350,6 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 		// bc.readDataForCollisionAnalisys(grid_3D, distance_catenary_obstacle, map, nn_trav_ugv.kdtree, nn_trav_ugv.obs_points);
 		bool just_one_axe = bc.configBisection(length_catenary_, p_reel_.x, p_reel_.y, p_reel_.z, p_final_.x, p_final_.y, p_final_.z, false);
 		bc.getPointCatenary3D(points_catenary_);
-		// printf("points_catenary_.size()=%lu \n",points_catenary_.size());
-		// for(int i=0 ; i < points_catenary_.size(); i ++){
-		// 	printf("points_catenary[%f %f %f] \n",points_catenary_[i].x, points_catenary_[i].y, points_catenary_[i].z);
-		// }
 
 		double d_min_point_cat = 100000;
 		if (points_catenary_.size() > 2){
@@ -1359,12 +1368,13 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 					p_in_cat_.x = points_catenary_[i].x;
 					p_in_cat_.y = points_catenary_[i].y;
 					p_in_cat_.z = points_catenary_[i].z;
-					double dist_cat_obs;
-					bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x,p_in_cat_.y,p_in_cat_.z);
-					if(is_into_)
-						dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x,(double)p_in_cat_.y,(double)p_in_cat_.z) ;
-					else
-						dist_cat_obs = -1.0;
+					
+					double dist_cat_obs = getPointDistanceFullMap(use_distance_function, p_in_cat_);
+					// bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x,p_in_cat_.y,p_in_cat_.z);
+					// if(is_into_)
+					// 	dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x,(double)p_in_cat_.y,(double)p_in_cat_.z) ;
+					// else
+					// 	dist_cat_obs = -1.0;
 
 					if (d_min_point_cat > dist_cat_obs){
 						q_init_.min_dist_obs_cat = dist_cat_obs;
@@ -1990,4 +2000,26 @@ octomap::OcTree RandomPlanner::checkTraversablePointInsideCircle(Vector3 point_)
 	return map_circle;
 }
 
-} 
+double RandomPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
+{
+	double dist;
+
+	if(use_dist_func_){
+		bool is_into_ = grid_3D->isIntoMap(p_.x,p_.y,p_.z);
+		if(is_into_)
+			dist =  grid_3D->getPointDist((double)p_.x,(double)p_.y,(double)p_.z) ;
+		else
+			dist = -1.0;
+	}
+	else{
+		Eigen::Vector3d obs_, pos_;
+		pos_.x() = p_.x * step ;
+		pos_.y() = p_.y * step ; 
+		pos_.z() = p_.z * step ; 
+		obs_ = nn_obs_uav.nearestObstacleMarsupial(nn_obs_uav.kdtree, pos_, nn_obs_uav.obs_points);
+		dist = sqrt(pow(obs_.x()-pos_.x(),2) + pow(obs_.y()-pos_.y(),2) + pow(obs_.z()-pos_.z(),2));
+	}
+	return dist;
+}
+
+} // end class 
