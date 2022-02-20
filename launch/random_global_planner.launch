@@ -134,18 +134,18 @@
         <param name="catenary_length_constraint"   value="true"/>    # catenary_length_constraint // true = autodiff ; false = numeric
 
         <!-- UGV Constraint Parameters -->
-        <param name="w_alpha_ugv"   value="0.250"/>   # Equi-distance ugv
+        <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
         <param name="w_beta_ugv"    value="0.080"/>   # Obstacles ugv
-        <param name="w_gamma_ugv"   value="0.220"/>   # Smoothness ugv 
+        <param name="w_gamma_ugv"   value="0.120"/>   # Smoothness ugv 
         <param name="w_epsilon_ugv"   value="0.05"/>   # Velocity 
         <param name="w_zeta_ugv"      value="0.005"/>   # Acceleration 
 
         <param name="w_theta_ugv"   value="0.5000"/>   # Traversability ugv
         
         <!-- UAV Constraint Parameters -->
-        <param name="w_alpha_uav"   value="0.300"/>   # Equi-distance uav 
+        <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
         <param name="w_beta_uav"    value="0.080"/>   # Obstacles uav 
-        <param name="w_gamma_uav"   value="0.240"/>   # Smoothness uav
+        <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
         <param name="w_epsilon_uav"   value="0.05"/>   # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
         
