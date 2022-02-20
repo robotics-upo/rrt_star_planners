@@ -579,7 +579,8 @@ RRTNode* RandomPlanner::getNearestNode(const RRTNode q_rand_)
 		}else
 			cos_angle = 1.0;
 
-		double cost_ = k0_ * d_ugv_ + k1_* d_uav_ + k2_ * (1.0 - cos_angle );
+		double cost_ = k0_ * d_ugv_ + k1_* d_uav_ + k2_ * (1.0 - cos_angle ); //Cost to choose q_nearest
+
 		if(cost_nearest_ > cost_){
 			q_nearest_ = nt_;
 			cost_nearest_ = cost_;

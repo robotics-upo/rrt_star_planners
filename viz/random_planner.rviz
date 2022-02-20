@@ -75,7 +75,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 4.625
+        Max Value: 9.274999618530273
         Min Value: 0.02500000037252903
         Value: true
       Axis: Z
@@ -140,13 +140,13 @@ Visualization Manager:
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /random_planner_node/path_ugv_rrt_star
       Name: Random_path_ugv
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /random_planner_node/path_uav_rrt_star
@@ -333,8 +333,6 @@ Visualization Manager:
         catenary_32: true
         catenary_33: true
         catenary_34: true
-        catenary_35: true
-        catenary_36: true
         catenary_4: true
         catenary_5: true
         catenary_6: true
@@ -643,6 +641,7 @@ Visualization Manager:
         catenary_34: true
         catenary_35: true
         catenary_36: true
+        catenary_37: true
         catenary_4: true
         catenary_5: true
         catenary_6: true
@@ -679,7 +678,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 12.371026039123535
+      Distance: 15.799348831176758
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -695,9 +694,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.319797545671463
+      Pitch: 0.42479783296585083
       Target Frame: <Fixed Frame>
-      Yaw: 4.607950210571289
+      Yaw: 4.702953815460205
     Saved: ~
 Window Geometry:
   Displays:

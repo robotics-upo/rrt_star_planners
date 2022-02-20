@@ -6,7 +6,7 @@
     <arg name="graph_traj_in_rviz" default="false"/>
     <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="true"/>
-    <arg name="use_distance_function" default="false"/>  
+    <arg name="use_distance_function" default="true"/>  
     <arg name="pc_user_name"    default="simon"/>     
 
     <arg name="write_data_residual" default="true"/> # Parameter to write the residual value for each optimizer Functor
@@ -103,8 +103,8 @@
         <param name="traj_dest_frame" value="uav_base_link"/>
 
         <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
-        <param name="pause_end_optimization" value="$(arg pause_execution)"/>
-        <!-- <param name="pause_end_optimization" value="true"/> -->
+        <!-- <param name="pause_end_optimization" value="$(arg pause_execution)"/> -->
+        <param name="pause_end_optimization" value="true"/>
         <param name="write_data_residual" value="$(arg write_data_residual)"/>
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
             
@@ -159,7 +159,7 @@
 
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
 
-        <param name="n_iter_opt"    value="1000"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
             
         <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
@@ -178,6 +178,7 @@
         <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="path"   value="/home/$(arg pc_user_name)/"/>     
+        <param name="pc_user_name"  value="$(arg pc_user_name)"/>     
         <param name="files_results"   value="$(arg files_results)"/>     
         <param name="files_residuals"   value="$(arg files_residuals)"/>     
 
