@@ -32,7 +32,7 @@ RandomPlanner::~RandomPlanner()
 void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
 				   float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
-				   bool nodes_marker_debug_, bool use_distance_function_, int scenario_number_, int num_pos_initial_)
+				   bool nodes_marker_debug_, bool use_distance_function_, int scenario_number_, int num_pos_initial_, std::string path_)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -83,6 +83,7 @@ void RandomPlanner::init(std::string plannerType, std::string frame_id_, float w
 
 	scenario_number = scenario_number_;
     num_pos_initial = num_pos_initial_;
+	path = path_;
 
 	distance_obstacle_ugv = distance_obstacle_ugv_;
 	distance_obstacle_uav = distance_obstacle_uav_;
@@ -217,24 +218,24 @@ int RandomPlanner::computeTreesIndependent()
 
 
 	//Save Time for each method in RRT* algorithm
-	output_file_time_methods = "/home/srlmsi/results_marsupial_optimizer/rrt_time_methods_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
-	output_file_time_solutions = "/home/srlmsi/results_marsupial_optimizer/rrt_time_solutions_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+	output_file_time_methods = path+"rrt_time_methods_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+	output_file_time_solutions = path+"rrt_time_solutions_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
     file_time1.open(output_file_time_methods);
     if(file_time1) 
         std::cout << output_file_time_methods <<" : File exists !!!!!!!!!! " << std::endl;
     else {
-		ofs_time.open(output_file_time_methods.c_str(), std::ofstream::app);
-		ofs_time <<"t_rand;t_nearest;t_steer;t_near;t_connect;t_rewire"<<std::endl;
-		ofs_time.close();
+		ofs_time1.open(output_file_time_methods.c_str(), std::ofstream::app);
+		ofs_time1 <<"t_rand;t_nearest;t_steer;t_near;t_connect;t_rewire"<<std::endl;
+		ofs_time1.close();
 		std::cout << output_file_time_methods <<" : File doesn't exist !!!!!!!!!! " << std::endl;
     }
 	file_time2.open(output_file_time_solutions);
     if(file_time2) 
         std::cout << output_file_time_solutions <<" : File exists !!!!!!!!!! " << std::endl;
     else {
-		ofs_time.open(output_file_time_solutions.c_str(), std::ofstream::app);
-		ofs_time <<"t_last_solutions;t_total_iterations;"<<std::endl;
-		ofs_time.close();
+		ofs_time2.open(output_file_time_solutions.c_str(), std::ofstream::app);
+		ofs_time2 <<"t_last_solutions;t_total_iterations;"<<std::endl;
+		ofs_time2.close();
 		std::cout << output_file_time_solutions <<" : File doesn't exist !!!!!!!!!! " << std::endl;
     }
 	clock_gettime(CLOCK_REALTIME, &start_extend);
@@ -278,12 +279,12 @@ int RandomPlanner::computeTreesIndependent()
 
 
 		//Save Time for each method in RRT* algorithm
-		ofs_time.open(output_file_time_methods.c_str(), std::ofstream::app);
-    	if (ofs_time.is_open()) 
-    	    ofs_time << time_random <<";" << time_nearest <<";" << time_steer <<";" << time_near <<";" << time_connect <<";" << time_rewire <<";" << std::endl ;
+		ofs_time1.open(output_file_time_methods.c_str(), std::ofstream::app);
+    	if (ofs_time1.is_open()) 
+    	    ofs_time1 << time_random <<";" << time_nearest <<";" << time_steer <<";" << time_near <<";" << time_connect <<";" << time_rewire <<";" << std::endl ;
     	else 
     	    std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
-    	ofs_time.close();
+    	ofs_time1.close();
 
 
 
@@ -329,12 +330,12 @@ int RandomPlanner::computeTreesIndependent()
 		time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
 	}
 	//Save Time RRT* algorithm
-	ofs_time.open(output_file_time_solutions.c_str(), std::ofstream::app);
-    if (ofs_time.is_open()) 
-        ofs_time << time_extend  <<";" << time_rrt <<";" << std::endl ;
+	ofs_time2.open(output_file_time_solutions.c_str(), std::ofstream::app);
+    if (ofs_time2.is_open()) 
+        ofs_time2 << time_extend  <<";" << time_rrt <<";" << std::endl ;
     else 
         std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
-    ofs_time.close();
+    ofs_time2.close();
 
 
 
