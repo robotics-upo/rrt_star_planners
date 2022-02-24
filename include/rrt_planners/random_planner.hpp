@@ -342,7 +342,7 @@ public:
 	
 	
 	
-	std::ifstream file_time;
+	std::ifstream file_time1, file_time2;
     std::ofstream ofs_time;
 	std::string output_file_time_methods, output_file_time_solutions;
 	struct timespec start_rand, finish_rand;

@@ -217,10 +217,10 @@ int RandomPlanner::computeTreesIndependent()
 
 
 	//Save Time for each method in RRT* algorithm
-	output_file_time_methods = "/home/simon/results_marsupial_optimizer/rrt_time_methods_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
-	output_file_time_solutions = "/home/simon/results_marsupial_optimizer/rrt_time_solutions_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
-    file_time.open(output_file_time_methods);
-    if(file_time) 
+	output_file_time_methods = "/home/srlmsi/results_marsupial_optimizer/rrt_time_methods_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+	output_file_time_solutions = "/home/srlmsi/results_marsupial_optimizer/rrt_time_solutions_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+    file_time1.open(output_file_time_methods);
+    if(file_time1) 
         std::cout << output_file_time_methods <<" : File exists !!!!!!!!!! " << std::endl;
     else {
 		ofs_time.open(output_file_time_methods.c_str(), std::ofstream::app);
@@ -228,8 +228,8 @@ int RandomPlanner::computeTreesIndependent()
 		ofs_time.close();
 		std::cout << output_file_time_methods <<" : File doesn't exist !!!!!!!!!! " << std::endl;
     }
-	file_time.open(output_file_time_solutions);
-    if(file_time) 
+	file_time2.open(output_file_time_solutions);
+    if(file_time2) 
         std::cout << output_file_time_solutions <<" : File exists !!!!!!!!!! " << std::endl;
     else {
 		ofs_time.open(output_file_time_solutions.c_str(), std::ofstream::app);
