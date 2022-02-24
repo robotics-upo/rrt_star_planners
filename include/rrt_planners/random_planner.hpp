@@ -112,7 +112,8 @@ public:
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
 			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
-			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, bool use_distance_function_);
+			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
+			bool use_distance_function_, int scenario_number_, int num_pos_initial_);
 
   	~RandomPlanner();
   
@@ -338,6 +339,39 @@ public:
 	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
 	PlannerGraphMarkers rrtgm;
 	Grid3d *grid_3D;
+	
+	
+	
+	std::ifstream file_time;
+    std::ofstream ofs_time;
+	std::string output_file_time_methods, output_file_time_solutions;
+	struct timespec start_rand, finish_rand;
+	float sec_rand, msec_rand;
+	float time_random;	
+	struct timespec start_nearest, finish_nearest;
+	float sec_nearest, msec_nearest;
+	float time_nearest;
+	struct timespec start_steer, finish_steer;
+	float sec_steer, msec_steer;
+	float time_steer;
+	struct timespec start_near, finish_near;
+	float sec_near, msec_near;
+	float time_near;
+	struct timespec start_connect, finish_connect;
+	float sec_connect, msec_connect;
+	float time_connect;
+	struct timespec start_rewire, finish_rewire;
+	float sec_rewire, msec_rewire;
+	float time_rewire;
+	struct timespec start_extend, finish_extend;
+	float sec_extend, msec_extend;
+	float time_extend;
+	struct timespec start_rrt, finish_rrt;
+	float sec_rrt, msec_rrt;
+	float time_rrt;
+	int scenario_number , num_pos_initial;
+	bool is_extend;
+
 
 protected:
 	

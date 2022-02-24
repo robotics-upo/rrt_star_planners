@@ -32,7 +32,7 @@ RandomPlanner::~RandomPlanner()
 void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
 				   float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
-				   bool nodes_marker_debug_, bool use_distance_function_)
+				   bool nodes_marker_debug_, bool use_distance_function_, int scenario_number_, int num_pos_initial_)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -80,6 +80,9 @@ void RandomPlanner::init(std::string plannerType, std::string frame_id_, float w
 
 	markers_debug = false;
 	nodes_marker_debug = nodes_marker_debug_;
+
+	scenario_number = scenario_number_;
+    num_pos_initial = num_pos_initial_;
 
 	distance_obstacle_ugv = distance_obstacle_ugv_;
 	distance_obstacle_uav = distance_obstacle_uav_;
@@ -209,7 +212,35 @@ int RandomPlanner::computeTreesIndependent()
  	double ret_val = -1.0; 
     count_loop = 0; 
 	int count_total_loop = 0; 
-	count_qnew_fail = count_fail_connect_goal = 0;
+	count_qnew_fail = count_fail_connect_goal = -1;
+
+
+
+	//Save Time for each method in RRT* algorithm
+	output_file_time_methods = "/home/simon/results_marsupial_optimizer/rrt_time_methods_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+	output_file_time_solutions = "/home/simon/results_marsupial_optimizer/rrt_time_solutions_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+    file_time.open(output_file_time_methods);
+    if(file_time) 
+        std::cout << output_file_time_methods <<" : File exists !!!!!!!!!! " << std::endl;
+    else {
+		ofs_time.open(output_file_time_methods.c_str(), std::ofstream::app);
+		ofs_time <<"t_rand;t_nearest;t_steer;t_near;t_connect;t_rewire"<<std::endl;
+		ofs_time.close();
+		std::cout << output_file_time_methods <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+    }
+	file_time.open(output_file_time_solutions);
+    if(file_time) 
+        std::cout << output_file_time_solutions <<" : File exists !!!!!!!!!! " << std::endl;
+    else {
+		ofs_time.open(output_file_time_solutions.c_str(), std::ofstream::app);
+		ofs_time <<"t_last_solutions;t_total_iterations;"<<std::endl;
+		ofs_time.close();
+		std::cout << output_file_time_solutions <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+    }
+	clock_gettime(CLOCK_REALTIME, &start_extend);
+
+
+
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
       	
 		// printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\n",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
@@ -217,20 +248,43 @@ int RandomPlanner::computeTreesIndependent()
 		
 		RRTNode q_rand;
 		
-		if ((count_loop%samp_goal_rate)!=0){
-			q_rand = getRandomNode();	
-		}
-		else{
-			q_rand = getRandomNode(true);	
-		}
+    	time_random = time_nearest = time_steer = time_near = time_connect = time_rewire = 0 ;
 
+        
+        clock_gettime(CLOCK_REALTIME, &start_rand);
+			if ((count_loop%samp_goal_rate)!=0)
+				q_rand = getRandomNode();	
+			else
+				q_rand = getRandomNode(true);	
+        clock_gettime(CLOCK_REALTIME, &finish_rand);
+		sec_rand = finish_rand.tv_sec - start_rand.tv_sec - 1;
+        msec_rand = (1000000000 - start_rand.tv_nsec) + finish_rand.tv_nsec;
+		time_random = (msec_rand + sec_rand * 1000000000.0)/1000000000.0;
+ 
 		if (debug_rrt)
 			printf(" q_rand = [%f %f %f / %f %f %f] \n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
 		
 		rrtgm.randNodeMarker(q_rand, rand_point_pub_, 1);
 
-		extendGraph(q_rand);
+
+		is_extend = extendGraph(q_rand);
 		count_loop++;
+        clock_gettime(CLOCK_REALTIME, &finish_extend);
+		if(is_extend){ 
+			sec_extend = finish_extend.tv_sec - start_extend.tv_sec - 1;
+        	msec_extend = (1000000000 - start_extend.tv_nsec) + finish_extend.tv_nsec;
+			time_extend = (msec_extend + sec_extend * 1000000000.0)/1000000000.0;
+		}
+
+
+		//Save Time for each method in RRT* algorithm
+		ofs_time.open(output_file_time_methods.c_str(), std::ofstream::app);
+    	if (ofs_time.is_open()) 
+    	    ofs_time << time_random <<";" << time_nearest <<";" << time_steer <<";" << time_near <<";" << time_connect <<";" << time_rewire <<";" << std::endl ;
+    	else 
+    	    std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
+    	ofs_time.close();
+
 
 
 		if ( ( (num_goal_finded>0) && (planner_type == "rrt") ) || 
@@ -268,6 +322,21 @@ int RandomPlanner::computeTreesIndependent()
 				printf("\n\t\t       Planner (%s) :: computeTreeIndependent: Starting new Loop      \n",planner_type.c_str());
 		}
 	}
+	clock_gettime(CLOCK_REALTIME, &finish_rrt);
+	if(is_extend){ 
+		sec_rrt = finish_rrt.tv_sec - start_extend.tv_sec - 1;
+    	msec_rrt = (1000000000 - start_extend.tv_nsec) + finish_rrt.tv_nsec;
+		time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
+	}
+	//Save Time RRT* algorithm
+	ofs_time.open(output_file_time_solutions.c_str(), std::ofstream::app);
+    if (ofs_time.is_open()) 
+        ofs_time << time_extend  <<";" << time_rrt <<";" << std::endl ;
+    else 
+        std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
+    ofs_time.close();
+
+
 
   	std::cout << "Finishing Random Planner: Explored Graph Nodes Numbers: " << nodes_tree.size() <<std::endl;
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
@@ -364,14 +433,27 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		RRTNode* new_node = new RRTNode();
 		RRTNode q_new;	//Take the new node value before to save it as a node in the list
 
-		RRTNode* q_nearest = getNearestNode(q_rand_); 
+		
+        clock_gettime(CLOCK_REALTIME, &start_nearest);
+			RRTNode* q_nearest = getNearestNode(q_rand_); 
+        clock_gettime(CLOCK_REALTIME, &finish_nearest);
+		sec_nearest = finish_nearest.tv_sec - start_nearest.tv_sec - 1;
+        msec_nearest = (1000000000 - start_nearest.tv_nsec) + finish_nearest.tv_nsec;
+		time_nearest = (msec_nearest + sec_nearest * 1000000000.0)/1000000000.0;
+		
 		rrtgm.randNodeMarker(*q_nearest, nearest_point_pub_, 0);
 
 		if (debug_rrt) 
 			printf(" q_nearest = [%f %f %f / %f %f %f] l=%f feasible_l=%s\n", q_nearest->point.x*step,q_nearest->point.y*step,q_nearest->point.z*step, q_nearest->point_uav.x*step,q_nearest->point_uav.y*step,q_nearest->point_uav.z*step, 
 			q_nearest->length_cat, q_nearest->catenary? "true" : "false");
 
-		bool exist_q_new_ = steering(*q_nearest, q_rand_, step_steer, q_new);
+		
+        clock_gettime(CLOCK_REALTIME, &start_steer);
+			bool exist_q_new_ = steering(*q_nearest, q_rand_, step_steer, q_new);
+		clock_gettime(CLOCK_REALTIME, &finish_steer);
+		sec_steer = finish_steer.tv_sec - start_steer.tv_sec - 1;
+        msec_steer = (1000000000 - start_steer.tv_nsec) + finish_steer.tv_nsec;
+		time_steer = (msec_steer + sec_steer * 1000000000.0)/1000000000.0;
 
 		if (!exist_q_new_){
 			if ((count_loop%samp_goal_rate)==0)
@@ -404,28 +486,42 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		if (debug_rrt)
 			printf(" q_min = [%f %f %f / %f %f %f] \n", q_min->point.x*step,q_min->point.y*step,q_min->point.z*step,q_min->point_uav.x*step,q_min->point_uav.y*step,q_min->point_uav.z*step);
 
-		std::vector<int> v_near_nodes = getNearNodes(q_new, radius_near_nodes) ;
+		
+        clock_gettime(CLOCK_REALTIME, &start_near);
+			std::vector<int> v_near_nodes = getNearNodes(q_new, radius_near_nodes) ;
+		clock_gettime(CLOCK_REALTIME, &finish_near);
+		sec_near = finish_near.tv_sec - start_near.tv_sec - 1;
+        msec_near = (1000000000 - start_near.tv_nsec) + finish_near.tv_nsec;
+		time_near = (msec_near + sec_near * 1000000000.0)/1000000000.0;
+
 		updateKdtreeNode(q_new); 	//KdTree is updated after get Near Nodes because to not take it own node as a near node
 		updateKdtreeUGV(q_new);
 		updateKdtreeUAV(q_new);
 		bool new_parentNode_ = false;
-		// I . Open near nodes and connected with minimum accumulated cost
-		if (planner_type == "rrt_star"){
-			for (size_t i = 0 ; i < v_near_nodes.size(); i++){
-				for (auto nt_:nodes_tree) {
-					if(nt_->id_uav == v_near_nodes[i] && nt_->id_uav != q_nearest->id_uav){
-						double C_ = nt_->cost + costBetweenNodes(*nt_,q_new);   
-						if (C_ < q_new.cost){
-							if (obstacleFreeBetweenNodes(*nt_, q_new)){
-								q_min = nt_;
-								new_parentNode_ = true;
+
+		
+        clock_gettime(CLOCK_REALTIME, &start_connect);
+			// I . Open near nodes and connected with minimum accumulated cost
+			if (planner_type == "rrt_star"){
+				for (size_t i = 0 ; i < v_near_nodes.size(); i++){
+					for (auto nt_:nodes_tree) {
+						if(nt_->id_uav == v_near_nodes[i] && nt_->id_uav != q_nearest->id_uav){
+							double C_ = nt_->cost + costBetweenNodes(*nt_,q_new);   
+							if (C_ < q_new.cost){
+								if (obstacleFreeBetweenNodes(*nt_, q_new)){
+									q_min = nt_;
+									new_parentNode_ = true;
+								}
 							}
+							break;
 						}
-						break;
 					}
 				}
 			}
-		}
+		clock_gettime(CLOCK_REALTIME, &finish_connect);
+		sec_connect = finish_connect.tv_sec - start_connect.tv_sec - 1;
+        msec_connect = (1000000000 - start_connect.tv_nsec) + finish_connect.tv_nsec;
+		time_connect = (msec_connect + sec_connect * 1000000000.0)/1000000000.0;
 		if (new_parentNode_ ){
 			q_new.parentNode = q_min;
 			updateParamsNode(q_new);
@@ -433,22 +529,28 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 
 		*new_node = q_new;
 
-		// II . Rewire Proccess for UGV
-		if (planner_type == "rrt_star"){
-			for (size_t i = 0 ; i < v_near_nodes.size(); i++){
-				for (auto nt_:nodes_tree) {
-					if(nt_->id_uav == v_near_nodes[i] && nt_->id_uav != q_min->id_uav){
-						if( nt_->cost > (new_node->cost + costBetweenNodes(*new_node, *nt_)) ){
-							if (obstacleFreeBetweenNodes(*nt_, *new_node)){
-								nt_->parentNode = new_node;
-								nt_->cost = new_node->cost + costBetweenNodes(*new_node, *nt_);
+		
+        clock_gettime(CLOCK_REALTIME, &start_rewire);
+			// II . Rewire Proccess for UGV
+			if (planner_type == "rrt_star"){
+				for (size_t i = 0 ; i < v_near_nodes.size(); i++){
+					for (auto nt_:nodes_tree) {
+						if(nt_->id_uav == v_near_nodes[i] && nt_->id_uav != q_min->id_uav){
+							if( nt_->cost > (new_node->cost + costBetweenNodes(*new_node, *nt_)) ){
+								if (obstacleFreeBetweenNodes(*nt_, *new_node)){
+									nt_->parentNode = new_node;
+									nt_->cost = new_node->cost + costBetweenNodes(*new_node, *nt_);
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-		
+		clock_gettime(CLOCK_REALTIME, &finish_rewire);
+		sec_rewire = finish_rewire.tv_sec - start_rewire.tv_sec - 1;
+        msec_rewire = (1000000000 - start_rewire.tv_nsec) + finish_rewire.tv_nsec;
+		time_rewire = (msec_rewire + sec_rewire * 1000000000.0)/1000000000.0;
+
 		int got_goal_aux_ = got_to_goal; 
 		isGoal(q_new);
 		if (got_to_goal != got_goal_aux_){

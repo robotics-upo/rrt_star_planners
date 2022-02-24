@@ -92,7 +92,8 @@ void RandomGlobalPlanner::configParams()
 void RandomGlobalPlanner::configRRTStar()
 {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
-                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function);
+                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
+                    scenario_number, num_pos_initial);
 }
 
 void RandomGlobalPlanner::configTopics()
