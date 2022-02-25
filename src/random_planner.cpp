@@ -267,11 +267,11 @@ int RandomPlanner::computeTreesIndependent()
 		
 		rrtgm.randNodeMarker(q_rand, rand_point_pub_, 1);
 
-
-		is_extend = extendGraph(q_rand);
-		count_loop++;
+		new_solution = false;
+			extendGraph(q_rand);
+			count_loop++;
         clock_gettime(CLOCK_REALTIME, &finish_extend);
-		if(is_extend){ 
+		if(new_solution){ 
 			sec_extend = finish_extend.tv_sec - start_extend.tv_sec - 1;
         	msec_extend = (1000000000 - start_extend.tv_nsec) + finish_extend.tv_nsec;
 			time_extend = (msec_extend + sec_extend * 1000000000.0)/1000000000.0;
@@ -324,11 +324,10 @@ int RandomPlanner::computeTreesIndependent()
 		}
 	}
 	clock_gettime(CLOCK_REALTIME, &finish_rrt);
-	if(is_extend){ 
-		sec_rrt = finish_rrt.tv_sec - start_extend.tv_sec - 1;
-    	msec_rrt = (1000000000 - start_extend.tv_nsec) + finish_rrt.tv_nsec;
-		time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
-	}
+	sec_rrt = finish_rrt.tv_sec - start_extend.tv_sec - 1;
+    msec_rrt = (1000000000 - start_extend.tv_nsec) + finish_rrt.tv_nsec;
+	time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
+	
 	//Save Time RRT* algorithm
 	ofs_time2.open(output_file_time_solutions.c_str(), std::ofstream::app);
     if (ofs_time2.is_open()) 
@@ -563,6 +562,7 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 						  new_node->point_uav.x*step, new_node->point_uav.y*step, new_node->point_uav.z*step);
 				disc_goal = new_node;
 				num_goal_finded++;
+				new_solution = true;
 			}
 		}	
 		else

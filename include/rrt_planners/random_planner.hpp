@@ -371,7 +371,7 @@ public:
 	float time_rrt;
 	int scenario_number , num_pos_initial;
 	std::string path;
-	bool is_extend;
+	bool new_solution;
 
 
 protected:
