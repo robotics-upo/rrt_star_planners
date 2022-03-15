@@ -218,27 +218,27 @@ int RandomPlanner::computeTreesIndependent()
 
 
 	//Save Time for each method in RRT* algorithm
-	output_file_time_methods = path+"rrt_time_methods_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
-	output_file_time_solutions = path+"rrt_time_solutions_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
-    file_time1.open(output_file_time_methods);
-    if(file_time1) 
-        std::cout << output_file_time_methods <<" : File exists !!!!!!!!!! " << std::endl;
-    else {
-		ofs_time1.open(output_file_time_methods.c_str(), std::ofstream::app);
-		ofs_time1 <<"t_rand;t_nearest;t_steer;t_near;t_connect;t_rewire"<<std::endl;
-		ofs_time1.close();
-		std::cout << output_file_time_methods <<" : File doesn't exist !!!!!!!!!! " << std::endl;
-    }
-	file_time2.open(output_file_time_solutions);
-    if(file_time2) 
-        std::cout << output_file_time_solutions <<" : File exists !!!!!!!!!! " << std::endl;
-    else {
-		ofs_time2.open(output_file_time_solutions.c_str(), std::ofstream::app);
-		ofs_time2 <<"t_last_solutions;t_total_iterations;"<<std::endl;
-		ofs_time2.close();
-		std::cout << output_file_time_solutions <<" : File doesn't exist !!!!!!!!!! " << std::endl;
-    }
-	clock_gettime(CLOCK_REALTIME, &start_extend);
+	// output_file_time_methods = path+"rrt_time_methods_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+	// output_file_time_solutions = path+"rrt_time_solutions_analisys_scenario_"+std::to_string(scenario_number)+"_num_pos_initial_"+std::to_string(num_pos_initial)+".txt";	
+    // file_time1.open(output_file_time_methods);
+    // if(file_time1) 
+    //     std::cout << output_file_time_methods <<" : File exists !!!!!!!!!! " << std::endl;
+    // else {
+	// 	ofs_time1.open(output_file_time_methods.c_str(), std::ofstream::app);
+	// 	ofs_time1 <<"t_rand;t_nearest;t_steer;t_near;t_connect;t_rewire"<<std::endl;
+	// 	ofs_time1.close();
+	// 	std::cout << output_file_time_methods <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+    // }
+	// file_time2.open(output_file_time_solutions);
+    // if(file_time2) 
+    //     std::cout << output_file_time_solutions <<" : File exists !!!!!!!!!! " << std::endl;
+    // else {
+	// 	ofs_time2.open(output_file_time_solutions.c_str(), std::ofstream::app);
+	// 	ofs_time2 <<"t_last_solutions;t_total_iterations;"<<std::endl;
+	// 	ofs_time2.close();
+	// 	std::cout << output_file_time_solutions <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+    // }
+	// clock_gettime(CLOCK_REALTIME, &start_extend);
 
 
 
@@ -249,18 +249,18 @@ int RandomPlanner::computeTreesIndependent()
 		
 		RRTNode q_rand;
 		
-    	time_random = time_nearest = time_steer = time_near = time_connect = time_rewire = 0 ;
+    	// time_random = time_nearest = time_steer = time_near = time_connect = time_rewire = 0 ;
 
         
-        clock_gettime(CLOCK_REALTIME, &start_rand);
+        // clock_gettime(CLOCK_REALTIME, &start_rand);
 			if ((count_loop%samp_goal_rate)!=0)
 				q_rand = getRandomNode();	
 			else
 				q_rand = getRandomNode(true);	
-        clock_gettime(CLOCK_REALTIME, &finish_rand);
-		sec_rand = finish_rand.tv_sec - start_rand.tv_sec - 1;
-        msec_rand = (1000000000 - start_rand.tv_nsec) + finish_rand.tv_nsec;
-		time_random = (msec_rand + sec_rand * 1000000000.0)/1000000000.0;
+        // clock_gettime(CLOCK_REALTIME, &finish_rand);
+		// sec_rand = finish_rand.tv_sec - start_rand.tv_sec - 1;
+        // msec_rand = (1000000000 - start_rand.tv_nsec) + finish_rand.tv_nsec;
+		// time_random = (msec_rand + sec_rand * 1000000000.0)/1000000000.0;
  
 		if (debug_rrt)
 			printf(" q_rand = [%f %f %f / %f %f %f] \n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
@@ -270,21 +270,21 @@ int RandomPlanner::computeTreesIndependent()
 		new_solution = false;
 			extendGraph(q_rand);
 			count_loop++;
-        clock_gettime(CLOCK_REALTIME, &finish_extend);
-		if(new_solution){ 
-			sec_extend = finish_extend.tv_sec - start_extend.tv_sec - 1;
-        	msec_extend = (1000000000 - start_extend.tv_nsec) + finish_extend.tv_nsec;
-			time_extend = (msec_extend + sec_extend * 1000000000.0)/1000000000.0;
-		}
+        // clock_gettime(CLOCK_REALTIME, &finish_extend);
+		// if(new_solution){ 
+		// 	sec_extend = finish_extend.tv_sec - start_extend.tv_sec - 1;
+        // 	msec_extend = (1000000000 - start_extend.tv_nsec) + finish_extend.tv_nsec;
+		// 	time_extend = (msec_extend + sec_extend * 1000000000.0)/1000000000.0;
+		// }
 
 
 		//Save Time for each method in RRT* algorithm
-		ofs_time1.open(output_file_time_methods.c_str(), std::ofstream::app);
-    	if (ofs_time1.is_open()) 
-    	    ofs_time1 << time_random <<";" << time_nearest <<";" << time_steer <<";" << time_near <<";" << time_connect <<";" << time_rewire <<";" << std::endl ;
-    	else 
-    	    std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
-    	ofs_time1.close();
+		// ofs_time1.open(output_file_time_methods.c_str(), std::ofstream::app);
+    	// if (ofs_time1.is_open()) 
+    	//     ofs_time1 << time_random <<";" << time_nearest <<";" << time_steer <<";" << time_near <<";" << time_connect <<";" << time_rewire <<";" << std::endl ;
+    	// else 
+    	//     std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
+    	// ofs_time1.close();
 
 
 
@@ -323,18 +323,17 @@ int RandomPlanner::computeTreesIndependent()
 				printf("\n\t\t       Planner (%s) :: computeTreeIndependent: Starting new Loop      \n",planner_type.c_str());
 		}
 	}
-	clock_gettime(CLOCK_REALTIME, &finish_rrt);
-	sec_rrt = finish_rrt.tv_sec - start_extend.tv_sec - 1;
-    msec_rrt = (1000000000 - start_extend.tv_nsec) + finish_rrt.tv_nsec;
-	time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
-	
+	// clock_gettime(CLOCK_REALTIME, &finish_rrt);
+	// sec_rrt = finish_rrt.tv_sec - start_extend.tv_sec - 1;
+    // msec_rrt = (1000000000 - start_extend.tv_nsec) + finish_rrt.tv_nsec;
+	// time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
 	//Save Time RRT* algorithm
-	ofs_time2.open(output_file_time_solutions.c_str(), std::ofstream::app);
-    if (ofs_time2.is_open()) 
-        ofs_time2 << time_extend  <<";" << time_rrt <<";" << std::endl ;
-    else 
-        std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
-    ofs_time2.close();
+	// ofs_time2.open(output_file_time_solutions.c_str(), std::ofstream::app);
+    // if (ofs_time2.is_open()) 
+    //     ofs_time2 << time_extend  <<";" << time_rrt <<";" << std::endl ;
+    // else 
+    //     std::cout << "Couldn't be open the output data file for time initial planning ugv" << std::endl;
+    // ofs_time2.close();
 
 
 
@@ -434,12 +433,12 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		RRTNode q_new;	//Take the new node value before to save it as a node in the list
 
 		
-        clock_gettime(CLOCK_REALTIME, &start_nearest);
+        // clock_gettime(CLOCK_REALTIME, &start_nearest);
 			RRTNode* q_nearest = getNearestNode(q_rand_); 
-        clock_gettime(CLOCK_REALTIME, &finish_nearest);
-		sec_nearest = finish_nearest.tv_sec - start_nearest.tv_sec - 1;
-        msec_nearest = (1000000000 - start_nearest.tv_nsec) + finish_nearest.tv_nsec;
-		time_nearest = (msec_nearest + sec_nearest * 1000000000.0)/1000000000.0;
+        // clock_gettime(CLOCK_REALTIME, &finish_nearest);
+		// sec_nearest = finish_nearest.tv_sec - start_nearest.tv_sec - 1;
+        // msec_nearest = (1000000000 - start_nearest.tv_nsec) + finish_nearest.tv_nsec;
+		// time_nearest = (msec_nearest + sec_nearest * 1000000000.0)/1000000000.0;
 		
 		rrtgm.randNodeMarker(*q_nearest, nearest_point_pub_, 0);
 
@@ -448,12 +447,12 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			q_nearest->length_cat, q_nearest->catenary? "true" : "false");
 
 		
-        clock_gettime(CLOCK_REALTIME, &start_steer);
+        // clock_gettime(CLOCK_REALTIME, &start_steer);
 			bool exist_q_new_ = steering(*q_nearest, q_rand_, step_steer, q_new);
-		clock_gettime(CLOCK_REALTIME, &finish_steer);
-		sec_steer = finish_steer.tv_sec - start_steer.tv_sec - 1;
-        msec_steer = (1000000000 - start_steer.tv_nsec) + finish_steer.tv_nsec;
-		time_steer = (msec_steer + sec_steer * 1000000000.0)/1000000000.0;
+		// clock_gettime(CLOCK_REALTIME, &finish_steer);
+		// sec_steer = finish_steer.tv_sec - start_steer.tv_sec - 1;
+        // msec_steer = (1000000000 - start_steer.tv_nsec) + finish_steer.tv_nsec;
+		// time_steer = (msec_steer + sec_steer * 1000000000.0)/1000000000.0;
 
 		if (!exist_q_new_){
 			if ((count_loop%samp_goal_rate)==0)
@@ -487,12 +486,12 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			printf(" q_min = [%f %f %f / %f %f %f] \n", q_min->point.x*step,q_min->point.y*step,q_min->point.z*step,q_min->point_uav.x*step,q_min->point_uav.y*step,q_min->point_uav.z*step);
 
 		
-        clock_gettime(CLOCK_REALTIME, &start_near);
+        // clock_gettime(CLOCK_REALTIME, &start_near);
 			std::vector<int> v_near_nodes = getNearNodes(q_new, radius_near_nodes) ;
-		clock_gettime(CLOCK_REALTIME, &finish_near);
-		sec_near = finish_near.tv_sec - start_near.tv_sec - 1;
-        msec_near = (1000000000 - start_near.tv_nsec) + finish_near.tv_nsec;
-		time_near = (msec_near + sec_near * 1000000000.0)/1000000000.0;
+		// clock_gettime(CLOCK_REALTIME, &finish_near);
+		// sec_near = finish_near.tv_sec - start_near.tv_sec - 1;
+        // msec_near = (1000000000 - start_near.tv_nsec) + finish_near.tv_nsec;
+		// time_near = (msec_near + sec_near * 1000000000.0)/1000000000.0;
 
 		updateKdtreeNode(q_new); 	//KdTree is updated after get Near Nodes because to not take it own node as a near node
 		updateKdtreeUGV(q_new);
@@ -500,7 +499,7 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		bool new_parentNode_ = false;
 
 		
-        clock_gettime(CLOCK_REALTIME, &start_connect);
+        // clock_gettime(CLOCK_REALTIME, &start_connect);
 			// I . Open near nodes and connected with minimum accumulated cost
 			if (planner_type == "rrt_star"){
 				for (size_t i = 0 ; i < v_near_nodes.size(); i++){
@@ -518,10 +517,10 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 					}
 				}
 			}
-		clock_gettime(CLOCK_REALTIME, &finish_connect);
-		sec_connect = finish_connect.tv_sec - start_connect.tv_sec - 1;
-        msec_connect = (1000000000 - start_connect.tv_nsec) + finish_connect.tv_nsec;
-		time_connect = (msec_connect + sec_connect * 1000000000.0)/1000000000.0;
+		// clock_gettime(CLOCK_REALTIME, &finish_connect);
+		// sec_connect = finish_connect.tv_sec - start_connect.tv_sec - 1;
+        // msec_connect = (1000000000 - start_connect.tv_nsec) + finish_connect.tv_nsec;
+		// time_connect = (msec_connect + sec_connect * 1000000000.0)/1000000000.0;
 		if (new_parentNode_ ){
 			q_new.parentNode = q_min;
 			updateParamsNode(q_new);
@@ -530,7 +529,7 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		*new_node = q_new;
 
 		
-        clock_gettime(CLOCK_REALTIME, &start_rewire);
+        // clock_gettime(CLOCK_REALTIME, &start_rewire);
 			// II . Rewire Proccess for UGV
 			if (planner_type == "rrt_star"){
 				for (size_t i = 0 ; i < v_near_nodes.size(); i++){
@@ -546,10 +545,10 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 					}
 				}
 			}
-		clock_gettime(CLOCK_REALTIME, &finish_rewire);
-		sec_rewire = finish_rewire.tv_sec - start_rewire.tv_sec - 1;
-        msec_rewire = (1000000000 - start_rewire.tv_nsec) + finish_rewire.tv_nsec;
-		time_rewire = (msec_rewire + sec_rewire * 1000000000.0)/1000000000.0;
+		// clock_gettime(CLOCK_REALTIME, &finish_rewire);
+		// sec_rewire = finish_rewire.tv_sec - start_rewire.tv_sec - 1;
+        // msec_rewire = (1000000000 - start_rewire.tv_nsec) + finish_rewire.tv_nsec;
+		// time_rewire = (msec_rewire + sec_rewire * 1000000000.0)/1000000000.0;
 
 		int got_goal_aux_ = got_to_goal; 
 		isGoal(q_new);

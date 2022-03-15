@@ -3,8 +3,8 @@
     <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
 
-    <arg name="graph_traj_in_rviz" default="false"/>
-    <arg name="pause_execution" default="false"/>
+    <arg name="graph_traj_in_rviz" default="true"/>
+    <arg name="pause_execution" default="true"/>
     <arg name="write_data_files" default="true"/>
     <arg name="use_distance_function" default="true"/>  
     <arg name="pc_user_name"    default="simon"/>     
@@ -31,8 +31,8 @@
     <arg name="files_results"    default="results_marsupial_optimizer/"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
-    <arg name="n_iter_rrt"          default="10000"/>
-    <arg name="n_loop_rrt"          default="2"/>
+    <arg name="n_iter_rrt"          default="500"/>
+    <arg name="n_loop_rrt"          default="100"/>
     <arg name="radius_near_nodes"   default="1.0"/> 
     <arg name="goal_gap_m"          default="0.8"/>
     <arg name="step_steer"          default="0.4"/>
@@ -159,7 +159,7 @@
 
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
 
-        <param name="n_iter_opt"    value="0"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
             
         <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
@@ -179,6 +179,7 @@
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="path"   value="/home/$(arg pc_user_name)/"/>     
         <param name="pc_user_name"  value="$(arg pc_user_name)"/>     
+        <param name="path_mission_file"  value="$(find marsupial_mission_interface)/cfg/optimized_path/"/>     
         <param name="files_results"   value="$(arg files_results)"/>     
         <param name="files_residuals"   value="$(arg files_residuals)"/>     
 
