@@ -15,7 +15,7 @@ RandomGlobalPlanner::RandomGlobalPlanner(std::string node_name_)
 
     // std::string node_name_grid_ = "grid3D_node";
 	grid_3D = new Grid3d(node_name);
-    
+
     configParams();
     configTopics();
     configServices();
@@ -70,6 +70,7 @@ void RandomGlobalPlanner::configParams()
 
   	nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
 	nh->param("path", path, (std::string) "~/");
+	nh->param("map_file", map_file, (std::string) "my_map");
 
     nh->param("sample_mode", sample_mode, (int)0);
     nh->param("do_steer_ugv", do_steer_ugv, (bool)true);
@@ -81,7 +82,6 @@ void RandomGlobalPlanner::configParams()
     nh->param("use_distance_function", use_distance_function, (bool)true); //Only related with tether and UAV distance
      
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
-    nh->param("scenario_number", scenario_number,(int)1);
 	nh->param("num_pos_initial", num_pos_initial,(int)1);
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
@@ -93,7 +93,7 @@ void RandomGlobalPlanner::configRRTStar()
 {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
                     nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                    scenario_number, num_pos_initial,path);
+                    map_file, path);
 }
 
 void RandomGlobalPlanner::configTopics()
@@ -329,8 +329,8 @@ bool RandomGlobalPlanner::calculatePath()
                 std::ofstream ofs_ugv, ofs_uav, ofs_time;
                 std::ifstream ifs_time;
                 std::string output_file_ugv, output_file_uav, time_random_planner;
-	            output_file_ugv = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UGV"+".txt";
-	            output_file_uav = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
+	            output_file_ugv = path+"results"+"_stage_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UGV"+".txt";
+	            output_file_uav = path+"results"+"_stage_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
 
                 float time_compute_GP = (milliseconds + seconds * 1000000000.0)/1000000000.0;
                 
@@ -540,7 +540,7 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 			
 			int n_interval_ = ceil(D_/min_distance_add_new_point);	 
 
-            // printf("D_ugv_=%f , D_uav_=%f , n_interval_=%i/%lu/%lu\n",D_ugv_, D_uav_,n_interval_,i,trajectory_.points.size());
+            printf("D_ugv_=%f , D_uav_=%f , n_interval_=%i/%lu/%lu\n",D_ugv_, D_uav_,n_interval_,i,trajectory_.points.size());
 
 			for(int j=0 ; j < n_interval_ ; j++){
 				// Get position and rotation vector for UGV

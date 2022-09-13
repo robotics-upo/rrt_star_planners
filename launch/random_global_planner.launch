@@ -3,13 +3,13 @@
     <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
 
-    <arg name="graph_traj_in_rviz" default="true"/>
-    <arg name="pause_execution" default="true"/>
-    <arg name="write_data_files" default="true"/>
-    <arg name="use_distance_function" default="true"/>  
+    <arg name="graph_traj_in_rviz" default="false"/>
+    <arg name="pause_execution" default="false"/>
+    <arg name="write_data_files" default="false"/>
+    <arg name="use_distance_function" default="false"/>  
     <arg name="pc_user_name"    default="simon"/>     
 
-    <arg name="write_data_residual" default="true"/> # Parameter to write the residual value for each optimizer Functor
+    <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
 
     <arg name="world_frame" default="map"/> 
     <arg name="ugv_frame" default="ugv_base_link"/> 
@@ -25,17 +25,17 @@
     <arg name="length_tether_max"    default="20.0"/>   
 
     <!-- To wirte Files -->
-    <arg name="scenario_number"        default="1"/>
+    <arg name="map_file"        default="stage_1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
     <arg name="files_results"    default="results_marsupial_optimizer/"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
-    <arg name="n_iter_rrt"          default="500"/>
+    <arg name="n_iter_rrt"          default="100"/>
     <arg name="n_loop_rrt"          default="100"/>
-    <arg name="radius_near_nodes"   default="1.0"/> 
-    <arg name="goal_gap_m"          default="0.8"/>
-    <arg name="step_steer"          default="0.4"/>
+    <arg name="radius_near_nodes"   default="1.2"/> 
+    <arg name="goal_gap_m"          default="1.4"/>
+    <arg name="step_steer"          default="0.2"/>
     <arg name="min_l_steer_ugv"     default="8.0"/>
     <arg name="coupled"             default="true"/>
     <arg name="samp_goal_rate"      default="15"/>
@@ -44,12 +44,11 @@
     <!-- Global Planner: RRT* -->
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
-        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
+        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <param name="path"   value="/home/$(arg pc_user_name)/$(arg files_results)"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
-        <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="planner_type" value="$(arg planner_type)"/> 
         <param name="world_frame" value="$(arg world_frame)"/> 
         <param name="ugv_base_frame" value="$(arg ugv_frame)"/> 
@@ -82,7 +81,8 @@
         <param name="w_nearest_uav"    value="6"/>   # catenary length 0.00150
         <param name="w_nearest_smooth"    value="10"/>   # catenary Z collision 0.00105
         <!-- For Grid3D -->
-        <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
+        <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
+        <param name="map_file"   value="$(arg map_file)"/>
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>
@@ -90,7 +90,7 @@
     <!-- Local Planner: Optimizer Ceres-->
     <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen">#  launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
-        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
+        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <remap from="/Navigation" to="Navigation"/>
         <remap from="/octomap_binary_local" to="/octomap_binary"/>
@@ -156,12 +156,9 @@
         <!-- <param name="w_eta_1"    value="0.0075"/>   # catenary Obstacles collision  -->
         <param name="w_eta_1"    value="0.0250"/>   # catenary Obstacles collision 
         <param name="w_eta_2"    value="0.1000"/>   # catenary length 0.00150
-
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
-
-        <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="0"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
-            
         <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
         <param name="distance_obstacle_uav"         value="1.2"/> <!-- bound distance UAV to obstacles [m]-->
         <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
@@ -175,7 +172,7 @@
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
-        <param name="scenario_number"    value="$(arg scenario_number)"/>     
+        <!-- <param name="scenario_number"    value="$(arg scenario_number)"/>      -->
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="path"   value="/home/$(arg pc_user_name)/"/>     
         <param name="pc_user_name"  value="$(arg pc_user_name)"/>     
@@ -184,7 +181,7 @@
         <param name="files_residuals"   value="$(arg files_residuals)"/>     
 
         <!-- For Grid3D -->
-        <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
+        <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>

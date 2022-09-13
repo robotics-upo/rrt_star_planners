@@ -199,8 +199,8 @@ namespace PathPlanners
             //These two flags can be configured as parameters
             bool showConfig, debug, debug_rrt, nodes_marker_debug;
 
-	        std::string path, name_output_file;
-	        int scenario_number, num_pos_initial;
+	        std::string path, name_output_file, map_file;
+	        int num_pos_initial;
             int countImpossible = 0;
 
             //Action client stuff
