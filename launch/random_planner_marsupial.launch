@@ -4,7 +4,7 @@
     <arg name="planner_type"        default="rrt_star"/>
     <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/>
     <arg name="num_pos_initial"         default="1"/>
-    <arg name="pos_uav_above_ugv"     default="1.0"/> #meters UAV above UGV
+    <arg name="pos_uav_above_ugv"     default="3.0"/> #meters UAV above UGV
     <arg name="using_pc"    default="true"/> 
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="marsupial"/>
@@ -42,12 +42,12 @@
         <param name="ugv_base_frame" value="$(arg ugv_base_frame)"/>
     </include>  -->
     <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
-        <arg name="map_file"  value="thermal_central_obstacles"/>    
+        <arg name="map_file"  value="$(arg map)_obstacles"/>    
         <arg name="node_name"  value="octomap_server_obstacles"/>  
         <arg name="published_pc"  value="/region_growing_obstacles_pc_map"/>   
     </include>
     <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
-        <arg name="map_file"  value="thermal_central_traversability"/>   
+        <arg name="map_file"  value="$(arg map)_traversability"/>   
         <arg name="node_name"  value="octomap_server_traversability"/>   
         <arg name="published_pc"  value="/region_growing_traversability_pc_map"/>   
     </include>

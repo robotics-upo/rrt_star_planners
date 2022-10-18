@@ -73,8 +73,8 @@
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>    
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
-        <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_obstacle_uav"         value="0.5"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
+        <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
+        <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
 
         <param name="w_nearest_ugv"    value="12"/>   # catenary Obstacles collision 0.00100

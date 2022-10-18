@@ -216,7 +216,6 @@ int RandomPlanner::computeTreesIndependent()
 
 
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
-      	
 		// printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\n",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
 		printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
 		
@@ -548,6 +547,7 @@ RRTNode RandomPlanner::getRandomNode(bool go_to_goal_)
 				randomState_.point_uav.y = distr_y_uav(eng);
 				randomState_.point_uav.z = distr_z_uav(eng);
 				finded_node = checkNodeFeasibility(randomState_,true);
+
 			}while(finded_node == false);		
 		}
 		else{
@@ -1308,6 +1308,7 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 	else{
 		// printf("isInside = %s\n",isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)? "true" : "false");
 		// printf("pf_ = [%i %i %i]\n",pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z);
+		// printf("step[%f] pf_ : [%f %f %f]\n", step, pf_.point_uav.x*step, pf_.point_uav.y*step, pf_.point_uav.z*step);
 		if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
 			// Eigen::Vector3d obs_to_uav, pos_uav;
 			geometry_msgs::Vector3 obs_to_uav, pos_uav; 
@@ -1799,6 +1800,9 @@ bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)
 
 bool RandomPlanner::setInitialPositionIndependent(RRTNode n_)
 {
+	// printf("isUGVInside = %s\n",isUGVInside(n_.point.x, n_.point.y, n_.point.z)? "true" : "false");
+	// printf("isInside = %s\n",isInside(n_.point_uav.x, n_.point_uav.y, n_.point_uav.z)? "true" : "false");
+	
 	if (isUGVInside(n_.point.x, n_.point.y, n_.point.z) && isInside(n_.point_uav.x, n_.point_uav.y, n_.point_uav.z)){
 		RRTNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(n_.point.x, n_.point.y, n_.point.z)];
 
@@ -1850,6 +1854,7 @@ bool RandomPlanner::setInitialPositionIndependent(RRTNode n_)
 	}
 	else{
 		disc_initial = NULL;
+		// ROS_ERROR("First position not posible to set");
 		return false;
 	}
 }
