@@ -2,7 +2,8 @@
 
     <!-- Loading Arguments -->
     <arg name="planner_type"        default="rrt_star"/>
-    <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/>
+    <arg name="map"        default="thermal_central_complete"/>
+    <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->
     <arg name="num_pos_initial"         default="1"/>
     <arg name="pos_uav_above_ugv"     default="3.0"/> #meters UAV above UGV
     <arg name="using_pc"    default="true"/> 
@@ -17,6 +18,7 @@
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
     <arg name="pos_reel_z"    default="0.5"/> #position reel on UGV
     <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
+    <arg name="use_analytical_method"   default="false"/>
 
     <!-- Publishing UGV and UAV tf -->
     <node pkg="marsupial_optimizer" type="optimizer_publisher_tf_node" name="optimizer_publisher_tf_node" output="screen">
@@ -61,6 +63,7 @@
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
         <arg name="pc_user_name" value="$(arg pc_user)" /> 
+        <arg name="use_analytical_method"   value="$(arg use_analytical_method)"/>
     </include>    
 
     <!-- RViz -->

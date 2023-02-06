@@ -45,8 +45,11 @@
 #include "rrt_planners/random_graph_markers.h"
 
 #include "misc/catenary_solver_ceres.hpp"
-#include "misc/near_neighbor.hpp"
-#include "misc/grid3d.hpp"
+
+#include "catenary_checker/near_neighbor.hpp"
+#include "catenary_checker/grid3d.hpp"
+#include "catenary_checker/bisection_catenary_3D.h"
+#include "catenary_checker/catenary_checker_manager.h"
 
 
 #define PRINTF_REGULAR "\x1B[0m"
@@ -113,7 +116,7 @@ public:
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
 			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
 			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
-			bool use_distance_function_, std::string map_file_, std::string path_);
+			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_analytical_method_);
 
   	~RandomPlanner();
   
@@ -311,6 +314,8 @@ public:
 	void clearLinesGPMarker();
 	double getPointDistanceFullMap(bool use_distance_function, geometry_msgs::Vector3 p_);
 
+	CatenaryCheckerManager *ccm;
+
 	/** Variables **/
 	float step; // Resolution of the Matrix and its inverse
 	float step_inv;
@@ -368,8 +373,14 @@ public:
 	struct timespec start_rrt, finish_rrt;
 	float sec_rrt, msec_rrt;
 	float time_rrt;
+	struct timespec start_cat, finish_cat;
+	float sec_cat, msec_cat;
+	double time_cat;
 	std::string path;
 	bool new_solution;
+	std::vector<double> v_length_cat, v_min_dist_obs_cat, v_time_cat;
+	bool get_catenary_data, use_analytical_method;
+	std::string catenary_file;
 
 
 protected:
@@ -384,7 +395,7 @@ protected:
 	std::vector<float> getNearestUAVNode(const RRTNode &q_new_);
 	// int getNearestUGVNode(const RRTNode &q_new_);
 	void getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_);
-	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
+	// bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
 	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
 	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
 	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Point> &points_catenary_);

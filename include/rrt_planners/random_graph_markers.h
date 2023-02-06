@@ -15,7 +15,7 @@
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
 #include "misc/catenary_solver_ceres.hpp"
-#include "misc/bisection_catenary_3D.h"
+#include "catenary_checker/bisection_catenary_3D.h"
 #include <rrt_planners/RRTNode.h>
 
 using namespace std;

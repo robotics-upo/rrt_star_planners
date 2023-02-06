@@ -15,12 +15,12 @@ RandomGlobalPlanner::RandomGlobalPlanner(std::string node_name_)
 
     // std::string node_name_grid_ = "grid3D_node";
 	grid_3D = new Grid3d(node_name);
-
+	CheckCM = new CatenaryCheckerManager(node_name);
+    
     configParams();
     configTopics();
     configServices();
     configRRTStar();
-    configRandomPlanner();
 }
 
 //This function gets parameter from param server at startup if they exists, if not it passes default values
@@ -62,6 +62,8 @@ void RandomGlobalPlanner::configParams()
     nh->param("distance_obstacle_uav", distance_obstacle_uav, (double)1.0);
     nh->param("distance_catenary_obstacle", distance_catenary_obstacle, (double)0.1);
 
+    nh->param("length_tether_max", length_tether_max, (double)10.0);
+
 	nh->param("min_distance_add_new_point", min_distance_add_new_point, (double)1.0);
 
 	nh->param("w_nearest_ugv", w_nearest_ugv, (double)1.0);
@@ -80,7 +82,12 @@ void RandomGlobalPlanner::configParams()
     nh->param("nodes_marker_debug", nodes_marker_debug, (bool)true);
     nh->param("pause_execution", pause_execution, (bool)true);
     nh->param("use_distance_function", use_distance_function, (bool)true); //Only related with tether and UAV distance
-     
+    
+    nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
+    nh->param("catenary_file", catenary_file, (std::string) "catenary_file");
+    nh->param("use_analytical_method", use_analytical_method, (bool)false);
+    catenary_analysis_file = path + catenary_file + ".txt";
+
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
 	nh->param("num_pos_initial", num_pos_initial,(int)1);
 
@@ -93,7 +100,12 @@ void RandomGlobalPlanner::configRRTStar()
 {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
                     nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                    map_file, path);
+                    map_file, path, get_catenary_data, catenary_analysis_file, use_analytical_method);
+    configRandomPlanner();
+
+
+    CheckCM->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, map_resolution, use_analytical_method);
+
 }
 
 void RandomGlobalPlanner::configTopics()
@@ -123,6 +135,7 @@ void RandomGlobalPlanner::configServices()
 
     make_plan_server_ptr->start();
     execute_path_client_ptr->waitForServer();
+
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D: Action client from global planner ready");
 }
@@ -327,7 +340,6 @@ bool RandomGlobalPlanner::calculatePath()
 
             if (write_data_for_analysis){
                 std::ofstream ofs_ugv, ofs_uav, ofs_time;
-                std::ifstream ifs_time;
                 std::string output_file_ugv, output_file_uav, time_random_planner;
 	            output_file_ugv = path+"results"+"_stage_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UGV"+".txt";
 	            output_file_uav = path+"results"+"_stage_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
@@ -392,7 +404,7 @@ bool RandomGlobalPlanner::calculatePath()
                     flg_replan_status.data = false;
                     replan_status_pub.publish(flg_replan_status);
                 }
-                    ret = true;
+                ret = true;
             }
             else
                 countImpossible++;
@@ -451,12 +463,6 @@ bool RandomGlobalPlanner::setStart()
     q_start_uav_.quaternion.y = position_uav_.transform.rotation.y;
     q_start_uav_.quaternion.z = position_uav_.transform.rotation.z;
     q_start_uav_.header = position_uav_.header;
-    // printf("setStart position:  ugv[%f %f %f / %f %f %f %f]  uav[%f %f %f / %f %f %f %f]\n",start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z, 
-    // q_start_ugv_.quaternion.x , q_start_ugv_.quaternion.y, q_start_ugv_.quaternion.z, q_start_ugv_.quaternion.w, start_uav_.vector.x, start_uav_.vector.y, start_uav_.vector.z, 
-    // q_start_uav_.quaternion.x, q_start_uav_.quaternion.y, q_start_uav_.quaternion.z, q_start_uav_.quaternion.w);
-
-    // if (start_ugv_.vector.z <= ws_z_min)
-    //     start_ugv_.vector.z = ws_z_min + map_v_inflaction + map_resolution;
 
     if (randPlanner.setValidInitialPositionMarsupial(start_ugv_.vector,start_uav_.vector, q_start_ugv_.quaternion, q_start_uav_.quaternion)){
         ROS_INFO(PRINTF_MAGENTA "Global Planner 3D: Found a free initial UGV position): [%.2f, %.2f, %.2f]", start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z);
@@ -566,68 +572,22 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
                     std::vector<geometry_msgs::Point> p_catenary_;
                     p_reel_ = getReelNode(t_.transforms[0].translation.x ,t_.transforms[0].translation.y ,t_.transforms[0].translation.z,
                                         t_.transforms[0].rotation.x, t_.transforms[0].rotation.y, t_.transforms[0].rotation.z, t_.transforms[0].rotation.w);
-                    
-                    double dist_init_final_ = sqrt(pow(p_reel_.x - t_.transforms[1].translation.x,2) + 
-                                                pow(p_reel_.y - t_.transforms[1].translation.y,2) + 
-                                                pow(p_reel_.z - t_.transforms[1].translation.z,2));
-                    double delta_ = 0.0;	//Initial Value
+                    p_final_.x = t_.transforms[1].translation.x; 
+                    p_final_.y = t_.transforms[1].translation.y;
+                    p_final_.z = t_.transforms[1].translation.z;
+
                     bool check_catenary = true;
-                    bool increase_catenary;
+                    bool look_for_catenary = true;
                     double l_cat_;
-                    double security_dis_ca_ = distance_catenary_obstacle;
                     
                     do{
-                        increase_catenary = false;
-                        p_catenary_.clear();
-                        l_cat_ = dist_init_final_* (1.01 + delta_);
-                        if (l_cat_ > length_tether_max){
-                            check_catenary = false;
-                            break;
-                        }
-                        
-                        bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, t_.transforms[1].translation.x, 
-                                                                t_.transforms[1].translation.y, t_.transforms[1].translation.z, false);
-			            bc.getPointCatenary3D(p_catenary_);
-
-                        double d_min_point_cat = 100000;
-                        if (p_catenary_.size() > 5){
-                            for (size_t i = 0 ; i < p_catenary_.size() ; i++){
-                                geometry_msgs::Point point_cat;
-                                Eigen::Vector3d p_in_cat_, obs_to_cat_;
-                                if (p_catenary_[i].z < ws_z_min*map_resolution + ((1*map_resolution)+security_dis_ca_)){
-                                    check_catenary = false;
-                                    break;
-                                }
-                                p_in_cat_.x() = p_catenary_[i].x;
-                                p_in_cat_.y() = p_catenary_[i].y;
-                                p_in_cat_.z() = p_catenary_[i].z;
-                                double dist_cat_obs;
-                                bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x(),p_in_cat_.y(),p_in_cat_.z());
-                                if(is_into_)
-                                    dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x(),(double)p_in_cat_.y(),(double)p_in_cat_.z()) ;
-                                else
-                                    dist_cat_obs = -1.0;
-                                if (d_min_point_cat > dist_cat_obs){
-                                    d_min_point_cat = dist_cat_obs;
-                                }
-                                if (dist_cat_obs < security_dis_ca_){
-                                    delta_ = delta_ + 0.005;
-                                    increase_catenary = true;
-                                    break;
-                                }
-                                point_cat.x = p_catenary_[i].x;
-                                point_cat.y = p_catenary_[i].y;
-                                point_cat.z = p_catenary_[i].z;
-                            }
-                            if (check_catenary && !increase_catenary){
-                                check_catenary = false;
-                            }
-                        }
-                        else{
-                            check_catenary = false;
-                        }
-                    }while (check_catenary);
-                    length_catenary.push_back(l_cat_);
+                        printf("p_reel_[%f %f %f] p_final_[%f %f %f] p_catenary_[%lu] \n",p_reel_.x,p_reel_.y,p_reel_.z,p_final_.x,p_final_.y,p_final_.z,p_catenary_.size());
+                        check_catenary = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
+                        look_for_catenary = !check_catenary;
+                        l_cat_ = CheckCM->length_cat_final;
+                        length_catenary.push_back(l_cat_);
+                        printf("I am here \n");
+                    }while (!look_for_catenary);
                 }
                 else{
                     length_catenary.push_back(l_catenary_[j_]);
@@ -677,10 +637,8 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
     //Get length catenary
     length_catenary.push_back(l_catenary_[0]);
 
-    // printf("I : size trajectory_=%lu l_catenary=%lu\n",trajectory_.points.size(),l_catenary_.size()); 
     trajectory_.points.clear();
     trajectory_ = trajectory_aux_;
-    // printf("II : size trajectory_=%lu l_catenary=%lu\n",trajectory_.points.size(),length_catenary.size()); 
 }
 
 geometry_msgs::Point RandomGlobalPlanner::getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_)
@@ -702,7 +660,6 @@ geometry_msgs::Point RandomGlobalPlanner::getReelNode( double x_, double y_, dou
 
 void RandomGlobalPlanner::configRandomPlanner()
 {
-    nh->param("length_tether_max", length_tether_max, (double)10.0);
 
     geometry_msgs::Vector3 pos_ugv_;
     geometry_msgs::Quaternion rot_ugv_;
@@ -718,6 +675,7 @@ void RandomGlobalPlanner::configRandomPlanner()
 
    	ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  length_tether_max: %f , sample_mode=%i !!", length_tether_max, sample_mode);
 	ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  is_coupled=[%s] debug_rrt=[%s] debug_msgs=[%s]", coupled? "true" : "false", debug_rrt? "true" : "false", debug? "true" : "false");
+
 }
 
 void RandomGlobalPlanner::clearLinesGPMarker()

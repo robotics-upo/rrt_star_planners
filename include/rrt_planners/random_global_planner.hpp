@@ -59,11 +59,14 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 
-#include "misc/bisection_catenary_3D.h"
-#include "misc/grid3d.hpp"
 #include "misc/catenary_solver_ceres.hpp"
-#include "misc/near_neighbor.hpp"
+#include "catenary_checker/near_neighbor.hpp"
 #include "rrt_planners/random_graph_markers.h"
+
+#include "catenary_checker/catenary_checker_manager.h"
+#include "catenary_checker/grid3d.hpp"
+#include "catenary_checker/bisection_catenary_3D.h"
+
 
 namespace PathPlanners
 {
@@ -159,6 +162,8 @@ namespace PathPlanners
             
             geometry_msgs::Point getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_);
 
+	        CatenaryCheckerManager *CheckCM;
+
             /*              Class Variables                 */
             ros::NodeHandlePtr nh;
 
@@ -249,12 +254,14 @@ namespace PathPlanners
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
             double w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth;
 
-            bool coupled;
+            bool coupled, get_catenary_data_;
             
             double min_distance_add_new_point;
             std::vector<double> length_catenary;
 
-            std::string planner_type;
+            bool get_catenary_data, use_analytical_method;
+            std::string planner_type, catenary_file, catenary_analysis_file;
+
     }; //class RandomGlobalPlanner
 
 } //namespace PathPlanners
