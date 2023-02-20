@@ -75,7 +75,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.03999999910593033
       Style: Flat Squares
-      Topic: /arco_os1_cloud_node/points_non_dense
+      Topic: /os1_cloud_node/points_non_dense
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -83,7 +83,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 9.074999809265137
+        Max Value: 10.925000190734863
         Min Value: 0.02500000037252903
         Value: true
       Axis: Z
@@ -103,7 +103,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.05000000074505806
       Style: Flat Squares
-      Topic: /arco/dll/map_point_cloud
+      Topic: /dll_node/map_point_cloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -113,15 +113,27 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        arco/base_link:
+        base_link:
           Value: true
-        arco/imu:
+        camera_depth_frame:
           Value: true
-        arco/odom:
+        camera_depth_optical_frame:
           Value: true
-        arco/os1_lidar:
+        camera_link:
+          Value: true
+        camera_rgb_frame:
+          Value: true
+        camera_rgb_optical_frame:
           Value: true
         map:
+          Value: true
+        odom:
+          Value: true
+        os1_imu:
+          Value: true
+        os1_lidar:
+          Value: true
+        os1_sensor:
           Value: true
       Marker Alpha: 1
       Marker Scale: 5
@@ -131,12 +143,20 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          arco/odom:
-            arco/base_link:
-              arco/imu:
-                {}
-              arco/os1_lidar:
-                {}
+          odom:
+            base_link:
+              camera_link:
+                camera_depth_frame:
+                  camera_depth_optical_frame:
+                    {}
+                camera_rgb_frame:
+                  camera_rgb_optical_frame:
+                    {}
+              os1_sensor:
+                os1_imu:
+                  {}
+                os1_lidar:
+                  {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -167,7 +187,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 11.53111457824707
+      Distance: 148.7866668701172
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1

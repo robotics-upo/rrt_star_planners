@@ -259,7 +259,7 @@ namespace PathPlanners
             double min_distance_add_new_point;
             std::vector<double> length_catenary;
 
-            bool get_catenary_data, use_analytical_method;
+            bool get_catenary_data, use_parable;
             std::string planner_type, catenary_file, catenary_analysis_file;
 
     }; //class RandomGlobalPlanner

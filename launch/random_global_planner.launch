@@ -6,7 +6,7 @@
     <arg name="graph_traj_in_rviz" default="false"/>
     <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="false"/>
-    <arg name="use_distance_function" default="false"/>  
+    <arg name="use_distance_function" default="true"/>  
     <arg name="pc_user_name"    default="simon"/>     
 
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
@@ -32,7 +32,7 @@
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
     <arg name="n_iter_rrt"          default="100"/>
-    <arg name="n_loop_rrt"          default="100"/>
+    <arg name="n_loop_rrt"          default="5"/>
     <arg name="radius_near_nodes"   default="1.2"/> 
     <arg name="goal_gap_m"          default="1.4"/>
     <arg name="step_steer"          default="0.2"/>
@@ -47,11 +47,11 @@
     <arg name="dbscan_theta" default="0.1"/>
     <arg name="use_dbscan_lines" default="false"/>
     <arg name="dbscan_min_points" default="5"/>
-    <arg name="use_analytical_method"   default="false"/>
+    <arg name="use_parable"   default="false"/>
 
 
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" launch-prefix="gdb -ex run --args">
+    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen"> #launch-prefix="gdb -ex run --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
@@ -95,7 +95,7 @@
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
         <!-- Catenaty Checker-->
-        <param name="use_analytical_method"   value="$(arg use_analytical_method)"/>
+        <param name="use_parable"   value="$(arg use_parable)"/>
         <param name="plane_dist" value="$(arg plane_dist)"/>
         <param name="dbscan_min_points" value="$(arg dbscan_min_points)"/>
         <param name="dbscan_epsilon" value="$(arg dbscan_epsilon)"/>

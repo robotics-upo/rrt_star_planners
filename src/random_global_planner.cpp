@@ -85,7 +85,7 @@ void RandomGlobalPlanner::configParams()
     
     nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
     nh->param("catenary_file", catenary_file, (std::string) "catenary_file");
-    nh->param("use_analytical_method", use_analytical_method, (bool)false);
+    nh->param("use_parable", use_parable, (bool)false);
     catenary_analysis_file = path + catenary_file + ".txt";
 
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
@@ -100,11 +100,11 @@ void RandomGlobalPlanner::configRRTStar()
 {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
                     nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                    map_file, path, get_catenary_data, catenary_analysis_file, use_analytical_method);
+                    map_file, path, get_catenary_data, catenary_analysis_file, use_parable);
     configRandomPlanner();
 
 
-    CheckCM->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, map_resolution, use_analytical_method);
+    CheckCM->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
 
 }
 
