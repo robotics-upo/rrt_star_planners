@@ -32,7 +32,7 @@
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
     <arg name="n_iter_rrt"          default="100"/>
-    <arg name="n_loop_rrt"          default="5"/>
+    <arg name="n_loop_rrt"          default="1"/>
     <arg name="radius_near_nodes"   default="1.2"/> 
     <arg name="goal_gap_m"          default="1.4"/>
     <arg name="step_steer"          default="0.2"/>

@@ -3,7 +3,7 @@ project(rrt_planners)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # set (CMAKE -DCMAKE_C_FLAGS=-pg -DCMAKE_CXX_FLAGS=-pg -DCMAKE_BUILD_TYPE=Debug)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
