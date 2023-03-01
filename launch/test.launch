@@ -6,7 +6,7 @@
     <arg name="graph_traj_in_rviz" default="false"/>
     <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="false"/>
-    <arg name="use_distance_function" default="false"/>  
+    <arg name="use_distance_function" default="true"/>  
     <arg name="pc_user_name"    default="simon"/>     
 
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
@@ -25,7 +25,7 @@
     <arg name="length_tether_max"    default="20.0"/>   
 
     <!-- To wirte Files -->
-    <arg name="map_file"        default="stage_1"/>
+    <arg name="map_file"        default="teatro_wall"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
     <arg name="files_results"    default="results_marsupial_optimizer/"/>     

@@ -586,8 +586,7 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
                         look_for_catenary = !check_catenary;
                         l_cat_ = CheckCM->length_cat_final;
                         length_catenary.push_back(l_cat_);
-                        printf("I am here \n");
-                    }while (!look_for_catenary);
+                    }while (look_for_catenary);
                 }
                 else{
                     length_catenary.push_back(l_catenary_[j_]);

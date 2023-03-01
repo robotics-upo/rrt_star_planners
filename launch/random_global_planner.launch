@@ -32,7 +32,7 @@
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
     <arg name="n_iter_rrt"          default="100"/>
-    <arg name="n_loop_rrt"          default="1"/>
+    <arg name="n_loop_rrt"          default="40"/>
     <arg name="radius_near_nodes"   default="1.2"/> 
     <arg name="goal_gap_m"          default="1.4"/>
     <arg name="step_steer"          default="0.2"/>
@@ -84,7 +84,7 @@
         <param name="min_distance_add_new_point" value="1.0"/>  
         <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_catenary_obstacle"  value="0.0"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
 
         <param name="w_nearest_ugv"    value="12"/>   # catenary Obstacles collision 0.00100
         <param name="w_nearest_uav"    value="6"/>   # catenary length 0.00150

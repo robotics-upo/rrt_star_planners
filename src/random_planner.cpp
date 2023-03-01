@@ -1526,13 +1526,13 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	pos_uav.z =pf_.point.z * step ; 
 	d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
 	if (d_ == -1.0){
-		printf("d_=%f , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
+		// printf("d_=%f , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
 		return false;
 	}
 	if (d_ > distance_catenary_obstacle)
 		ret = true;
 	else{
-		printf("d_=%f < distance_catenary_obstacle , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
+		// printf("d_=%f < distance_catenary_obstacle , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
 		ret = false;
 	}
 	return ret;
