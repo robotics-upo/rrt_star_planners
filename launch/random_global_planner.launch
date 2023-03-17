@@ -48,7 +48,7 @@
     <arg name="use_dbscan_lines" default="false"/>
     <arg name="dbscan_min_points" default="5"/>
     <arg name="use_parable"   default="false"/>
-
+    <arg name="n_planes" default="100"/>
 
     <!-- Global Planner: RRT* -->
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen"> #launch-prefix="gdb -ex run --args">
@@ -103,6 +103,7 @@
         <param name="dbscan_theta" value="$(arg dbscan_theta)"/>
         <param name="use_dbscan_lines" value="$(arg use_dbscan_lines)"/>
         <remap from="points2" to="/octomap_point_cloud_centers"/>
+        <param name="n_planes" value="$(arg n_planes)"/>
     </node>
    
     <!-- Robot Marker -->
