@@ -71,6 +71,35 @@ void PlannerGraphMarkers::getGraphMarker(RRTNode* nodes_tree_, int count, ros::P
 	}
 }
 
+void PlannerGraphMarkers::publishUAVMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_uav_pub_)
+{
+  pointTreeMarkerUAV.markers.resize(count+1);
+
+  pointTreeMarkerUAV.markers[count].header.frame_id = frame_id;
+  pointTreeMarkerUAV.markers[count].header.stamp = ros::Time::now();
+  pointTreeMarkerUAV.markers[count].ns = "tree_RRTStar_uav";
+  pointTreeMarkerUAV.markers[count].id = nodes_tree_->id_uav;
+  pointTreeMarkerUAV.markers[count].action = visualization_msgs::Marker::ADD;
+  pointTreeMarkerUAV.markers[count].type = visualization_msgs::Marker::SPHERE;
+  pointTreeMarkerUAV.markers[count].lifetime = ros::Duration(0);
+  pointTreeMarkerUAV.markers[count].pose.position.x = nodes_tree_->point_uav.x * step; 
+  pointTreeMarkerUAV.markers[count].pose.position.y = nodes_tree_->point_uav.y * step; 
+  pointTreeMarkerUAV.markers[count].pose.position.z = nodes_tree_->point_uav.z * step;
+  pointTreeMarkerUAV.markers[count].pose.orientation.x = 0.0;
+  pointTreeMarkerUAV.markers[count].pose.orientation.y = 0.0;
+  pointTreeMarkerUAV.markers[count].pose.orientation.z = 0.0;
+  pointTreeMarkerUAV.markers[count].pose.orientation.w = 1.0;
+  pointTreeMarkerUAV.markers[count].scale.x = 0.1;
+  pointTreeMarkerUAV.markers[count].scale.y = 0.1;
+  pointTreeMarkerUAV.markers[count].scale.z = 0.1;
+  pointTreeMarkerUAV.markers[count].color.r=0.2;
+  pointTreeMarkerUAV.markers[count].color.g=0.2;
+  pointTreeMarkerUAV.markers[count].color.b=1.0;
+  pointTreeMarkerUAV.markers[count].color.a=1.0; 
+
+  tree_rrt_star_uav_pub_.publish(pointTreeMarkerUAV);
+}
+
 void PlannerGraphMarkers::getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_, ros::Publisher take_off_nodes_pub_)
 { 
 	pointTakeOffMarker.markers.resize(take_off_nodes_.size());
@@ -366,11 +395,13 @@ void PlannerGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Point> points_
 	one_catenary_marker_pub_.publish(oneCatenaryMarker);
 }
 
+
+
 void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Publisher catenary_marker_pub_, Grid3d* g_3D_ , double bound_obst_,
 									octomap::OcTree* octotree_full_, pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT_, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc_)
 {
-    std::string string_marker;
-    std::string ns_marker;
+  std::string string_marker;
+  std::string ns_marker;
 	double c_color1, c_color2, c_color3;
 	std::vector<geometry_msgs::Point> points_catenary_;
 	geometry_msgs::Point p_reel_;
@@ -440,8 +471,8 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
 			catenaryMarker.markers[i].color.b = c_color3;
 			catenaryMarker.markers[i].color.a = 1.0; 
 		}
-	count++;
-	catenary_marker_pub_.publish(catenaryMarker);
+    count++;
+    catenary_marker_pub_.publish(catenaryMarker);
 	}	
 }
 
@@ -829,6 +860,17 @@ void PlannerGraphMarkers::clearMarkers(ros::Publisher lines_ugv_marker_pub_, ros
     lines_uav_marker_pub_.publish(lines_uav_marker);
 }
 
+void PlannerGraphMarkers::clearMarkers(ros::Publisher lines_uav_marker_pub_)
+{
+	auto size_ = n_iter;
+  lines_uav_marker.markers.clear();
+	lines_uav_marker.markers.resize(size_);
+	for (auto i = 0 ; i < size_; i++){
+    lines_uav_marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
+  }
+  lines_uav_marker_pub_.publish(lines_uav_marker);
+}
+
 void PlannerGraphMarkers::clearMarkersNodesTree(ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_, ros::Publisher take_off_nodes_pub_)
 {
 	auto size_ = pointTreeMarkerUGV.markers.size();
@@ -854,6 +896,16 @@ void PlannerGraphMarkers::clearMarkersNodesTree(ros::Publisher tree_rrt_star_ugv
         pointTakeOffMarker.markers[i].action = visualization_msgs::Marker::DELETEALL;
     }
     take_off_nodes_pub_.publish(pointTakeOffMarker);
+}
+
+void PlannerGraphMarkers::clearUAVNodesTree(ros::Publisher uav_tree_pub) {
+  auto size_ = pointTreeMarkerUAV.markers.size();
+  pointTreeMarkerUAV.markers.clear();
+	pointTreeMarkerUAV.markers.resize(size_);
+  for (auto i = 0 ; i < size_; i++){
+    pointTreeMarkerUAV.markers[i].action = visualization_msgs::Marker::DELETEALL;
+  }
+  uav_tree_pub.publish(pointTreeMarkerUAV);
 }
 
 void PlannerGraphMarkers::clearCatenaryMarker(ros::Publisher c_m_pub_)

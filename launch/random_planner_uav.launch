@@ -57,7 +57,7 @@
     </include>
 
     <!-- Launch Optimizer and Global Planner-->
-    <include file="$(find rrt_planners)/launch/random_global_planner.launch">
+    <include file="$(find rrt_planners)/launch/random_global_uav_planner.launch">
         <arg name="coupled" value="$(arg is_coupled)"/> 
         <arg name="map_file" value="$(arg map)"/> 
         <arg name="num_pos_initial" value="$(arg num_pos_initial)" /> 
@@ -71,5 +71,4 @@
 
     <!-- RViz -->
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find rrt_planners)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
-
 </launch>
