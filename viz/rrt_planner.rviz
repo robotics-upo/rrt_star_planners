@@ -6,16 +6,18 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /TF1
         - /TF1/Frames1
         - /RRTStar_path_ugv1
         - /RRTStar_path_uav1
         - /Optimized_catenary_cable1
         - /RRTStar_nodes_ugv1
-        - /RRTStar_nodes_ugv1/Status1
         - /RRTStar_nodes_uav1
-        - /RRTStar_nodes_uav1/Status1
+        - /RRT_catenary_marsupial_path1
+        - /RRT_All_catenaries1
+        - /One_catenary1
       Splitter Ratio: 0.5346715450286865
-    Tree Height: 784
+    Tree Height: 1137
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -116,6 +118,8 @@ Visualization Manager:
       Value: false
     - Class: rviz/TF
       Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: false
@@ -128,9 +132,9 @@ Visualization Manager:
         ugv_base_link:
           Value: true
         world:
-          Value: true
+          Value: false
       Marker Alpha: 1
-      Marker Scale: 1
+      Marker Scale: 5
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -159,7 +163,8 @@ Visualization Manager:
       Marker Topic: /random_planner_node/path_uav_rrt_star
       Name: RRTStar_path_uav
       Namespaces:
-        {}
+        Line_uav_RRTStar_Path: true
+        Line_ugv_RRTStar_Path: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -179,29 +184,29 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/opt_trajectory_ugv_marker
       Name: Optimized_trajectory_ugv
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/opt_trajectory_uav_marker
       Name: OptImized_trajectory_uav
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/catenary_marker
       Name: Optimized_catenary_cable
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /random_planner_node/tree_rrt_star_ugv
@@ -216,6 +221,7 @@ Visualization Manager:
       Name: RRTStar_nodes_uav
       Namespaces:
         tree_RRTStar_uav: true
+        tree_RRTStar_ugv: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -448,10 +454,30 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /rrt_star_planner_node/all_catenaries_rrt
+      Marker Topic: /random_planner_node/interpolated_catenary
       Name: RRT_All_catenaries
       Namespaces:
-        {}
+        catenary_0: true
+        catenary_1: true
+        catenary_10: true
+        catenary_11: true
+        catenary_12: true
+        catenary_13: true
+        catenary_14: true
+        catenary_15: true
+        catenary_16: true
+        catenary_17: true
+        catenary_18: true
+        catenary_19: true
+        catenary_2: true
+        catenary_20: true
+        catenary_3: true
+        catenary_4: true
+        catenary_5: true
+        catenary_6: true
+        catenary_7: true
+        catenary_8: true
+        catenary_9: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -463,21 +489,21 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_star_planner_node/reel1_point
       Name: Reel1
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/Marker
-      Enabled: false
+      Enabled: true
       Marker Topic: /rrt_star_planner_node/reel2_point
       Name: Reel2
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -550,7 +576,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 12.932308197021484
+      Distance: 13.680140495300293
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -566,17 +592,17 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.200398251414299
+      Pitch: 0.07539822161197662
       Target Frame: <Fixed Frame>
-      Yaw: 3.926264762878418
+      Yaw: 4.511257171630859
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1016
+  Height: 1369
   Hide Left Dock: false
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000003c600000351fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006b00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000004400000351000000eb00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c0000026100000001000001040000037cfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000037c000000b900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007440000003efc0100000002fb0000000800540069006d0065010000000000000744000003a200fffffffb0000000800540069006d00650100000000000004500000000000000000000003770000035100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000003c6000004b2fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006b00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000044000004b2000000eb00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c0000026100000001000001040000037cfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000037c000000b900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000009b40000003efc0100000002fb0000000800540069006d00650100000000000009b4000003a200fffffffb0000000800540069006d00650100000000000004500000000000000000000005e7000004b200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -585,6 +611,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1860
+  Width: 2484
   X: 76
   Y: 34

@@ -40,8 +40,8 @@ public:
 	// NodeState st;
 	DiscretePosition point;
 	DiscretePosition point_uav;
-	nodeOrientation rot_ugv;
-	nodeOrientation rot_uav;
+	nodeOrientation rot_ugv = {0.0, 0.0, 0.0, 1.0};
+	nodeOrientation rot_uav = {0.0, 0.0, 0.0, 1.0};
 	int id;
 	int id_uav;
 	bool catenary;	//Inform the feasibility to get a catenary in node

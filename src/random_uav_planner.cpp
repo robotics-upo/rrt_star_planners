@@ -3,13 +3,13 @@
 namespace PathPlanners
 {
 //*****************************************************************
-// 		 Random Algorithm Class Definitions (RRT* only for UAV) 
+// 		 Random Algorithm Class Definitions (RRT* for UAV + tether) 
 //*****************************************************************
 
 // Default constructor
 RandomUAVPlanner::RandomUAVPlanner()
 {
-	ccm = new CatenaryCheckerManager("random_uav_planner");
+	ccm = NULL;
 }
 
 RandomUAVPlanner::~RandomUAVPlanner()
@@ -29,8 +29,8 @@ RandomUAVPlanner::~RandomUAVPlanner()
                               float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_,
                               ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_uav_,
                               double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_,
-                              bool use_distance_function_, std::string map_file_, std::string path_,
-                              bool get_catenary_data_, std::string catenary_file_, bool use_parable_)
+                              bool use_distance_function_, std::string map_file_, bool get_catenary_data_,
+                              std::string catenary_file_, bool use_parable_, CatenaryCheckerManager *catenary_manager)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -60,7 +60,9 @@ RandomUAVPlanner::~RandomUAVPlanner()
 	ws_x_min_inflated = (ws_x_min - 2 * h_inflation);
 	ws_y_min_inflated = (ws_y_min - 2 * h_inflation);
 	ws_z_min_inflated = (ws_z_min - 2 * v_inflation);
-	matrix_size = (abs(ws_x_max_inflated) - ws_x_min_inflated + 1) * (abs(ws_y_max_inflated) - ws_y_min_inflated + 1) * (abs(ws_z_max_inflated) - ws_z_min_inflated + 1);
+	matrix_size = (abs(ws_x_max_inflated) - ws_x_min_inflated + 1) *
+    (abs(ws_y_max_inflated) - ws_y_min_inflated + 1) *
+    (abs(ws_z_max_inflated) - ws_z_min_inflated + 1);
 	discrete_world.resize(matrix_size);
 	printf("Global Planner %s Node : Occupancy Matrix has %d nodes [%lu MB]\n", plannerName.c_str(), matrix_size, (uint_fast32_t)(matrix_size * sizeof(RRTNode)) / (1024 * 1024));
 	Lx = ws_x_max_inflated - ws_x_min_inflated + 1;
@@ -73,12 +75,12 @@ RandomUAVPlanner::~RandomUAVPlanner()
 	goal_gap_m = goal_gap_m_;
 	debug_rrt = debug_rrt_;
 	use_distance_function = use_distance_function_;
-	printf("Global Planner %s Node : Using distance function: %s \n", plannerName.c_str(), use_distance_function?"true":"false");
+	printf("Global Planner %s Node : Using distance function: %s \n",
+         plannerName.c_str(), use_distance_function?"true":"false");
 
 	markers_debug = false;
 	nodes_marker_debug = nodes_marker_debug_;
 
-	path = path_;
 	map_file = map_file_;
 
 	distance_obstacle_uav = distance_obstacle_uav_;
@@ -87,6 +89,8 @@ RandomUAVPlanner::~RandomUAVPlanner()
 	get_catenary_data = get_catenary_data_;
 	catenary_file = catenary_file_;
 	use_parable = use_parable_;
+
+  nh->param("n_intermediate", n_intermediate, 6);
 
 	lines_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("path_uav_rrt_star", 2, true);
 	goal_point_pub_ = nh->advertise<visualization_msgs::Marker>("goal_point", 1, true);
@@ -107,6 +111,7 @@ RandomUAVPlanner::~RandomUAVPlanner()
 		reel2_point_pub_ = nh->advertise<visualization_msgs::Marker>("reel2_point", 1, true);
 		all_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("all_catenaries_rrt", 10000, true);
 	}
+  ccm = catenary_manager;
 }
 
 int RandomUAVPlanner::computeTree()
@@ -122,8 +127,7 @@ int RandomUAVPlanner::computeTree()
   struct timespec start_rrt, finish_rrt;
   clock_gettime(CLOCK_REALTIME, &start_rrt);
 
-	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
-	printf("RandomUAVPlanner::computeTreesIndependent -->  STARTING --> star_point_ugv[%.2f %.2f %.2f/%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n", 
+	ROS_INFO("RandomUAVPlanner::computeTree -->  start_point_ugv[%.2f %.2f %.2f/%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n", 
          initial_position_ugv.x, initial_position_ugv.y, initial_position_ugv.z,
          initial_position_uav.x, initial_position_uav.y, initial_position_uav.z,
          final_position.x, final_position.y, final_position.z);  
@@ -138,8 +142,6 @@ int RandomUAVPlanner::computeTree()
   } else {
     std::cout << "RandomUAVPlanner::computeTree --> Initial node saved." << std::endl;
   }
-
-		
   rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
 	rrtgm.goalPointMarker(final_position, goal_point_pub_);
 	
@@ -152,13 +154,13 @@ int RandomUAVPlanner::computeTree()
 	int count_total_loop = 0; 
 	count_qnew_fail = count_fail_connect_goal = -1;
 
-
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
-		printf("\t\t-----  Planner  :: computeTree: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r", count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
+		printf("\t\t  Planner::computeTree: iter=[%i/%i], loop=[%i/%i], nodes[%lu/%i]\r",
+           count_loop+1, n_iter, count_total_loop+1, n_loop,
+           nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
 		
 		RRTNode q_rand;
 
-		
     if ((count_loop%samp_goal_rate)!=0)
       q_rand = getRandomNode();	
     else {
@@ -170,9 +172,9 @@ int RandomUAVPlanner::computeTree()
     q_rand.point.y = initial_position_ugv.y * step_inv;
     q_rand.point.z = initial_position_ugv.z * step_inv;
 
-
 		if (debug_rrt)
-			printf(" q_rand = [%f %f %f / %f %f %f] \n", q_rand.point.x*step, q_rand.point.y*step, q_rand.point.z*step,
+			printf(" q_rand = [%f %f %f / %f %f %f] \n",
+             q_rand.point.x*step, q_rand.point.y*step, q_rand.point.z*step,
              q_rand.point_uav.x * step, q_rand.point_uav.y * step, q_rand.point_uav.z * step);
 		
 		rrtgm.randNodeMarker(q_rand, rand_point_pub_, 1);
@@ -181,16 +183,16 @@ int RandomUAVPlanner::computeTree()
 		extendGraph(q_rand);
 		count_loop++;
 
-		if ( num_goal_finded > 0 && count_loop == n_iter ){
-			printf("\n\n\nRandomUAVPlanner::computeTreesIndependent -->  goal found for Coupled Marsupial Configuration.\n")	; 
+		if ( num_goal_found > 0 && count_loop == n_iter ){
+			printf("\n\n\nRandomUAVPlanner::computeTree -->  goal found.\n")	; 
 			rrt_path = getPath(); 
-			printf("RandomUAVPlanner::computeTreesIndependent -->  finded path for Coupled Marsupial Configuration--> (path size: %lu , iteration numbers: %i) : \n",rrt_path.size(), (count_loop)+(500*count_total_loop)); 
+			printf("Path size: %lu , iterations: %i) : \n",rrt_path.size(), (count_loop)+(500*count_total_loop)); 
 
 			int i_=0;
       printf("\tPrinting the Path Nodes obtainded : \n");
 			for (auto pt_: rrt_path){
-				printf("\tRandom_planner_node[%i/%lu] :  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f    cost=%.3f\n", i_, rrt_path.size(),
-				pt_->point_uav.x*step, pt_->point_uav.y*step, pt_->point_uav.z*step,
+				printf("\tRandom_uav_planner[%i/%lu] :  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f    cost=%.3f\n", i_, rrt_path.size(),
+               pt_->point_uav.x*step, pt_->point_uav.y*step, pt_->point_uav.z*step,
                pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w,
                pt_->length_cat, pt_->cost);
 				i_++;
@@ -202,27 +204,27 @@ int RandomUAVPlanner::computeTree()
 			count_total_loop++;
 			count_loop = 0;
 			if (count_total_loop > n_loop - 1){
-				printf("RandomUAVPlanner::computeTreesUAV -->  could't find path for Coupled Marsupial Configuration-->  number iteration: %lu \n\n", nodes_tree.size());    
+				printf("RandomUAVPlanner::computeTreesUAV -->  could't find path Iterations: %lu \n\n", nodes_tree.size());    
 				ret_val = 0;
 				break;
-			}
-			else
-				printf("\n\t\t       Planner :: computeTreeIndependent: Starting new Loop \n");
+			}	else printf("\n\t\tPlanner :: computeTree: Starting new Loop \n");
 		}
 	}
 
-  std::cout << "Finishing Random Planner: Explored Graph Nodes Numbers: " << nodes_tree.size() <<std::endl;
+  std::cout << "Finished Planner: Graph size: " << nodes_tree.size() <<std::endl;
 	std::cout << std::endl << "---------------------------------------------------------------------"
             << std::endl << std::endl;
 
   clock_gettime(CLOCK_REALTIME, &finish_rrt);
   auto sec_rrt = finish_rrt.tv_sec - start_rrt.tv_sec;
-  auto msec_rrt = (1000000000 - start_rrt.tv_nsec) + finish_rrt.tv_nsec;
-  double time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
+  auto msec_rrt = finish_rrt.tv_nsec - start_rrt.tv_nsec;
+  double time_rrt = msec_rrt*1e-9 + sec_rrt;
   std::cout << "RRT time: " << time_rrt << std::endl << std::endl;
 
 	if (markers_debug)
 		rrtgm.getAllCatenaryMarker(nodes_tree, all_catenary_marker_pub_);
+
+  ccm->exportStats(catenary_file);
 
   return ret_val; 
 }
@@ -236,7 +238,9 @@ bool RandomUAVPlanner::extendGraph(const RRTNode q_rand_)
   rrtgm.randNodeMarker(*q_nearest, nearest_point_pub_, 0);
 
   if (debug_rrt) 
-    printf(" q_nearest = [%f %f %f / %f %f %f] l=%f feasible_l=%s\n", q_nearest->point.x*step,q_nearest->point.y*step,q_nearest->point.z*step, q_nearest->point_uav.x*step,q_nearest->point_uav.y*step,q_nearest->point_uav.z*step, 
+    printf(" q_nearest = [%f %f %f / %f %f %f] l=%f feasible_l=%s\n", q_nearest->point.x*step,
+           q_nearest->point.y*step,q_nearest->point.z*step, q_nearest->point_uav.x*step,
+           q_nearest->point_uav.y*step,q_nearest->point_uav.z*step,
            q_nearest->length_cat, q_nearest->catenary? "true" : "false");
 		
   bool exist_q_new_ = steering(*q_nearest, q_rand_, step_steer, q_new);
@@ -244,8 +248,6 @@ bool RandomUAVPlanner::extendGraph(const RRTNode q_rand_)
     if ((count_loop%samp_goal_rate)==0)
       count_fail_connect_goal++;
 
-    if (debug_rrt) 
-      printf(" exist_q_new_=%s\n", exist_q_new_? "true" : "false");
     return false;
   }
   if ((count_loop%samp_goal_rate)==0)
@@ -253,44 +255,47 @@ bool RandomUAVPlanner::extendGraph(const RRTNode q_rand_)
 
   rrtgm.randNodeMarker(q_new, new_point_pub_, 2);
   q_new.parentNode = q_nearest;
-  getParamsNode(q_new);
+  getParamsNode(q_new); // Here we check for catenary
+
+  if (!obstacleFreeBetweenNodes(q_new, *q_nearest)) {
+    return false;
+  }
 
   RRTNode *q_min;
   q_min = q_nearest;
   if (debug_rrt)
-    printf(" q_min = [%f %f %f / %f %f %f] \n", q_min->point.x*step,q_min->point.y*step,q_min->point.z*step,
+    printf(" q_min = [%f %f %f / %f %f %f] \n", q_min->point.x*step,
+           q_min->point.y*step,q_min->point.z*step,
            q_min->point_uav.x*step,q_min->point_uav.y*step,q_min->point_uav.z*step);
 
-  updateKdtreeNode(q_new); 	//KdTree is updated after get Near Nodes because to not take it own node as a near 
+  //KdTree is updated after get Near Nodes because to not take it own node as a near 
+  updateKdtreeNode(q_new); 	
 
-  if (false) {
-    bool new_parentNode_ = false;
-    // To make it easier --> not RRT*
-    std::vector<int> v_near_nodes = getNearNodes(q_new, radius_near_nodes) ;
-    // I . Open near nodes and connected with minimum accumulated
+  bool new_parentNode_ = false;
+  // To make it easier --> not RRT*
+  std::vector<int> v_near_nodes = getNearNodes(q_new, radius_near_nodes) ;
+  // I . Open near nodes and connected with minimum accumulated
 
-    for (size_t i = 0 ; i < v_near_nodes.size(); i++){
-      for (auto nt_:nodes_tree) {
-        if (nt_->id == v_near_nodes[i] ){
-          if (obstacleFreeBetweenNodes(*nt_, q_new)){
-            double C_ = nt_->cost + costBetweenNodes(*nt_,q_new);
-            if (C_ < q_new.cost){
-              q_min = nt_;
-              new_parentNode_ = true;
-            }
+  for (size_t i = 0 ; i < v_near_nodes.size(); i++){
+    for (auto nt_:nodes_tree) {
+      if (nt_->id == v_near_nodes[i] ){
+        if (obstacleFreeBetweenNodes(*nt_, q_new)){
+          double C_ = nt_->cost + costBetweenNodes(*nt_,q_new);
+          if (C_ < q_new.cost){
+            q_min = nt_;
+            new_parentNode_ = true;
           }
-          else{
-            // ROS_ERROR("RandomPlanner::extendGraph -->  exist collision between one of <X_near node> and <X_new node> !!");
-          }
+        } else {
+          return false;
         }
       }
     }
-    if (new_parentNode_ ){
-      q_new.parentNode = q_min;
-      updateParamsNode(q_new);
-    }
   }
-
+  if (new_parentNode_ ){
+    q_new.parentNode = q_min;
+    updateParamsNode(q_new);
+  }
+  
   *new_node = q_new;
   
   int got_goal_aux_ = got_to_goal; 
@@ -298,12 +303,11 @@ bool RandomUAVPlanner::extendGraph(const RRTNode q_rand_)
   if (got_to_goal != got_goal_aux_){
     saveNode(new_node);
     if(new_node->cost < disc_goal->cost){
-      printf("\n");
-      ROS_INFO(PRINTF_ROSE"\n\n\n\t\t !!!!!!!!!!!!!  Got it GOAL position quien new node->point : [%f %f %f/%f %f %f]  !!!!!!!!!!!!! \n\n",
+      ROS_INFO(PRINTF_ROSE"\n\n\n\t\t Got GOAL position new node-> : [%f %f %f/%f %f %f]  \n",
                new_node->point.x*step, new_node->point.y*step, new_node->point.z*step,
                new_node->point_uav.x*step, new_node->point_uav.y*step, new_node->point_uav.z*step);
 				disc_goal = new_node;
-				num_goal_finded++;
+				num_goal_found++;
 				new_solution = true;
 			}
 		}	
@@ -335,7 +339,7 @@ RRTNode RandomUAVPlanner::getRandomNode()
   std::uniform_int_distribution<int> distr_y_uav(ws_y_min, ws_y_max);  // define the discrete range
   std::uniform_int_distribution<int> distr_z_uav(ws_z_min+(0.0+0.6*step_inv), ws_z_max);  // define the range 1.0+0.6*step_inv
 	RRTNode randomState_;
-	bool finded_node = false;
+	bool found_node = false;
 	bool catenary_state = false;
 
 	// Get random position for UAV
@@ -343,9 +347,8 @@ RRTNode RandomUAVPlanner::getRandomNode()
     randomState_.point_uav.x = distr_x_uav(eng);
     randomState_.point_uav.y = distr_y_uav(eng);
     randomState_.point_uav.z = distr_z_uav(eng);
-    finded_node = checkNodeFeasibility(randomState_);
-
-  }while(!finded_node);
+    found_node = checkNodeFeasibility(randomState_);
+  }while(!found_node);
 
   return randomState_;
 }
@@ -427,16 +430,68 @@ bool RandomUAVPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand
   }
 
   // Get the UGV position
-  q_new_.point.x = initial_position_uav.x;
-  q_new_.point.y = initial_position_uav.y;
-  q_new_.point.z = initial_position_uav.z;
+  q_new_.point.x = initial_position_ugv.x;
+  q_new_.point.y = initial_position_ugv.y;
+  q_new_.point.z = initial_position_ugv.z;
 
   return checkNodeFeasibility(q_new_);
 }
 
-bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const RRTNode q_new_)
+inline geometry_msgs::Point getInterpPoint(const geometry_msgs::Point &A,
+                                           const geometry_msgs::Point &B,
+                                           float i = 0.5) {
+    geometry_msgs::Point p;
+    float ot = 1.0 - i;
+
+    p.x = i * A.x + ot * B.x;
+    p.y = i * A.y + ot * B.y;
+    p.z = i * A.z + ot * B.z;
+
+    return p;
+}
+
+bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
+                                                const RRTNode q_new_)
 {
-	geometry_msgs::Point  point_nearest_uav_ , point_new_uav_,p_reel_nearest_, p_reel_new_;
+
+  // New method --> we get the intermediate points with the mean of catenary lengths
+  // --> obtain catenary and check
+  // TODO: add more than one middle point
+
+
+  geometry_msgs::Point middle_uav, middle_reel;
+  geometry_msgs::Point  point_nearest_uav_ , point_new_uav_,p_reel_nearest_, p_reel_new_;
+
+  float addition = 1.0/(float)n_intermediate;
+
+	point_new_uav_.x = q_new_.point_uav.x * step; 
+	point_new_uav_.y = q_new_.point_uav.y * step; 
+	point_new_uav_.z = q_new_.point_uav.z * step;
+
+	point_nearest_uav_.x = q_nearest_.point_uav.x * step; 
+	point_nearest_uav_.y = q_nearest_.point_uav.y * step; 
+	point_nearest_uav_.z = q_nearest_.point_uav.z * step;
+
+  p_reel_nearest_ = getReelNode(q_nearest_);
+  p_reel_new_ = getReelNode(q_new_); 
+
+  bool ret_val = true;
+  ccm->distance_catenary_obstacle = distance_catenary_obstacle;
+  ROS_INFO("Setting the catenary obstacle dist to: %f", distance_catenary_obstacle);
+  for (int i = 0; i <= n_intermediate && ret_val; i++) {
+    float p = i * addition;
+    auto new_length = q_nearest_.length_cat * p + q_new_.length_cat * (1.0 - p);
+    middle_uav = getInterpPoint(point_nearest_uav_, point_new_uav_, p);
+    //middle_reel = getInterpPoint(p_reel_nearest_, p_reel_new_, p);
+    ret_val = ccm->checkCatenary(p_reel_new_, middle_uav, new_length);
+  }
+
+  return ret_val;
+}
+
+/*bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
+                                                const RRTNode q_new_) {
+  	geometry_msgs::Point  point_nearest_uav_ , point_new_uav_,p_reel_nearest_, p_reel_new_;
 	std::vector<geometry_msgs::Point> points_cat_nearest_, points_cat_new_;
 	points_cat_nearest_.clear();
 	points_cat_new_.clear();
@@ -450,21 +505,39 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const R
 	point_nearest_uav_.y = q_nearest_.point_uav.y * step; 
 	point_nearest_uav_.z = q_nearest_.point_uav.z * step;
 
+	//Get points for both catenary New_node and Nearest_node
+	// CatenarySolver cSolver_;
+	// cSolver_.setMaxNumIterations(100);
+
 	p_reel_nearest_ = getReelNode(q_nearest_);
+	// double l_cat_nearest_ = q_nearest_.length_cat;
+	// cSolver_.solve(p_reel_nearest_.x, p_reel_nearest_.y, p_reel_nearest_.z, point_nearest_uav_.x, point_nearest_uav_.y, point_nearest_uav_.z, l_cat_nearest_, points_cat_nearest_);
+
+    // std::cout << "RandomPlanner::obstacleFreeBetweenNodes l_cat_nearest_=" << q_nearest_.length_cat << std::endl;
+    // std::cout << "RandomPlanner::obstacleFreeBetweenNodes p_reel[=" 
+	// 		  << p_reel_nearest_.x << "," << p_reel_nearest_.y << "," << p_reel_nearest_.z 
+	// 		  << "] p_nearest[" 
+	// 		  << point_nearest_uav_.x << "," << point_nearest_uav_.y << "," << point_nearest_uav_.z << "]" <<std::endl;
+	  
 
 	double r_;
 
-  if (!q_nearest_.catenary)
-    return false;
+    // std::cout << "RandomPlanner::obstacleFreeBetweenNodes points_cat_nearest_.size()=" << q_nearest_.p_cat.size() << std::endl;
+	// for(size_t i = 0 ; i < points_cat_new_.size() ; i++){
+    // std::cout << "points_cat_new_=[" << points_cat_new_[i].x << "," << points_cat_new_[i].y << "," << points_cat_new_[i].z << "]" << std::endl;
+	// }
+	// for(size_t i = 0 ; i < q_nearest_.p_cat.size() ; i++){
+    // 	std::cout << "points_cat_nearest_=[" << q_nearest_.p_cat[i].x << "," << q_nearest_.p_cat[i].y << "," << q_nearest_.p_cat[i].z << "]" << std::endl;	
+	// }
 
-  std::vector<geometry_msgs::Point> points_obstacles_;
+	std::vector<geometry_msgs::Point> points_obstacles_;
 	points_obstacles_.clear();
 	if(points_cat_new_.size() > q_nearest_.p_cat.size()){
 		r_ = (double)(q_nearest_.p_cat.size()-1.0)/(double)(points_cat_new_.size()-1.0);
-		for(size_t i = 1 ; i < points_cat_new_.size() && i < q_nearest_.p_cat.size() ; i++){
+		for(size_t i = 1 ; i < points_cat_new_.size() ; i++){
 			int k_ = (int)(round(r_ * (i)));
 			//Get the unitary vector from nearest to rand direction
-    //   std::cout << "RandomUAVPlanner::checkPointsCatenaryFeasibility points_cat_nearest_[=" << q_nearest_.p_cat[k_].x << "," << q_nearest_.p_cat[k_].y << "," << q_nearest_.p_cat[k_].z << "]" << std::endl;
+    //   std::cout << "RandomPlanner::checkPointsCatenaryFeasibility points_cat_nearest_[=" << q_nearest_.p_cat[k_].x << "," << q_nearest_.p_cat[k_].y << "," << q_nearest_.p_cat[k_].z << "]" << std::endl;
 			float dir_x_ = q_nearest_.p_cat[k_].x - points_cat_new_[i].x;
 			float dir_y_ = q_nearest_.p_cat[k_].y - points_cat_new_[i].y; 
 			float dir_z_ = q_nearest_.p_cat[k_].z - points_cat_new_[i].z;
@@ -474,7 +547,8 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const R
 				uni_x_ = 0.0;
 				uni_y_ = 0.0;
 				uni_z_ = 0.0;
-			} else {
+			}
+			else{
 				uni_x_ = dir_x_/ dist_nearest_new_;
 				uni_y_ = dir_y_/ dist_nearest_new_;
 				uni_z_ = dir_z_/ dist_nearest_new_;
@@ -491,6 +565,7 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const R
 				check_point_.point.z = (point_obs_.z)*step_inv; 
 				j_++;
 				bool is_feasible_ = checkPointsCatenaryFeasibility(check_point_);
+	// printf("\t 1 RandomPlanner::checkPointsCatenaryFeasibility(check_point_)=%s check_point_[%f %f %f]\n",is_feasible_?"true":"false",(point_obs_.x), (point_obs_.y), (point_obs_.z));
 				if(!is_feasible_){
 					return false;
 				}
@@ -503,7 +578,7 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const R
 		r_ = (double)(points_cat_new_.size()-1.0)/(double)(q_nearest_.p_cat.size()-1.0);
 		for(size_t i = 1 ; i < q_nearest_.p_cat.size() ; i++){
 			int k_ = (int)(round(r_ * (i)));
-    //   std::cout << "RandomUAVPlanner::checkPointsCatenaryFeasibility points_cat_nearest_[=" << q_nearest_.p_cat[i].x << "," << q_nearest_.p_cat[i].y << "," << q_nearest_.p_cat[i].z << "]" << std::endl;
+    //   std::cout << "RandomPlanner::checkPointsCatenaryFeasibility points_cat_nearest_[=" << q_nearest_.p_cat[i].x << "," << q_nearest_.p_cat[i].y << "," << q_nearest_.p_cat[i].z << "]" << std::endl;
 			//Get the unitary vector from nearest to rand direction
 			float dir_x_ = q_nearest_.p_cat[i].x - points_cat_new_[k_].x;
 			float dir_y_ = q_nearest_.p_cat[i].y - points_cat_new_[k_].y; 
@@ -544,7 +619,7 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const R
 	else{
 		for(size_t i = 1 ; i < q_nearest_.p_cat.size() ; i++){
 			//Get the unitary vector from nearest to rand direction
-    //   std::cout << "RandomUAVPlanner::checkPointsCatenaryFeasibility points_cat_nearest_[=" << q_nearest_.p_cat[i].x << "," << q_nearest_.p_cat[i].y << "," << points_cat_nearest_[i].z << "]" << std::endl;
+    //   std::cout << "RandomPlanner::checkPointsCatenaryFeasibility points_cat_nearest_[=" << q_nearest_.p_cat[i].x << "," << q_nearest_.p_cat[i].y << "," << points_cat_nearest_[i].z << "]" << std::endl;
 			float dir_x_ = q_nearest_.p_cat[i].x - points_cat_new_[i].x;
 			float dir_y_ = q_nearest_.p_cat[i].y - points_cat_new_[i].y; 
 			float dir_z_ = q_nearest_.p_cat[i].z - points_cat_new_[i].z;
@@ -582,7 +657,8 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const R
 		}
 	}	
 	return true;	
-}
+
+  }*/
 
 std::vector<int> RandomUAVPlanner::getNearNodes(const RRTNode &q_new_, double radius_) 
 {
@@ -722,7 +798,7 @@ bool RandomUAVPlanner::checkNodeFeasibility(const RRTNode pf_)
     if (d_ == -1.0)
       return false;
 
-    if (d_ > distance_obstacle_uav)
+    if (d_ > distance_obstacle_uav) 
       ret = true;
     else
       ret = false;
@@ -840,7 +916,7 @@ inline void RandomUAVPlanner::clearStatus()
 	rrt_path.clear();
 
   got_to_goal = 0;
-	num_goal_finded = 0;
+	num_goal_found = 0;
 	length_catenary.clear();
 	v_nodes_kdtree.clear();
 	v_uav_nodes_kdtree.clear();
@@ -908,22 +984,23 @@ bool RandomUAVPlanner::getGlobalPath(Trajectory &trajectory)
 	traj_marsupial_.accelerations.resize(2);
 
 	for(auto nt_ : rrt_path){
-		traj_marsupial_.transforms[0].translation.x = nt_->point.x*step;
-		traj_marsupial_.transforms[0].translation.y = nt_->point.y*step;
-		if (nt_->point.z*step == 0.0)
-			traj_marsupial_.transforms[0].translation.z = nt_->point.z*step + step/2.0;
-		else
-			traj_marsupial_.transforms[0].translation.z = nt_->point.z*step;
-		traj_marsupial_.transforms[0].rotation.x = nt_->rot_ugv.x;
-		traj_marsupial_.transforms[0].rotation.y = nt_->rot_ugv.y;
-		traj_marsupial_.transforms[0].rotation.z = nt_->rot_ugv.z;
-		traj_marsupial_.transforms[0].rotation.w = nt_->rot_ugv.w;
+    // UGV (does not move)
+		traj_marsupial_.transforms[0].translation.x = initial_position_ugv.x;
+		traj_marsupial_.transforms[0].translation.y = initial_position_ugv.y;
+    traj_marsupial_.transforms[0].translation.z = initial_position_ugv.z;
+
+		traj_marsupial_.transforms[0].rotation.x = 0;
+		traj_marsupial_.transforms[0].rotation.y = 0;
+		traj_marsupial_.transforms[0].rotation.z = 0;
+		traj_marsupial_.transforms[0].rotation.w = 1;
 		traj_marsupial_.velocities[0].linear.x = 0.0;
 		traj_marsupial_.velocities[0].linear.y = 0.0;
 		traj_marsupial_.velocities[0].linear.z = 0.0;
 		traj_marsupial_.accelerations[0].linear.x = 0.0;
 		traj_marsupial_.accelerations[0].linear.y = 0.0;
 		traj_marsupial_.accelerations[0].linear.z = 0.0;
+
+    //UAV
 		traj_marsupial_.transforms[1].translation.x = nt_->point_uav.x*step;
 		traj_marsupial_.transforms[1].translation.y = nt_->point_uav.y*step;
 		traj_marsupial_.transforms[1].translation.z = nt_->point_uav.z*step;

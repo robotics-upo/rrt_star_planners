@@ -1796,9 +1796,9 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 		traj_marsupial_.accelerations[0].linear.x = 0.0;
 		traj_marsupial_.accelerations[0].linear.y = 0.0;
 		traj_marsupial_.accelerations[0].linear.z = 0.0;
-		traj_marsupial_.transforms[1].translation.x = nt_->point_uav.x*step;
-		traj_marsupial_.transforms[1].translation.y = nt_->point_uav.y*step;
-		traj_marsupial_.transforms[1].translation.z = nt_->point_uav.z*step;
+		traj_marsupial_.transforms[1].translation.x = nt_->point_uav.x * step;
+		traj_marsupial_.transforms[1].translation.y = nt_->point_uav.y * step;
+		traj_marsupial_.transforms[1].translation.z = nt_->point_uav.z * step;
 		traj_marsupial_.transforms[1].rotation.x = nt_->rot_uav.x;
 		traj_marsupial_.transforms[1].rotation.y = nt_->rot_uav.y;
 		traj_marsupial_.transforms[1].rotation.z = nt_->rot_uav.z;
@@ -1816,9 +1816,11 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 	return true;
 }
 
-void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv, 
-									bool coupled_, int n_iter_ , int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
-									double w_n_ugv_, double w_n_uav_, double w_n_smooth_)
+void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel ,
+                                        geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
+                                        bool coupled_, int n_iter_ , int n_loop_, double r_nn_, double s_s_,
+                                        int s_g_r_, int sample_m_, double min_l_steer_ugv_,
+                                        double w_n_ugv_, double w_n_uav_, double w_n_smooth_)
 {
 	length_tether_max = _l_m;
 	pos_reel_ugv.x = _p_reel.x;

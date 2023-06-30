@@ -83,7 +83,7 @@ namespace PathPlanners
     /**
        Default destructor
     **/
-    // ~RandomGlobalUAVPlanner();
+    ~RandomGlobalUAVPlanner();
 
     /*
       @brief: This is the main function that should be executed in loop by the node
@@ -126,6 +126,7 @@ namespace PathPlanners
     geometry_msgs::TransformStamped getRobotPoseUAV();
 
     //get Local Reel pose on UGV
+
     geometry_msgs::TransformStamped getLocalPoseReel();
     /*
       @brief: 
@@ -244,7 +245,7 @@ namespace PathPlanners
     double map_h_inflaction;
     double map_v_inflaction; //JAC: Hasta aquí todo cero.
 
-    bool pause_execution;
+    bool pause_execution = false;
     double length_tether_max, radius_near_nodes, step_steer;
     int n_iter, n_loop, samp_goal_rate;
     double goal_gap_m;
@@ -254,7 +255,7 @@ namespace PathPlanners
     double min_distance_add_new_point;
     std::vector<double> length_catenary;
 
-    bool get_catenary_data, use_parable;
+    bool get_catenary_data, use_parable, use_both;
     std::string planner_type, catenary_file, catenary_analysis_file;
 
   }; //class RandomGlobalUAVPlanner

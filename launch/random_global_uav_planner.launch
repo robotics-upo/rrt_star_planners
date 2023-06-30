@@ -48,12 +48,12 @@
     <arg name="use_dbscan_lines" default="false"/>
     <arg name="dbscan_min_points" default="5"/>
     <arg name="use_parable"   default="false"/>
+    <arg name="use_both" default="true"/>
     <arg name="n_planes" default="100"/>
     <arg name="optimize" default="false"/>
-
     <arg name="debug" default="false"/>
     <arg name="debug_prefix" default="" unless="$(arg debug)"/>
-    <arg name="debug_prefix" default="gdb --args" if="$(arg debug)"/>
+    <arg name="debug_prefix" default="gdb --args " if="$(arg debug)"/>
 
     <!-- Global Planner: RRT* -->
     <node pkg="rrt_planners" type="random_global_uav_planner_node" name="random_planner_node" output="screen" launch-prefix="$(arg debug_prefix)">
@@ -86,8 +86,8 @@
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>    
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
-        <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_obstacle_uav" value="0.6"/> <!-- bound distance UAV to obstacles 0.05[m] map resolution -->
+        <param name="distance_catenary_obstacle"  value="0.4"/> <!--bound distance catenary to obstacles [m] -->   
 
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
@@ -97,6 +97,7 @@
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
         <!-- Catenaty Checker-->
         <param name="use_parable"   value="$(arg use_parable)"/>
+        <param name="use_both"   value="$(arg use_both)"/>
         <param name="plane_dist" value="$(arg plane_dist)"/>
         <param name="dbscan_min_points" value="$(arg dbscan_min_points)"/>
         <param name="dbscan_epsilon" value="$(arg dbscan_epsilon)"/>

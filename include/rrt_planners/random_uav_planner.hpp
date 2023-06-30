@@ -95,8 +95,8 @@ public:
             float ws_x_min_, float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_,
             ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_uav_,
             double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_,
-            bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_,
-            std::string catenary_file_, bool use_parable_);
+            bool use_distance_function_, std::string map_file_, bool get_catenary_data_,
+            std::string catenary_file_, bool use_parable_, CatenaryCheckerManager *catenary_manager);
 
   ~RandomUAVPlanner();
 
@@ -120,18 +120,15 @@ public:
 
   inline bool setValidInitialPositionMarsupial(RRTNode n_)
 	{
-    if(setInitialPositionIndependent(n_))
-      {
-        if(!isInitialPositionUAVOccupied()){
-          ROS_INFO("RandomUAVPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] OK", 
-                       n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
-          return true;
-        }
-        else{
-          ROS_WARN("RandomUAVPlanner: Cannot set initial position UAV Marsupial out of bounds!!");
-        }
-      }
-       
+    if(!isInitialPositionUAVOccupied()){
+      ROS_INFO("RandomUAVPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] OK", 
+               n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
+      return true;
+    }
+    else{
+      ROS_WARN("RandomUAVPlanner: Cannot set initial position UAV Marsupial out of bounds!!");
+    }
+           
     return false;
   }
 
@@ -273,6 +270,8 @@ public:
 
 	RRTNode *disc_initial, *disc_final; // Discretes
 	RRTNode *disc_goal; // That node is fill it by the node that approach the goal in Independent configuration
+
+  int n_intermediate = 6; // Number of steps to check in checkBetweenNodes
 
 	std::vector<double> length_catenary;
 
@@ -463,7 +462,7 @@ p		  occupation matrix nodes that have to be inflated
 
 	// bool got_to_goal = false;
 	int got_to_goal = 1;
-	int num_goal_finded;
+	int num_goal_found;
 	double minR;
 
 	octomap::OcTree *map;

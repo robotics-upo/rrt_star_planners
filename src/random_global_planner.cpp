@@ -26,43 +26,43 @@ RandomGlobalPlanner::RandomGlobalPlanner(std::string node_name_)
 //This function gets parameter from param server at startup if they exists, if not it passes default values
 void RandomGlobalPlanner::configParams()
 {
-    //At startup, no goal and no costmap received yet
-    seq = 0;
-    timesReplaned = 0;
-    mapRec = false;
+  //At startup, no goal and no costmap received yet
+  seq = 0;
+  timesReplaned = 0;
+  mapRec = false;
 
-    //Get params from param server. If they dont exist give variables default values
-    nh->param("show_config", showConfig, (bool)0);
-    nh->param("planner_type", planner_type, (std::string)"rrt_star");
-    nh->param("debug", debug, (bool)0);
+  //Get params from param server. If they dont exist give variables default values
+  nh->param("show_config", showConfig, (bool)0);
+  nh->param("planner_type", planner_type, (std::string)"rrt_star");
+  nh->param("debug", debug, (bool)0);
 
-    nh->param("ws_x_max", ws_x_max, (double)30);
-    nh->param("ws_y_max", ws_y_max, (double)30);
-    nh->param("ws_z_max", ws_z_max, (double)30);
-    nh->param("ws_x_min", ws_x_min, (double)0);
-    nh->param("ws_y_min", ws_y_min, (double)0);
-    nh->param("ws_z_min", ws_z_min, (double)0);
+  nh->param("ws_x_max", ws_x_max, (double)30);
+  nh->param("ws_y_max", ws_y_max, (double)30);
+  nh->param("ws_z_max", ws_z_max, (double)30);
+  nh->param("ws_x_min", ws_x_min, (double)0);
+  nh->param("ws_y_min", ws_y_min, (double)0);
+  nh->param("ws_z_min", ws_z_min, (double)0);
 
-    nh->param("map_resolution", map_resolution, (double)0.05);
-    nh->param("map_h_inflaction", map_h_inflaction, (double)0.05);
-    nh->param("map_v_inflaction", map_v_inflaction, (double)0.05);
+  nh->param("map_resolution", map_resolution, (double)0.05);
+  nh->param("map_h_inflaction", map_h_inflaction, (double)0.05);
+  nh->param("map_v_inflaction", map_v_inflaction, (double)0.05);
 
-    nh->param("n_iter", n_iter, (int)100);
-    nh->param("n_loop", n_loop, (int)1);
-    nh->param("world_frame", world_frame, (string) "/map");
-    nh->param("ugv_base_frame", ugv_base_frame, (string) "ugv_base_link");
-    nh->param("uav_base_frame", uav_base_frame, (string) "uav_base_link");
-    nh->param("reel_base_frame", reel_base_frame, (string) "reel_base_link");
-    nh->param("radius_near_nodes", radius_near_nodes, (double)1.0);
-    nh->param("step_steer", step_steer, (double)0.5);
-    nh->param("goal_gap_m", goal_gap_m, (double)0.2);
-    nh->param("min_l_steer_ugv", min_l_steer_ugv, (double)5.0);
+  nh->param("n_iter", n_iter, (int)100);
+  nh->param("n_loop", n_loop, (int)1);
+  nh->param("world_frame", world_frame, (string) "/map");
+  nh->param("ugv_base_frame", ugv_base_frame, (string) "ugv_base_link");
+  nh->param("uav_base_frame", uav_base_frame, (string) "uav_base_link");
+  nh->param("reel_base_frame", reel_base_frame, (string) "reel_base_link");
+  nh->param("radius_near_nodes", radius_near_nodes, (double)1.0);
+  nh->param("step_steer", step_steer, (double)0.5);
+  nh->param("goal_gap_m", goal_gap_m, (double)0.2);
+  nh->param("min_l_steer_ugv", min_l_steer_ugv, (double)5.0);
 
-    nh->param("distance_obstacle_ugv", distance_obstacle_ugv, (double)1.0);
-    nh->param("distance_obstacle_uav", distance_obstacle_uav, (double)1.0);
-    nh->param("distance_catenary_obstacle", distance_catenary_obstacle, (double)0.1);
+  nh->param("distance_obstacle_ugv", distance_obstacle_ugv, (double)1.0);
+  nh->param("distance_obstacle_uav", distance_obstacle_uav, (double)1.0);
+  nh->param("distance_catenary_obstacle", distance_catenary_obstacle, (double)0.1);
 
-    nh->param("length_tether_max", length_tether_max, (double)10.0);
+  nh->param("length_tether_max", length_tether_max, (double)10.0);
 
 	nh->param("min_distance_add_new_point", min_distance_add_new_point, (double)1.0);
 
@@ -70,50 +70,50 @@ void RandomGlobalPlanner::configParams()
 	nh->param("w_nearest_uav", w_nearest_uav, (double)1.0);
 	nh->param("w_nearest_smooth", w_nearest_smooth, (double)1.0);
 
-  	nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
+  nh->param("write_data_for_analysis",write_data_for_analysis, (bool)0);
 	nh->param("path", path, (std::string) "~/");
 	nh->param("map_file", map_file, (std::string) "my_map");
 
-    nh->param("sample_mode", sample_mode, (int)0);
-    nh->param("do_steer_ugv", do_steer_ugv, (bool)true);
-    nh->param("coupled", coupled, (bool)true);
-    nh->param("samp_goal_rate", samp_goal_rate, (int)10);
-    nh->param("debug_rrt", debug_rrt, (bool)true);
-    nh->param("nodes_marker_debug", nodes_marker_debug, (bool)true);
-    nh->param("pause_execution", pause_execution, (bool)true);
-    nh->param("use_distance_function", use_distance_function, (bool)true); //Only related with tether and UAV distance
+  nh->param("sample_mode", sample_mode, (int)0);
+  nh->param("do_steer_ugv", do_steer_ugv, (bool)true);
+  nh->param("coupled", coupled, (bool)true);
+  nh->param("samp_goal_rate", samp_goal_rate, (int)10);
+  nh->param("debug_rrt", debug_rrt, (bool)true);
+  nh->param("nodes_marker_debug", nodes_marker_debug, (bool)true);
+  nh->param("pause_execution", pause_execution, (bool)true);
+  nh->param("use_distance_function", use_distance_function, (bool)true); //Only related with tether and UAV distance
     
-    nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
-    nh->param("catenary_file", catenary_file, (std::string) "catenary_file");
-    nh->param("use_parable", use_parable, (bool)false);
-    catenary_analysis_file = path + catenary_file + ".txt";
+  nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
+  nh->param("catenary_file", catenary_file, (std::string) "catenary_file");
+  nh->param("use_parable", use_parable, (bool)false);
+  catenary_analysis_file = path + catenary_file + ".txt";
 
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
 	nh->param("num_pos_initial", num_pos_initial,(int)1);
 
-    ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
-    ROS_INFO_COND(showConfig, PRINTF_GREEN "   Workspace = X: [%.2f, %.2f]\t Y: [%.2f, %.2f]\t Z: [%.2f, %.2f]  ", ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min);
-    ROS_INFO_COND(showConfig, PRINTF_GREEN "   World frame: %s, UGV base frame: %s, UAV base frame: %s ", world_frame.c_str(), ugv_base_frame.c_str(), uav_base_frame.c_str());
+  ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D Node Configuration:");
+  ROS_INFO_COND(showConfig, PRINTF_GREEN "   Workspace = X: [%.2f, %.2f]\t Y: [%.2f, %.2f]\t Z: [%.2f, %.2f]  ", ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min);
+  ROS_INFO_COND(showConfig, PRINTF_GREEN "   World frame: %s, UGV base frame: %s, UAV base frame: %s ", world_frame.c_str(), ugv_base_frame.c_str(), uav_base_frame.c_str());
 }
 
-void RandomGlobalPlanner::configRRTStar()
-{
+  void RandomGlobalPlanner::configRRTStar()
+  {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
-                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                    map_file, path, get_catenary_data, catenary_analysis_file, use_parable);
+                     nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
+                     map_file, path, get_catenary_data, catenary_analysis_file, use_parable);
     configRandomPlanner();
 
 
     CheckCM->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
 
-}
+  }
 
-void RandomGlobalPlanner::configTopics()
-{
+  void RandomGlobalPlanner::configTopics()
+  {
     replan_status_pub = nh->advertise<std_msgs::Bool>("replanning_status", 1);
     clean_markers_optimizer_pub_ = nh->advertise<std_msgs::Bool>("/clean_marker_optimizer", 1);
     interpolated_path_ugv_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_path_ugv_rrt_star", 2, true);
-	interpolated_path_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_path_uav_rrt_star", 2, true);
+    interpolated_path_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_path_uav_rrt_star", 2, true);
     interpolated_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_catenary_marsupial", 1000, true);
 
     sub_map = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary", 1, &RandomGlobalPlanner::collisionMapCallBack, this);
@@ -228,7 +228,7 @@ void RandomGlobalPlanner::makePlanGoalCB()
 
         sendPathToLocalPlannerServer();
     }
-    else{ 
+    else{
         make_plan_res.not_possible = true;
         make_plan_res.finished = false;
         make_plan_server_ptr->setAborted(make_plan_res, "Impossible to calculate a solution");
