@@ -120,6 +120,8 @@ public:
 
   inline bool setValidInitialPositionMarsupial(RRTNode n_)
 	{
+    delete disc_initial;
+    disc_initial = new RRTNode(n_);
     if(!isInitialPositionUAVOccupied()){
       ROS_INFO("RandomUAVPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] OK", 
                n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
