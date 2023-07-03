@@ -1,0 +1,26 @@
+<launch>
+  <arg name="map_name" default="stage_3"/>
+
+  <node pkg="octomap_server" type="octomap_server_node" name="server_obstacles_" >
+    <remap from="/cloud_in" to="/region_growing_obstacles_pc_map"/>
+    <remap from="/octomap_full" to="/region_growing_obstacles_octo"/>
+    <param name="frame_id" value="world"/>
+  </node>
+
+  <node pkg="octomap_server" type="octomap_server_node" name="server_traversability_" >
+    <remap from="/cloud_in" to="/region_growing_traversability_pc_map"/>
+    <remap from="/octomap_full" to="/region_growing_traversability_octo"/>
+    <param name="frame_id" value="world"/>
+  </node>
+
+  <node pkg="octomap_server" type="octomap_saver" name="saver_1" args="-f $(arg map_name)_obstacles.bt" >
+    <remap from="/octomap_full" to="/region_growing_obstacles_octo"/>
+  </node>
+
+  <node pkg="octomap_server" type="octomap_saver" name="saver_2" args="-f $(arg map_name)_traversability.bt" >
+    <remap from="/octomap_full" to="/region_growing_traversability_octo"/>
+  </node>
+
+
+
+</launch>
