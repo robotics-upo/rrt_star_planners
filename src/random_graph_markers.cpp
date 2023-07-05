@@ -189,7 +189,7 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 	std::string string_marker, ns_marker;
 	double c_color1, c_color2, c_color3;
 	double x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_;
-	std::vector<geometry_msgs::Point> points_catenary_;
+	std::vector<geometry_msgs::Vector3> points_catenary_;
 	geometry_msgs::Point p_reel_;
 	int count = 0; 
 
@@ -272,8 +272,8 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 		len_cat_ = ct_[i];
 
 		points_catenary_.clear();
-		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, false);
-		bc.getPointCatenary3D(points_catenary_);
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
+		bc.getPointCatenary3D(points_catenary_, false);
 
 		int id_ = i;
 		
@@ -324,7 +324,7 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 			
 }
 
-void PlannerGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Point> points_catenary_, ros::Publisher one_catenary_marker_pub_){
+void PlannerGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Vector3> points_catenary_, ros::Publisher one_catenary_marker_pub_){
 	std::string string_marker;
     std::string ns_marker;
 
@@ -372,7 +372,7 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
     std::string string_marker;
     std::string ns_marker;
 	double c_color1, c_color2, c_color3;
-	std::vector<geometry_msgs::Point> points_catenary_;
+	std::vector<geometry_msgs::Vector3> points_catenary_;
 	geometry_msgs::Point p_reel_;
 	
 	int count = 0; 
@@ -380,7 +380,7 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
 		p_reel_ = getReelNode(*nt_);
 		points_catenary_.clear();
 
-		bisectionCatenary bc;
+		bisectionCatenary bc(g_3D_ , bound_obst_, octotree_full_, trav_kdT_, trav_pc_);
 
 		double x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, len_cat_;
 		x_ugv_ = p_reel_.x; 
@@ -391,13 +391,9 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
 		z_uav_ = nt_->point_uav.z*step; 
 		len_cat_ = nt_->length_cat;
 
-		bc.readDataForCollisionAnalisys(g_3D_ , bound_obst_, octotree_full_, trav_kdT_, trav_pc_);
-		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, true);
-		bc.getPointCatenary3D(points_catenary_, false);
-		// printf("Catenary[%i]: L=[%f] reel=[%f %f %f] uav=[%f %f %f] \n",count, len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
-		// for (int i=0 ; i < bc.dist_obst_cat.size() ;  i++){
-		// 	printf("Catenary[%i/%i]: Distance To Obstacle=[%f]\n",i,count, bc.dist_obst_cat[i]);
-		// }
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
+		bc.getPointCatenary3D(points_catenary_, true);
+
 
 		int id_ = nt_->id;
 		
@@ -453,7 +449,7 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
 	double c_color1, c_color2, c_color3;
 	int count = 0; 
 	bisectionCatenary bc;
-	std::vector<geometry_msgs::Point> points_catenary_;
+	std::vector<geometry_msgs::Vector3> points_catenary_;
 	geometry_msgs::Point p_reel_, p_uav_;
 	
 	for (auto nt_:nodes_tree_) {		
@@ -464,8 +460,8 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
 		p_uav_.z = nt_->point_uav.z*step;
 		double l_cat_ = nt_->length_cat;
 
-		bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z, false);
-		bc.getPointCatenary3D(points_catenary_);
+		bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z);
+		bc.getPointCatenary3D(points_catenary_, false);
 
 
 		int id_ = nt_->id;

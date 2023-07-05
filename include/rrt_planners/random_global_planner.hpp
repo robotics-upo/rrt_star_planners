@@ -36,7 +36,6 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 
 //Dynamic reconfigure auto generated libraries
 #include <dynamic_reconfigure/server.h>
-#include <theta_star_2d/GlobalPlannerConfig.h>
 
 #include <time.h>
 #include <sys/timeb.h>
@@ -62,6 +61,7 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include "misc/catenary_solver_ceres.hpp"
 #include "catenary_checker/near_neighbor.hpp"
 #include "rrt_planners/random_graph_markers.h"
+#include "rrt_planners/export_rrt_path.hpp"
 
 #include "catenary_checker/catenary_checker_manager.h"
 #include "catenary_checker/grid3d.hpp"
@@ -160,7 +160,7 @@ namespace PathPlanners
             void clearCatenaryGPMarker();
 	        void clearLinesGPMarker();
             
-            geometry_msgs::Point getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_);
+            geometry_msgs::Vector3 getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_);
 
 	        CatenaryCheckerManager *CheckCM;
 
@@ -202,7 +202,7 @@ namespace PathPlanners
 	        Grid3d *grid_3D;
 
             //These two flags can be configured as parameters
-            bool showConfig, debug, debug_rrt, nodes_marker_debug;
+            bool showConfig, debug, debug_rrt, nodes_marker_debug, save_path_in_file;
 
 	        std::string path, name_output_file, map_file;
 	        int num_pos_initial;

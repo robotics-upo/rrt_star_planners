@@ -26,7 +26,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   dynamic_reconfigure
   upo_actions
-  costmap_2d
   trajectory_msgs
 )
 find_package(Boost REQUIRED COMPONENTS system)
@@ -191,10 +190,14 @@ include_directories(
 #   src/${PROJECT_NAME}/rrt_planners.cpp
 # )
 
-add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp src/random_graph_markers.cpp )
+add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp src/random_graph_markers.cpp src/random_graph_markers.cpp src/export_rrt_path.cpp)
 add_dependencies(random_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(random_global_planner_node  ${catkin_LIBRARIES} Ceres::ceres ${EXTERNAL_LIBS} ${CERES_LIBRARIES} catenary_checker Qt5::Charts
 Qt5::Widgets dbscan_line)
+
+add_executable(goal_marker_node src/goal_marker_node.cpp) 
+target_link_libraries(goal_marker_node ${catkin_LIBRARIES} ${EXTERNAL_LIBS})
+add_dependencies(goal_marker_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries

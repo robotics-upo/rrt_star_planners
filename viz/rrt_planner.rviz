@@ -4,10 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
         - /TF1/Frames1
-        - /Optimized_catenary_cable1
       Splitter Ratio: 0.5346715450286865
     Tree Height: 797
   - Class: rviz/Selection
@@ -157,45 +154,45 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/post_init_trajectory_ugv_marker
       Name: post_trajectory_ugv
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/post_init_trajectory_uav_marker
       Name: post_tajectory_uav
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/opt_trajectory_ugv_marker
       Name: Optimized_trajectory_ugv
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/opt_trajectory_uav_marker
       Name: OptImized_trajectory_uav
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /optimizer_local_planner_node/catenary_marker
       Name: Optimized_catenary_cable
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /random_planner_node/tree_rrt_star_ugv
@@ -253,21 +250,21 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /random_planner_node/new_point
       Name: New_node
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /random_planner_node/nearest_point
       Name: Nearest_node
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /random_planner_node/points_marker
@@ -297,7 +294,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.05000000074505806
+      Size (m): 0.15000000596046448
       Style: Spheres
       Topic: /region_growing_traversability_pc_map
       Unreliable: false
@@ -307,14 +304,14 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 9.975000381469727
+        Min Value: -0.4749999940395355
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 164; 0; 0
-      Color Transformer: FlatColor
+      Color Transformer: AxisColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -325,7 +322,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.019999999552965164
+      Size (m): 0.029999999329447746
       Style: Flat Squares
       Topic: /region_growing_obstacles_pc_map
       Unreliable: false
@@ -501,21 +498,21 @@ Visualization Manager:
       Use rainbow: true
       Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /rrt_planner_node/new_catenaty
       Name: MarkerArray
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /rrt_planner_node/nearest_catenaty
       Name: MarkerArray
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 85; 87; 83
@@ -544,7 +541,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 23.77379035949707
+      Distance: 10.724964141845703
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -552,17 +549,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.34628820419311523
-        Y: 2.528245449066162
-        Z: -1.5015361896075774e-06
+        X: 5.268983364105225
+        Y: -1.1856224536895752
+        Z: -5.316233455232577e-06
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.020398277789354324
+      Pitch: 0.2953982353210449
       Target Frame: <Fixed Frame>
-      Yaw: 4.681265354156494
+      Yaw: 6.106276512145996
     Saved: ~
 Window Geometry:
   Displays:

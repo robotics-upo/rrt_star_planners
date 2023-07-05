@@ -5,7 +5,7 @@
 
     <arg name="graph_traj_in_rviz" default="false"/>
     <arg name="pause_execution" default="false"/>
-    <arg name="write_data_files" default="false"/>
+    <arg name="write_data_files" default="true"/>
     <arg name="use_distance_function" default="true"/>  
     <arg name="pc_user_name"    default="simon"/>     
 
@@ -113,12 +113,12 @@
         <param name="w_eta_1"    value="0.0250"/>   # catenary Obstacles collision 
         <param name="w_eta_2"    value="0.1000"/>   # catenary length 0.00150
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
-        <param name="n_iter_opt"    value="0"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
         <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
-        <param name="distance_obstacle_uav"         value="1.2"/> <!-- bound distance UAV to obstacles [m]-->
-        <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
-        <param name="initial_velocity_uav"  value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
+        <param name="distance_obstacle_uav"         value="2.0"/> <!-- bound distance UAV to obstacles [m]-->
+        <param name="initial_velocity_ugv"  value="0.25"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
+        <param name="initial_velocity_uav"  value="0.25"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
         <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
         <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->

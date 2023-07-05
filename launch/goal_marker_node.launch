@@ -1,0 +1,13 @@
+<launch>
+
+    <!-- Loading Arguments -->
+    <arg name="map"        default="teatro_wall"/>
+    <!-- <rosparam command="load" file="$(find marsupial_optimizer)/trees/resources/$(arg map).yaml" /> -->
+
+    <node pkg="rrt_planners" type="goal_marker_node" name="goal_marker_node" output="screen">
+        <param name="map" value="$(arg map)" />
+        <param name="/$(arg map)_pos_final_1/pose/x" value="-6.65" />
+        <param name="/$(arg map)_pos_final_1/pose/y" value="4.39" />
+        <param name="/$(arg map)_pos_final_1/pose/z" value="3.05" />
+    </node> 
+</launch>

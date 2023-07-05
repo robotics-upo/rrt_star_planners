@@ -385,7 +385,7 @@ public:
 
 protected:
 	
-	RRTNode getRandomNode(bool go_to_goal_ = false); 
+	bool getRandomNode(RRTNode &q_rand_, bool go_to_goal_ = false); 
 	bool extendGraph(const RRTNode q_rand_);
 	RRTNode* getNearestNode(const RRTNode q_rand_);
   	bool steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_, RRTNode &q_new_);
@@ -398,8 +398,8 @@ protected:
 	// bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
 	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
 	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
-	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Point> &points_catenary_);
-	geometry_msgs::Point getReelNode(const RRTNode node_);
+	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Vector3> &points_catenary_);
+	geometry_msgs::Vector3 getReelNode(const RRTNode node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtreeNode(const RRTNode ukT_);
 	void updateKdtreeUGV(const RRTNode ukT_);
@@ -574,8 +574,8 @@ protected:
 	double minR;
 
 	octomap::OcTree *map;
-	std::vector<geometry_msgs::Point> points_catenary_new_node;
-	std::vector<geometry_msgs::Point> v_points_ws_ugv;
+	std::vector<geometry_msgs::Vector3> points_catenary_new_node;
+	std::vector<geometry_msgs::Vector3> v_points_ws_ugv;
   	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_ugv_marker_pub_, lines_uav_marker_pub_, catenary_marker_pub_, all_catenary_marker_pub_;
   	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
 	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_, reducedMapPublisher;

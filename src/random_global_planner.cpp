@@ -43,6 +43,8 @@ void RandomGlobalPlanner::configParams()
     nh->param("ws_y_min", ws_y_min, (double)0);
     nh->param("ws_z_min", ws_z_min, (double)0);
 
+    nh->param("save_path_in_file", save_path_in_file, (bool) false);
+
     nh->param("map_resolution", map_resolution, (double)0.05);
     nh->param("map_h_inflaction", map_h_inflaction, (double)0.05);
     nh->param("map_v_inflaction", map_v_inflaction, (double)0.05);
@@ -128,14 +130,15 @@ void RandomGlobalPlanner::configTopics()
 
 void RandomGlobalPlanner::configServices()
 {
-    execute_path_client_ptr.reset(new ExecutePathClient("/Execute_Plan", true));
     make_plan_server_ptr.reset(new MakePlanServer(*nh, "/Make_Plan", false));
     make_plan_server_ptr->registerGoalCallback(boost::bind(&RandomGlobalPlanner::makePlanGoalCB, this));
     make_plan_server_ptr->registerPreemptCallback(boost::bind(&RandomGlobalPlanner::makePlanPreemptCB, this));
-
     make_plan_server_ptr->start();
-    execute_path_client_ptr->waitForServer();
 
+    if (!save_path_in_file){
+        execute_path_client_ptr.reset(new ExecutePathClient("/Execute_Plan", true));
+        execute_path_client_ptr->waitForServer();
+    }
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Global Planner 3D: Action client from global planner ready");
 }
@@ -183,7 +186,8 @@ void RandomGlobalPlanner::deleteCatenaryGPCallBack(const std_msgs::Bool::ConstPt
 void RandomGlobalPlanner::makePlanGoalCB()
 {
    //Cancel previous executing plan
-    execute_path_client_ptr->cancelAllGoals();
+    if (!save_path_in_file)
+        execute_path_client_ptr->cancelAllGoals();
     countImpossible = 0;
     timesReplaned = 0;
     make_plan_res.replan_number.data = 0;
@@ -212,6 +216,8 @@ void RandomGlobalPlanner::makePlanGoalCB()
 		    /*************************************************************************************************/
         }
 
+        // ros::Duration(5.0).sleep();
+        
         interpolatePointsGlobalPath(trajectory,randPlanner.length_catenary);
         ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
         randPlanner.clearCatenaryGPMarker();
@@ -223,6 +229,8 @@ void RandomGlobalPlanner::makePlanGoalCB()
             std::string y_ ;
             std::cout << " *** Press key to continue: " << std::endl;
             std::cin >> y_ ;
+            // ros::Duration(10.0).sleep();
+
         /*************************************************************************************************/
         }
 
@@ -243,7 +251,8 @@ void RandomGlobalPlanner::makePlanPreemptCB()
 
     make_plan_server_ptr->setPreempted(make_plan_res, "Goal Preempted by User");
     ROS_INFO("Global Planner: Make plan preempt cb: cancelling");
-    execute_path_client_ptr->cancelAllGoals();
+    if (!save_path_in_file)
+        execute_path_client_ptr->cancelAllGoals();
 }
 
 // This is the main function executed in loop
@@ -253,28 +262,30 @@ void RandomGlobalPlanner::plan()
     if (!make_plan_server_ptr->isActive())
         return;
 
-    if (execute_path_client_ptr->getState().isDone())
-    {
-        if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-            make_plan_res.finished = true;
-            make_plan_res.not_possible = false;
-            make_plan_res.replan_number.data = timesReplaned;
-            make_plan_res.time_spent.data = (ros::Time::now() - start_time);
-            make_plan_server_ptr->setSucceeded(make_plan_res);
-        }
+    if (!save_path_in_file){
+        if (execute_path_client_ptr->getState().isDone())
+        {
+            if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+                make_plan_res.finished = true;
+                make_plan_res.not_possible = false;
+                make_plan_res.replan_number.data = timesReplaned;
+                make_plan_res.time_spent.data = (ros::Time::now() - start_time);
+                make_plan_server_ptr->setSucceeded(make_plan_res);
+            }
 
-        if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::ABORTED){
-            ROS_INFO("Global Planner: Path execution aborted by local planner...");
-            replan();
-        } //!It means that local planner couldn t find a local solution
+            if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::ABORTED){
+                ROS_INFO("Global Planner: Path execution aborted by local planner...");
+                replan();
+            } //!It means that local planner couldn t find a local solution
 
-        if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::PREEMPTED){//!Maybe when the goal is inside the local workspace and occupied
-            ROS_INFO("Global Planner: Path execution preempted by local planner");
-            replan();
-        }
-        if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::REJECTED){//!Maybe when the goal is inside the local workspace and occupied
-            ROS_INFO("Global Planner: Path execution rejected by local planner");
-            replan();
+            if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::PREEMPTED){//!Maybe when the goal is inside the local workspace and occupied
+                ROS_INFO("Global Planner: Path execution preempted by local planner");
+                replan();
+            }
+            if (execute_path_client_ptr->getState() == actionlib::SimpleClientGoalState::REJECTED){//!Maybe when the goal is inside the local workspace and occupied
+                ROS_INFO("Global Planner: Path execution rejected by local planner");
+                replan();
+            }
         }
     }
 }
@@ -303,8 +314,11 @@ void RandomGlobalPlanner::replan()
         replan_status_pub.publish(flg_replan_status);
 
         make_plan_server_ptr->setAborted(make_plan_res, "Tried to replan and aborted after replanning 5 times");
-        execute_path_client_ptr->cancelAllGoals();
-        // return false;
+   
+        if (!save_path_in_file)
+            execute_path_client_ptr->cancelAllGoals();
+    
+    // return false;
     }
 }
 
@@ -421,7 +435,12 @@ void RandomGlobalPlanner::sendPathToLocalPlannerServer()
         goal_action.length_catenary.push_back(length_catenary[i]);
     }
 
-    execute_path_client_ptr->sendGoal(goal_action);
+    if (!save_path_in_file)
+        execute_path_client_ptr->sendGoal(goal_action);
+    else{
+        ExportPath ep_(goal_action, path);
+    }
+
 }
 
 bool RandomGlobalPlanner::setGoal()
@@ -568,25 +587,24 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 		        trajectory_aux_.points.push_back(t_);
 
                 if(j != 0){                    
-                    geometry_msgs::Point p_reel_, p_final_;
-                    std::vector<geometry_msgs::Point> p_catenary_;
+                    geometry_msgs::Vector3 p_reel_, p_final_;
+                    std::vector<geometry_msgs::Vector3> p_catenary_;
                     p_reel_ = getReelNode(t_.transforms[0].translation.x ,t_.transforms[0].translation.y ,t_.transforms[0].translation.z,
                                         t_.transforms[0].rotation.x, t_.transforms[0].rotation.y, t_.transforms[0].rotation.z, t_.transforms[0].rotation.w);
                     p_final_.x = t_.transforms[1].translation.x; 
                     p_final_.y = t_.transforms[1].translation.y;
                     p_final_.z = t_.transforms[1].translation.z;
 
-                    bool check_catenary = true;
-                    bool look_for_catenary = true;
                     double l_cat_;
                     
-                    do{
-                        printf("p_reel_[%f %f %f] p_final_[%f %f %f] p_catenary_[%lu] \n",p_reel_.x,p_reel_.y,p_reel_.z,p_final_.x,p_final_.y,p_final_.z,p_catenary_.size());
-                        check_catenary = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
-                        look_for_catenary = !check_catenary;
+                    printf("p_reel_[%f %f %f] p_final_[%f %f %f] p_catenary_[%lu] \n",p_reel_.x,p_reel_.y,p_reel_.z,p_final_.x,p_final_.y,p_final_.z,p_catenary_.size());
+                    bool is_cat_ = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
+                    if (is_cat_)
                         l_cat_ = CheckCM->length_cat_final;
-                        length_catenary.push_back(l_cat_);
-                    }while (look_for_catenary);
+                    else
+                        l_cat_ = l_catenary_[j_] * 1.01;
+                    
+                    length_catenary.push_back(l_cat_);
                 }
                 else{
                     length_catenary.push_back(l_catenary_[j_]);
@@ -640,9 +658,9 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
     trajectory_ = trajectory_aux_;
 }
 
-geometry_msgs::Point RandomGlobalPlanner::getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_)
+geometry_msgs::Vector3 RandomGlobalPlanner::getReelNode( double x_, double y_, double z_ , double r_x_, double r_y_, double r_z_, double r_w_)
 {
-	geometry_msgs::Point pos_reel;
+	geometry_msgs::Vector3 pos_reel;
 	double roll_, pitch_, yaw_;
 
 	tf::Quaternion q(r_x_, r_y_, r_z_, r_w_);
