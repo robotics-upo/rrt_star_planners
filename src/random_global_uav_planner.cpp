@@ -322,9 +322,9 @@ bool RandomGlobalUAVPlanner::calculatePath()
 
       seconds = finish.tv_sec - start.tv_sec;
       milliseconds = (- start.tv_nsec) + finish.tv_nsec;
+      auto time_ms = milliseconds*1e-6 + seconds*1e3;
 
-      ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms",
-               milliseconds*1e-6 + seconds*1e3);
+      ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms", time_ms);
       ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path: %d", number_of_points);
 
       if (number_of_points > 0){
@@ -345,8 +345,11 @@ bool RandomGlobalUAVPlanner::calculatePath()
 
         
       }
-      else
+      else {
+        ret = false;
         countImpossible++;
+      }
+      stats.push_back({time_ms, ret, (double)number_of_points});
     }
 
   return ret;
