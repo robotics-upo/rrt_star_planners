@@ -48,15 +48,16 @@
     <arg name="use_dbscan_lines" default="false"/>
     <arg name="dbscan_min_points" default="5"/>
     <arg name="use_parable"   default="false"/>
-    <arg name="use_both" default="false"/>
+    <arg name="use_both" default="true"/>
     <arg name="n_planes" default="100"/>
     <arg name="optimize" default="false"/>
+
     <arg name="debug" default="false"/>
     <arg name="debug_prefix" default="" unless="$(arg debug)"/>
     <arg name="debug_prefix" default="gdb --args " if="$(arg debug)"/>
 
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_planners" type="random_global_uav_planner_node" name="random_planner_node" output="screen" launch-prefix="$(arg debug_prefix)">
+    <node pkg="rrt_planners" type="random_global_uav_planner_node" name="$(anon random_planner_node2)" output="screen" launch-prefix="$(arg debug_prefix)">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
@@ -85,10 +86,9 @@
         <param name="samp_goal_rate"   value="$(arg samp_goal_rate)"/>  
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>    
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
-        <param name="min_distance_add_new_point" value="0.3"/>  
-        <param name="distance_obstacle_uav" value="0.4"/> <!-- bound distance UAV to obstacles 0.05[m] map resolution -->
-        <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->
-        <param name="n_intermediate" value="6"/>
+        <param name="min_distance_add_new_point" value="1.0"/>  
+        <param name="distance_obstacle_uav"         value="0.6"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
+        <param name="distance_catenary_obstacle"  value="0.4"/> <!--bound distance catenary to obstacles [m] -->   
 
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
@@ -110,4 +110,35 @@
         <param name="optimize" value="$(arg optimize)"/>
     </node>
    
+    <!-- Robot Marker -->
+    <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
+        <param name="frame_id" value="$(arg ugv_frame)"/>
+        <param name="scale" value="2.0"/>
+    </node>
+
+     <!-- Robot Marker -->
+    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
+        <param name="base_frame_id" value="$(arg uav_frame)"/>
+        <param name="model" value="m100"/> <!-- m600 or m100 -->
+        <param name="color" value="0.0"/> 
+        <param name="color_r" value="0.0"/> 
+        <param name="color_g" value="0.0"/> 
+        <param name="color_b" value="0.0"/> 
+        <param name="scale" value="1.5"/>
+    </node>
+
+    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
+        <param name="base_frame_id" value="$(arg uav_frame)"/>
+        <param name="model" value="circle"/> 
+        <param name="radius" value="0.6"/> 
+        <param name="color" value="0.5"/> 
+        <param name="color_r" value="0.8"/> 
+        <param name="color_g" value="0.4"/> 
+        <param name="color_b" value="0.0"/> 
+        <param name="scale_x" value="0.2"/> 
+        <param name="scale_y" value="0.2"/> 
+        <param name="scale_z" value="0.2"/> 
+        <param name="scale" value="1.0"/>
+    </node>
+
 </launch>

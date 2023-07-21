@@ -8,18 +8,16 @@
     <arg name="using_pc"    default="true"/> 
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="rrt_planner"/>
+    <arg name="is_coupled"    default="false"/>
     <arg name="sample_mode"    default="1"/>
     <arg name="write_data_files" default="false"/>
-    <arg name="pc_user"    default="simon"/>
-    <arg name="ugv_frame" default="ugv_base_link"/>
-    <arg name="uav_frame" default="uav_base_link"/>
+    <arg name="pc_user"    default="simon"/>     
     
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
     <arg name="pos_reel_z"    default="0.5"/> #position reel on UGV
-
+    <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
     <arg name="use_parable"   default="false"/>
-    <arg name="use_both"   default="false"/>
     <arg name="use_distance_function"   default="true"/>
 
     <!-- Publishing UGV and UAV tf -->
@@ -29,7 +27,7 @@
         <param name="num_pos_initial" value="$(arg num_pos_initial)"/>
         <param name="pos_uav_above_ugv" value="$(arg pos_uav_above_ugv)"/>
         <param name="uav_base_frame" value="uav_base_link"/>
-        <param name="ugv_base_frame" value="$(arg ugv_frame)"/>
+        <param name="ugv_base_frame" value="$(arg ugv_base_frame)"/>
         <param name="reel_base_frame" value="reel_base_link"/>
     </node>
 
@@ -42,18 +40,14 @@
         <arg name="map_file"  value="$(arg map)"/>    
     </include>
 
-    <!-- Segmentation -->
 
-    <arg name="segment" default="false"/>
-    <include file="$(find rrt_planners)/launch/region_growing.launch" if="$(arg segment)"/>
-
-    <include file="$(find marsupial_optimizer)/launch/octomap_server.launch" unless="$(arg segment)">
+    <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
         <arg name="map_file"  value="$(arg map)_obstacles"/>    
         <arg name="node_name"  value="octomap_server_obstacles"/>  
         <arg name="published_pc"  value="/region_growing_obstacles_pc_map"/>   
     </include>
 
-    <include file="$(find marsupial_optimizer)/launch/octomap_server.launch" unless="$(arg segment)">
+    <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
         <arg name="map_file"  value="$(arg map)_traversability"/>   
         <arg name="node_name"  value="octomap_server_traversability"/>   
         <arg name="published_pc"  value="/region_growing_traversability_pc_map"/>   
@@ -61,7 +55,8 @@
 
     <!-- Launch Optimizer and Global Planner-->
     <arg name="debug" default="false"/>
-    <include file="$(find rrt_planners)/launch/random_global_uav_planner.launch">
+    <include file="$(find rrt_planners)/launch/random_global_uav_planner2.launch">
+        <arg name="coupled" value="$(arg is_coupled)"/> 
         <arg name="map_file" value="$(arg map)"/> 
         <arg name="num_pos_initial" value="$(arg num_pos_initial)" /> 
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
@@ -71,42 +66,8 @@
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
         <arg name="optimize" value="false"/>
         <arg name="debug" value="$(arg debug)"/>
-        <arg name="use_both" value="$(arg use_both)"/>
     </include>    
 
     <!-- RViz -->
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find rrt_planners)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
-
-    <!--Markers-->
-    <!-- Robot Marker -->
-    <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
-        <param name="frame_id" value="$(arg ugv_frame)"/>
-        <param name="scale" value="2.0"/>
-    </node>
-
-     <!-- Robot Marker -->
-    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="m100"/> <!-- m600 or m100 -->
-        <param name="color" value="0.0"/> 
-        <param name="color_r" value="0.0"/> 
-        <param name="color_g" value="0.0"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale" value="1.5"/>
-    </node>
-
-    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="circle"/> 
-        <param name="radius" value="0.6"/> 
-        <param name="color" value="0.5"/> 
-        <param name="color_r" value="0.8"/> 
-        <param name="color_g" value="0.4"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale_x" value="0.2"/> 
-        <param name="scale_y" value="0.2"/> 
-        <param name="scale_z" value="0.2"/> 
-        <param name="scale" value="1.0"/>
-    </node>
-
 </launch>

@@ -145,6 +145,6 @@
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>
 
-
+    <include file="$(find marsupial_optimizer)/launch/behavior_tree_node_marsupial.launch"/>
 
 </launch>
