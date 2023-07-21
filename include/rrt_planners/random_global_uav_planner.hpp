@@ -67,6 +67,7 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
 
+#include <sstream>
 
 namespace PathPlanners
 {
@@ -257,6 +258,30 @@ namespace PathPlanners
 
     bool get_catenary_data, use_parable, use_both;
     std::string planner_type, catenary_file, catenary_analysis_file;
+
+    // Runtime stats:
+    class RuntimeStats {
+    public:
+      double planning_time;
+      bool success;
+      double trajectory_length;
+
+      inline std::string toString() const {
+        std::ostringstream oss;
+
+        oss << planning_time <<"\t";
+        oss << trajectory_length <<"\t";
+        oss << success <<"\n";
+
+        return oss.str();
+      }
+
+    };
+    std::vector<RuntimeStats> stats;
+
+  public:
+    bool exportStats(const std::string file);
+
 
   }; //class RandomGlobalUAVPlanner
 

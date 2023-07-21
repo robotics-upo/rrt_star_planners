@@ -1,4 +1,5 @@
 #include <rrt_planners/random_global_uav_planner.hpp>
+#include <sstream>
 
 namespace PathPlanners
 {
@@ -63,7 +64,7 @@ void RandomGlobalUAVPlanner::configParams()
   nh->param("goal_gap_m", goal_gap_m, (double)0.2);
 
   nh->param("distance_obstacle_uav", distance_obstacle_uav, (double)1.0);
-  nh->param("distance_catenary_obstacle", distance_catenary_obstacle, (double)0.5);
+  nh->param("distance_catenary_obstacle", distance_catenary_obstacle, (double)0.1);
 
   nh->param("length_tether_max", length_tether_max, (double)10.0);
 
@@ -319,11 +320,11 @@ bool RandomGlobalUAVPlanner::calculatePath()
       clock_gettime(CLOCK_REALTIME, &finish);
       ros::Duration(2.0).sleep();
 
-      seconds = finish.tv_sec - start.tv_sec - 1;
+      seconds = finish.tv_sec - start.tv_sec;
       milliseconds = (- start.tv_nsec) + finish.tv_nsec;
 
       ROS_INFO(PRINTF_YELLOW "Global Planner: Time Spent in Global Path Calculation: %.1f ms",
-               milliseconds/1000000 + seconds*1000);
+               milliseconds*1e-6 + seconds*1e3);
       ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path: %d", number_of_points);
 
       if (number_of_points > 0){
@@ -620,5 +621,22 @@ void RandomGlobalUAVPlanner::clearCatenaryGPMarker()
 { 
 	rrtgm.clearCatenaryMarker(interpolated_catenary_marker_pub_); 
 }
+
+  bool RandomGlobalUAVPlanner::exportStats(const std::string file) {
+    try {
+      ofstream ofs(file.c_str());
+
+      for (auto &x:stats) {
+        ofs << x.toString();
+      }
+    } catch (std::exception &e) {
+      ROS_ERROR("Could not save the stats. Filename: %s", file.c_str());
+      return false;
+    }
+
+    return randPlanner.ccm->exportStats(catenary_analysis_file);
+  }
+
+
 
 } // namespace PathPlanners
