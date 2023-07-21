@@ -122,10 +122,29 @@ public:
 	{
     delete disc_initial;
     disc_initial = new RRTNode(n_);
+    disc_initial->parentNode = NULL; // Make sure this node has no parents
     if(!isInitialPositionUAVOccupied()){
+      initial_position_ugv.x = disc_initial->point.x * step;
+      initial_position_ugv.y = disc_initial->point.y * step;
+      initial_position_ugv.z = disc_initial->point.z * step;
+      initial_position_uav.x = disc_initial->point_uav.x * step;
+      initial_position_uav.y = disc_initial->point_uav.y * step;
+      initial_position_uav.z = disc_initial->point_uav.z * step;
+
+      auto p_reel_ = getReelNode(*disc_initial);
+      std::vector <geometry_msgs::Point> pts_cat;
+      geometry_msgs::Point p_i;
+      p_i.x = initial_position_uav.x; p_i.y = initial_position_uav.y; p_i.z = initial_position_uav.z;
+      bool ret_val = ccm->SearchCatenary(p_reel_, p_i, pts_cat);
+      if (ret_val)
+        disc_initial->length_cat = ccm->length_cat_final;
+
+
       ROS_INFO("RandomUAVPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] OK", 
                n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
-      return true;
+      
+
+      return ret_val;
     }
     else{
       ROS_WARN("RandomUAVPlanner: Cannot set initial position UAV Marsupial out of bounds!!");
@@ -308,7 +327,7 @@ protected:
 	void getOrientation(RRTNode &n_ , RRTNode p_);
 	bool checkNodeFeasibility(const RRTNode pf_ );
 	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
-	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Point> &points_catenary_);
+	bool checkCatenary(RRTNode &q_init_, vector<geometry_msgs::Point> &points_catenary_);
 	geometry_msgs::Point getReelNode(const RRTNode node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtreeNode(const RRTNode ukT_);
