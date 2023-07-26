@@ -832,19 +832,22 @@ bool RandomUAVPlanner::checkCatenary(RRTNode &q_init_, vector<geometry_msgs::Poi
   p_final_.x = q_init_.point_uav.x * step ;	
   p_final_.y = q_init_.point_uav.y * step ;   
   p_final_.z = q_init_.point_uav.z * step ;   
-	
-  printf("Checking catenary. P reel: %f %f %f. \t P Final: %f %f %f\n", p_reel_.x, p_reel_.y, p_reel_.z,
-         p_final_.x, p_final_.y, p_final_.z);
 
-	bool founded_catenary = ccm->SearchCatenary(p_reel_, p_final_, points_catenary_);
-	if(founded_catenary){
+  if (debug_rrt) {
+    printf("Checking catenary. P reel: %f %f %f. \t P Final: %f %f %f\n",
+           p_reel_.x, p_reel_.y, p_reel_.z,
+           p_final_.x, p_final_.y, p_final_.z);
+  }
+
+	bool found_catenary = ccm->SearchCatenary(p_reel_, p_final_, points_catenary_);
+	if(found_catenary){
 		// printf("\t RandomUAVPlanner::checkCatenary: points_catenary_=%lu\n",points_catenary_.size());
 		q_init_.p_cat = points_catenary_;
 		q_init_.min_dist_obs_cat = ccm->min_dist_obs_cat;
 		q_init_.length_cat = ccm->length_cat_final;
-		q_init_.catenary = founded_catenary;
+		q_init_.catenary = found_catenary;
 	}
-	return founded_catenary;
+	return found_catenary;
 }
 
 geometry_msgs::Point RandomUAVPlanner::getReelNode(const RRTNode node_)
@@ -861,7 +864,6 @@ geometry_msgs::Point RandomUAVPlanner::getReelNode(const RRTNode node_)
 	return pos_reel;
 }
 
-
 void RandomUAVPlanner::updateKdtreeNode(const RRTNode ukT_)
 {
 	point_t pt_;
@@ -874,7 +876,8 @@ void RandomUAVPlanner::updateKdtreeUAV(const RRTNode ukT_)
 {
 	point_t pt_;
 
-	pt_ = {(float)ukT_.point_uav.x, (float)ukT_.point_uav.y, (float)ukT_.point_uav.z,ukT_.rot_uav.x, ukT_.rot_uav.y, ukT_.rot_uav.z, ukT_.rot_uav.w};
+	pt_ = {(float)ukT_.point_uav.x, (float)ukT_.point_uav.y, (float)ukT_.point_uav.z,
+         ukT_.rot_uav.x, ukT_.rot_uav.y, ukT_.rot_uav.z, ukT_.rot_uav.w};
 	v_uav_nodes_kdtree.push_back(pt_);
 }
 
