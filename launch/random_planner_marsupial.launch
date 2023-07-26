@@ -40,6 +40,11 @@
         <arg name="map_file"  value="$(arg map)"/>    
     </include>
 
+    <include file="$(find marsupial_optimizer)/launch/behavior_tree_node_marsupial.launch"/>
+    <include file="$(find rrt_planners)/launch/test.launch">
+      <arg name="map_file" value="$(arg map)"/>
+    </include>
+
     <!-- Launch  region_growing-->
     <!-- <include file="$(find rrt_planners)/launch/region_growing.launch">
         <param name="ugv_base_frame" value="$(arg ugv_base_frame)"/>
