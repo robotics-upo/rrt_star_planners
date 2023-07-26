@@ -1,5 +1,5 @@
-#ifndef _RRT_STAR_HPP__
-#define _RRT_STAR_HPP__
+#ifndef _RANDOM_PLANNER_HPP__
+#define _RANDOM_PLANNER_HPP__
 
 #include <math.h>
 #include <random>
@@ -42,11 +42,14 @@
 // #include "rrt_star_planners/near_neighbor.hpp"
 #include "rrt_planners/RRTNode.h"
 #include "rrt_planners/kdtree.hpp"
-#include "rrt_planners/rrt_graph_markers.h"
+#include "rrt_planners/random_graph_markers.h"
 
 #include "misc/catenary_solver_ceres.hpp"
-#include "misc/near_neighbor.hpp"
-#include "misc/grid3d.hpp"
+
+#include "catenary_checker/near_neighbor.hpp"
+#include "catenary_checker/grid3d.hpp"
+#include "catenary_checker/bisection_catenary_3D.h"
+#include "catenary_checker/catenary_checker_manager.h"
 
 
 #define PRINTF_REGULAR "\x1B[0m"
@@ -64,26 +67,23 @@
 #define PRINTF_GRAY    "\x1B[38;2;176;174;174m"
 
 // Uncomment to set length catenary in nodes
-#define USE_CATENARY_COMPUTE
 
 namespace PathPlanners
 {
 typedef geometry_msgs::Vector3 Vector3;
 typedef geometry_msgs::Quaternion Quaternion;
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
-
 typedef trajectory_msgs::MultiDOFJointTrajectory Trajectory;
 typedef visualization_msgs::Marker RVizMarker;
 
-
 //*****************************************************************
-// 				RRTPlanner Algoritm Class Declaration
+// 				RandomPlanner Algoritm Class Declaration
 //*****************************************************************
 
-class RRTPlanner
+class RandomPlanner
 {
 public:
-	RRTPlanner();
+	RandomPlanner();
 
 	/**
 		  Constructor with arguments
@@ -97,9 +97,9 @@ public:
 		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
-	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
-			   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, 
-			   double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
+	// RandomPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
+	// 		   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
+	// 		   double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
 
 	/**
 		  Initialization
@@ -114,10 +114,11 @@ public:
 		   @param NodeHandle 
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
-			float step_, float h_inflation_, float v_inflation_, float goal_weight_, float z_weight_cost_, float z_not_inflate_, ros::NodeHandlePtr nh_, 
-			double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
+			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
+			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
+			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parable_);
 
-  	~RRTPlanner();
+  	~RandomPlanner();
   
   	virtual int computeTreeCoupled();      
   	virtual int computeTreesIndependent();      
@@ -128,29 +129,9 @@ public:
   	std::list<RRTNode*> nodes_tree; // TODO: single tree planners
   	// std::list<RRTNode *> nodes_tree_ugv, nodes_tree_uav; // TODO: single tree planners
   	std::list<RRTNode*> take_off_nodes; // TODO: single 
-  
-  	// void getGraphMarker();
-	// void getTakeOffNodesMarker();
-	// void getPathMarker(std::list<RRTNode*> pt_);
-	// void getCatenaryMarker(std::vector<geometry_msgs::Point> points_catenary_);
-	// void getCatenaryPathMarker(std::list<RRTNode*> ct_);
-	// void getAllCatenaryMarker();
-	// void goalPointMarker();
-	// void reelPointMarker1(geometry_msgs::Point p_);
-	// void reelPointMarker2(geometry_msgs::Point p_);
-	// void randNodeMarker(RRTNode rn_);
-	// void newNodeMarker(RRTNode rn_);
-	// void nearestNodeMarker(RRTNode rn_);
-
-	// void getPointsObsMarker(std::vector<geometry_msgs::Point> points_catenary_);
-	// void clearMarkers();
 
   	virtual void clearStatus();
-	bool getTrajectory(Trajectory &trajectory);
-
-  	// virtual int getGraphSize() {
-    // 	return nodes_tree.size();
-  	// }
+	bool getGlobalPath(Trajectory &trajectory);
 
 	/**
 		  Set initial position of the path only check if 
@@ -177,23 +158,6 @@ public:
 		   @param [x,y,z] discrete or continuous position
 		   @return true if is a valid initial/final position and has been set correctly
 		**/
-	// inline bool setValidInitialPosition(DiscretePosition p)
-	// {
-	// 	if (setInitialPosition(p))
-	// 	{
-	// 		if (!isInitialPositionOccupied())
-	// 		{
-	// 			ROS_INFO("ThetaStar: Initial discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
-	// 			return true;
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		ROS_WARN("ThetaStar: Initial position outside the workspace attempt!!");
-	// 	}
-
-	// 	return false;
-	// }
 
 	inline bool setValidInitialPositionMarsupial(RRTNode n_)
 	{
@@ -202,13 +166,13 @@ public:
 			{
 				if (!isInitialPositionUGVOccupied())
 				{
-					ROS_INFO("RRTPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
+					ROS_INFO("RandomPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
 					return true;
 				}
 			}
 			else
 			{
-				ROS_WARN("RRTPlanner: Initial position UGV Coupled outside the workspace attempt!!");
+				ROS_WARN("RandomPlanner: Initial position UGV Coupled outside the workspace attempt!!");
 			}
 
 			return false;
@@ -219,29 +183,23 @@ public:
 					if (!isInitialPositionUGVOccupied())
 					{
 						if(!isInitialPositionUAVOccupied()){
-							ROS_INFO("RRTPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
+							ROS_INFO("RandomPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
 									n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
 							return true;
 						}
 						else{
-							ROS_WARN("RRTPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
+							ROS_WARN("RandomPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
 						}
 					}
 					else
-						ROS_WARN("RRTPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
+						ROS_WARN("RandomPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
 				}		
 				else
-					ROS_WARN("RRTPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
+					ROS_WARN("RandomPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
 
 			return false;
 		}
 	}
-
-	// inline bool setValidInitialPosition(Vector3 p)
-	// {
-	// 	DiscretePosition pp = discretizePosition(p);
-	// 	return setValidInitialPosition(pp);
-	// }
 
 	inline bool setValidInitialPositionMarsupial(Vector3 p1,Vector3 p2, Quaternion q1, Quaternion q2)
 	{
@@ -274,17 +232,18 @@ public:
 		{
 			if (!isFinalPositionOccupied())
 			{
-				ROS_INFO("RRTPlanner: Final discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
+				ROS_INFO("RandomPlanner: Final discrete position [%d, %d, %d] set correctly", p.x, p.y, p.z);
 				return true;
 			}
 		}
 		else
 		{
-			ROS_WARN("RRTPlanner: Final position outside the workspace attempt!! [%d, %d, %d]", p.x, p.y, p.z);
+			ROS_WARN("RandomPlanner: Final position outside the workspace attempt!! [%d, %d, %d]", p.x, p.y, p.z);
 		}
 
 		return false;
 	}
+	
 	inline bool setValidFinalPosition(Vector3 p)
 	{
 		DiscretePosition pp = discretizePosition(p);
@@ -325,19 +284,14 @@ public:
 		   Clear occupancy discrete matrix reduced
 		**/
 	void clearMapReduced(size_t _size);
-		/**
-		  Set timeout to calculate the solution
-			@param Natural number with time in seconds
-		**/
-	void setTimeOut(int sec);
 	/**
 		  Publish via topic the discrete map constructed
 		**/
-	virtual void publishOccupationMarkersMap();
+	// virtual void publishOccupationMarkersMap();
 	
 	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
-							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, bool do_s_ugv_, double min_l_steer_ugv_);
-
+							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
+							double w_n_ugv_, double w_n_uav_, double w_n_smooth_);
 	/** 
 	   Receive segmented PointCloud2 for UGV traversability
 	**/
@@ -353,10 +307,16 @@ public:
 
 	void setInitialCostGoal(RRTNode* n_);
 
+	octomap::OcTree checkTraversablePointInsideCircle(Vector3 point_);
 
+	void clearNodesMarker();
+	void clearCatenaryGPMarker();
+	void clearLinesGPMarker();
+	double getPointDistanceFullMap(bool use_distance_function, geometry_msgs::Vector3 p_);
+
+	CatenaryCheckerManager *ccm;
 
 	/** Variables **/
-
 	float step; // Resolution of the Matrix and its inverse
 	float step_inv;
 
@@ -368,8 +328,6 @@ public:
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
 	double phi_min, phi_max, theta_min, theta_max ;
 
-	// std::vector<Eigen::Vector3d> v_nodes_kdtree_ugv, v_nodes_kdtree_uav;
-
 	pointVec v_nodes_kdtree, v_ugv_nodes_kdtree, v_uav_nodes_kdtree;
 
 	RRTNode *disc_initial, *disc_final; // Discretes
@@ -378,12 +336,52 @@ public:
 	std::vector<double> length_catenary;
 
 	bool debug_rrt;
+	bool use_distance_function; //Only related with tether and UAV distance
 
 	std::string node_name, path_name;
 
+	double w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth;
 	NearNeighbor nn_trav_ugv, nn_obs_ugv, nn_obs_uav;
-	RRTGraphMarkers rrtgm;
+	PlannerGraphMarkers rrtgm;
 	Grid3d *grid_3D;
+	
+	
+	std::ifstream file_time1, file_time2;
+    std::ofstream ofs_time1, ofs_time2;
+	std::string output_file_time_methods, output_file_time_solutions, map_file;
+	struct timespec start_rand, finish_rand;
+	float sec_rand, msec_rand;
+	float time_random;	
+	struct timespec start_nearest, finish_nearest;
+	float sec_nearest, msec_nearest;
+	float time_nearest;
+	struct timespec start_steer, finish_steer;
+	float sec_steer, msec_steer;
+	float time_steer;
+	struct timespec start_near, finish_near;
+	float sec_near, msec_near;
+	float time_near;
+	struct timespec start_connect, finish_connect;
+	float sec_connect, msec_connect;
+	float time_connect;
+	struct timespec start_rewire, finish_rewire;
+	float sec_rewire, msec_rewire;
+	float time_rewire;
+	struct timespec start_extend, finish_extend;
+	float sec_extend, msec_extend;
+	float time_extend;
+	struct timespec start_rrt, finish_rrt;
+	float sec_rrt, msec_rrt;
+	float time_rrt;
+	struct timespec start_cat, finish_cat;
+	float sec_cat, msec_cat;
+	double time_cat;
+	std::string path;
+	bool new_solution;
+	std::vector<double> v_length_cat, v_min_dist_obs_cat, v_time_cat;
+	bool get_catenary_data, use_parable;
+	std::string catenary_file;
+
 
 protected:
 	
@@ -397,7 +395,7 @@ protected:
 	std::vector<float> getNearestUAVNode(const RRTNode &q_new_);
 	// int getNearestUGVNode(const RRTNode &q_new_);
 	void getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_);
-	bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
+	// bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
 	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
 	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
 	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Point> &points_catenary_);
@@ -570,12 +568,9 @@ protected:
 
 	RVizMarker markerRviz;	 // Explored nodes by ThetaStar
 
-
 	// bool got_to_goal = false;
 	int got_to_goal = 1;
-	float goal_weight;   // Reduction of the initial position distance weight C(s) = factor * g(s) + h(s)
-	float z_weight_cost; // Weight for height changes
-	float z_not_inflate; // Altitude to not be inflated
+	int num_goal_finded;
 	double minR;
 
 	octomap::OcTree *map;
@@ -583,7 +578,7 @@ protected:
 	std::vector<geometry_msgs::Point> v_points_ws_ugv;
   	ros::Publisher tree_rrt_star_ugv_pub_,tree_rrt_star_uav_pub_, take_off_nodes_pub_,lines_ugv_marker_pub_, lines_uav_marker_pub_, catenary_marker_pub_, all_catenary_marker_pub_;
   	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
-	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_;
+	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_, reducedMapPublisher;
 
 	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	double goal_gap_m;
@@ -595,7 +590,7 @@ protected:
 
 	std::vector<RRTNodeLink3D> discrete_world; // Occupancy Matrix and its size
 
-	int count_qnew_fail; // count times that fail get a new q_new;
+	int count_qnew_fail, count_fail_connect_goal, count_loop; // count times that fail get a new q_new;
 	int matrix_size;
 	int K, n_iter, n_loop, count_graph;
 	int ws_x_max, ws_y_max, ws_z_max; // WorkSpace lenghts from origin (0,0,0)
@@ -608,10 +603,9 @@ protected:
 	float Lx_inv, Ly_inv, Lz_inv;
 	std::string frame_id, planner_type;
 	bool is_coupled; 
-	bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
-	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value. 
+	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
     double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV

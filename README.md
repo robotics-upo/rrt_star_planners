@@ -25,8 +25,8 @@ In order to reproduce the tests presented in the paper, we provide you with a co
 
 
 
-    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_2 use_parable:=true
-    roscd marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_2
+    > roslaunch rrt_planners random_planner_marsupial.launch map:=stage_2 use_parable:=true
+    > roscd marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_2
 
 
 
@@ -36,3 +36,5 @@ In order to reproduce the tests presented in the paper, we provide you with a co
 This work is partially supported by Programa Operativo FEDER Andalucia 2014-2020, Consejeria de Economía, Conocimiento y Universidades (DeepBot, PY20_00817) and by the Spanish Ministry of Science, Innovation and Universities (Insertion PID2021-127648OB-C31, MCIU/AEI/FEDER, UE).
 
 <img src="images/mci_logo.png" width="400"/> <img src="images/junta_logo.png" width="114"/>
+RRT Star Planner adapted to get path for tied marsupial  robotic configuration
+
