@@ -25,9 +25,8 @@ In order to reproduce the tests presented in the paper, we provide you with a co
 
 
 
-    > roslaunch rrt_planners random_planner_marsupial.launch map:=stage_2 use_parable:=true
-    > roscd marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_2
-
+    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_2
+    roscd marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_2
 
 
 
