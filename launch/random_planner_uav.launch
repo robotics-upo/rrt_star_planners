@@ -109,4 +109,9 @@
         <param name="scale" value="1.0"/>
     </node>
 
+    <include file="$(find rrt_planners)/launch/test_uav.launch">
+
+      <arg name="map_file" value="$(arg map)"/>
+    </include>
+
 </launch>

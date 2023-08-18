@@ -487,7 +487,8 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
   return ret_val;
 }
 
-/*bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
+/*
+bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
                                                 const RRTNode q_new_) {
   	geometry_msgs::Point  point_nearest_uav_ , point_new_uav_,p_reel_nearest_, p_reel_new_;
 	std::vector<geometry_msgs::Point> points_cat_nearest_, points_cat_new_;
@@ -656,7 +657,8 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
 	}	
 	return true;	
 
-  }*/
+}
+*/
 
 std::vector<int> RandomUAVPlanner::getNearNodes(const RRTNode &q_new_, double radius_) 
 {

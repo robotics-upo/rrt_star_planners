@@ -22,7 +22,5 @@ int main(int argc, char **argv)
     RandomGP.exportStats("rrt_stats.txt"); // Exports the catenary and rrt stats
   }
 
-
-
   return 0;
 }

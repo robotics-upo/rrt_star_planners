@@ -437,7 +437,7 @@ geometry_msgs::TransformStamped RandomGlobalUAVPlanner::getLocalPoseReel()
   try{
     ret = tfBuffer->lookupTransform(ugv_base_frame, reel_base_frame,ros::Time(0));
   } catch (tf2::TransformException &ex) {
-    ROS_WARN("Glonbal Planner: Couldn't get Local Pose Reel(frame: %s), canot start Catenary; tf exception: %s",
+    ROS_WARN("Global Planner: Couldn't get Local Pose Reel(frame: %s), canot start Catenary; tf exception: %s",
              reel_base_frame.c_str(),ex.what());
   }
   return ret;
