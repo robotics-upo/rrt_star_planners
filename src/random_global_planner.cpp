@@ -85,7 +85,7 @@ void RandomGlobalPlanner::configParams()
     nh->param("pause_execution", pause_execution, (bool)true);
     nh->param("use_distance_function", use_distance_function, (bool)true); //Only related with tether and UAV distance
     
-    nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
+    nh->param("get_catenary_data", get_catenary_data, (bool)false);
     nh->param("catenary_file", catenary_file, (std::string) "catenary_file");
     nh->param("use_parable", use_parable, (bool)false);
     catenary_analysis_file = path + catenary_file + ".txt";
@@ -162,6 +162,7 @@ void RandomGlobalPlanner::readPointCloudTraversabilityMapCallback(const sensor_m
 void RandomGlobalPlanner::readPointCloudUGVObstaclesMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
     randPlanner.readPointCloudMapForUGV(msg);
+    pc_obs_ugv = msg;
     ROS_INFO_COND(debug, PRINTF_GREEN "Global Planner: UGV Obstacles Map Navigation Received");
 }
 
@@ -208,31 +209,30 @@ void RandomGlobalPlanner::makePlanGoalCB()
 
     if (calculatePath()){
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n");
-        if(pause_execution){
-            /********************* To obligate pause method and check Planning result *********************/
-		    std::string y_ ;
-		    std::cout << " *** Press key to continue: " << std::endl;
-		    std::cin >> y_ ;
-		    /*************************************************************************************************/
-        }
 
         // ros::Duration(5.0).sleep();
+
+        ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path before interpolation: %lu ", trajectory.points.size());
+        checkCollisionPathPlanner ccpp(node_name, grid_3D, pc_obs_ugv, pos_reel_ugv);
+        ccpp.CheckStatus(trajectory,randPlanner.length_catenary);
         
         interpolatePointsGlobalPath(trajectory,randPlanner.length_catenary);
+
         ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
         randPlanner.clearCatenaryGPMarker();
         randPlanner.clearLinesGPMarker();
         rrtgm.getPathMarker(trajectory,length_catenary,interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
-        ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
-        if(pause_execution){
-        /********************* To obligate stop method and check Optimization result *********************/
-            std::string y_ ;
-            std::cout << " *** Press key to continue: " << std::endl;
-            std::cin >> y_ ;
-            // ros::Duration(10.0).sleep();
+        
+        ccpp.CheckStatus(trajectory,length_catenary);
 
+        ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
+
+        /********************* To obligate pause method and check Planning result *********************/
+                   std::string y_ ;
+                   std::cout << " *** Press key to continue: " << std::endl;
+                   std::cin >> y_ ;
         /*************************************************************************************************/
-        }
+
 
         sendPathToLocalPlannerServer();
     }
@@ -355,8 +355,8 @@ bool RandomGlobalPlanner::calculatePath()
             if (write_data_for_analysis){
                 std::ofstream ofs_ugv, ofs_uav, ofs_time;
                 std::string output_file_ugv, output_file_uav, time_random_planner;
-	            output_file_ugv = path+"results"+"_stage_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UGV"+".txt";
-	            output_file_uav = path+"results"+"_stage_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
+	            output_file_ugv = path+"results_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UGV"+".txt";
+	            output_file_uav = path+"results_"+map_file+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file+"_UAV"+".txt";
 
                 float time_compute_GP = (milliseconds + seconds * 1000000000.0)/1000000000.0;
                 
@@ -367,7 +367,8 @@ bool RandomGlobalPlanner::calculatePath()
                     std::cout << output_file_ugv <<" : File exists !!!!!!!!!! " << std::endl;
                 } else {
                 ofs_ugv.open(output_file_ugv.c_str(), std::ofstream::app);
-                ofs_ugv <<"tCGP;tCO;dTI;dTO;tTI;tTO;mean_doI;min_doI;mean_doO;min_doO;mean_dcI;min_dcI;mean_dcO;min_dcO;mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;count_c;count_coll_U;pos_coll_I;count_coll_O;pos_coll_O"<<std::endl;
+                // ofs_ugv <<"tCGP;tCO;dTI;dTO;tTI;tTO;mean_doI;min_doI;mean_doO;min_doO;mean_dcI;min_dcI;mean_dcO;min_dcO;mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;count_c;count_coll_U;pos_coll_I;count_coll_O;pos_coll_O"<<std::endl;
+                ofs_ugv <<"TCGP;TCO;tTO;Mean_DOO;Min_DOO;Mean_DPO;Min_DPO;Mean_VTO;Max_VTO;Mean_ATO;Max_ATO;Count_CP"<<std::endl;
                 ofs_ugv.close();
                 std::cout << output_file_ugv <<" : File doesn't exist !!!!!!!!!! " << std::endl;
                 }
@@ -388,7 +389,8 @@ bool RandomGlobalPlanner::calculatePath()
                     std::cout << output_file_uav <<" : File exists !!!!!!!!!! " << std::endl;
                 } else {
                 ofs_uav.open(output_file_uav.c_str(), std::ofstream::app);
-                ofs_uav <<"tCGP;tCO;dTI;dTO;tTI;tTO;mean_doI;min_doI;mean_doO;min_doO;mean_dcI;min_dcI;mean_dcO;min_dcO;mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;count_coll_I;pos_coll_I;count_coll_O;pos_coll_O"<<std::endl;
+                // ofs_uav <<"tCGP;tCO;dTI;dTO;tTI;tTO;mean_doI;min_doI;mean_doO;min_doO;mean_dcI;min_dcI;mean_dcO;min_dcO;mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;count_coll_I;pos_coll_I;count_coll_O;pos_coll_O"<<std::endl;
+                ofs_uav <<"TCGP;TCO;tTO;Mean_DOO;Min_DOO;Mean_DPO;Min_DPO;Mean_VTO;Max_VTO;Mean_ATO;Max_ATO;Count_CP"<<std::endl;
                 ofs_uav.close();
                 std::cout << output_file_uav <<" : File doesn't exist !!!!!!!!!! " << std::endl;
                 }

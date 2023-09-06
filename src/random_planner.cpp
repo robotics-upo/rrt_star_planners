@@ -189,14 +189,10 @@ int RandomPlanner::computeTreesIndependent()
 {
  	double ret_val = -1.0; 
 	
-// for (int count_rrt = 0 ; count_rrt < 100 ; count_rrt++){
 	clearStatus();
 	if(nodes_marker_debug)
 		rrtgm.clearMarkersNodesTree(tree_rrt_star_ugv_pub_, tree_rrt_star_uav_pub_, take_off_nodes_pub_);
 	rrtgm.clearMarkers(lines_ugv_marker_pub_, lines_uav_marker_pub_);
-
-	if(get_catenary_data)
-		clock_gettime(CLOCK_REALTIME, &start_rrt);
 
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
 	printf("RandomPlanner::computeTreesIndependent -->  STARTING --> star_point_ugv[%.2f %.2f %.2f/%.2f %.2f %.2f]  goal_point=[%.2f %.2f %.2f] \n\n", 
@@ -207,15 +203,13 @@ int RandomPlanner::computeTreesIndependent()
 
 	setInitialCostGoal(disc_final);
 	
-	
 	if(!saveNode(disc_initial,true)){
 		ROS_ERROR("RandomPlanner::computeTreesIndependent --> Not posible to get catenary in initial node");
 		return 0;
 	}else
 		printf("RandomPlanner::computeTreesIndependent --> Saved initial node\n\n");
 
-		rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
-
+	rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
 	rrtgm.goalPointMarker(final_position, goal_point_pub_);
 	
 	count_graph = 0;
@@ -253,12 +247,11 @@ int RandomPlanner::computeTreesIndependent()
 		extendGraph(q_rand);
 		count_loop++;
 
-		// rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
-		/********************* To graph Catenary Node *********************/
-		// std::string y_ ;
-		// std::cin >> y_ ;
-		// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;
-		/******************************************************************/
+		/********************* To obligate pause method and check Planning result *********************/
+            std::string y_ ;
+            std::cout << " *** Press key to continue: " << std::endl;
+            std::cin >> y_ ;
+        /*************************************************************************************************/
 
 		if ( ( (num_goal_finded>0) && (planner_type == "rrt") ) || 
 			 ( (num_goal_finded>0) && (planner_type == "rrt_star") && (count_loop == n_iter) ) ||
@@ -282,7 +275,6 @@ int RandomPlanner::computeTreesIndependent()
 			ret_val = rrt_path.size();
 			break;
 		}
-		
 		else if (count_loop >= n_iter){
 			count_total_loop++;
 			count_loop = 0;
@@ -296,11 +288,8 @@ int RandomPlanner::computeTreesIndependent()
 		}
 	}
 	// Data Analysis for Catenary 
+
 	if(get_catenary_data){
-		clock_gettime(CLOCK_REALTIME, &finish_rrt);
-		sec_rrt = finish_rrt.tv_sec - start_rrt.tv_sec;
-		msec_rrt = (1000000000 - start_rrt.tv_nsec) + finish_rrt.tv_nsec;
-		time_rrt = (msec_rrt + sec_rrt * 1000000000.0)/1000000000.0;
 		// Compute means catenary values
 		double mean_sum_values_dis_, mean_sum_values_length_, mean_sum_time_cat_, sum_values_dis_, sum_values_length_ , sum_time_cat_, min_dist_obs_cat_;
 		mean_sum_values_dis_ = mean_sum_values_length_ = mean_sum_time_cat_ = sum_values_dis_ = sum_values_length_ = sum_time_cat_ = 0.0;
@@ -362,7 +351,6 @@ int RandomPlanner::computeTreesIndependent()
 	rrtgm.getAllCatenaryMarker(nodes_tree, all_catenary_marker_pub_);
 
 	ros::Duration(0.0).sleep();
-// }
   	return ret_val; 
 }
 
@@ -450,12 +438,7 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		RRTNode* new_node = new RRTNode();
 		RRTNode q_new;	//Take the new node value before to save it as a node in the list
 		
-        // clock_gettime(CLOCK_REALTIME, &start_nearest);
-			RRTNode* q_nearest = getNearestNode(q_rand_); 
-        // clock_gettime(CLOCK_REALTIME, &finish_nearest);
-		// sec_nearest = finish_nearest.tv_sec - start_nearest.tv_sec - 1;
-        // msec_nearest = (1000000000 - start_nearest.tv_nsec) + finish_nearest.tv_nsec;
-		// time_nearest = (msec_nearest + sec_nearest * 1000000000.0)/1000000000.0;
+		RRTNode* q_nearest = getNearestNode(q_rand_); 
 		
 		rrtgm.randNodeMarker(*q_nearest, nearest_point_pub_, 0);
 
@@ -463,26 +446,13 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			printf(" q_nearest = [%f %f %f / %f %f %f] l=%f feasible_l=%s\n", q_nearest->point.x*step,q_nearest->point.y*step,q_nearest->point.z*step, q_nearest->point_uav.x*step,q_nearest->point_uav.y*step,q_nearest->point_uav.z*step, 
 			q_nearest->length_cat, q_nearest->catenary? "true" : "false");
 		
-        // clock_gettime(CLOCK_REALTIME, &start_steer);
 		bool exist_q_new_ = steering(*q_nearest, q_rand_, step_steer, q_new);
-		// clock_gettime(CLOCK_REALTIME, &finish_steer);
-		// sec_steer = finish_steer.tv_sec - start_steer.tv_sec - 1;
-        // msec_steer = (1000000000 - start_steer.tv_nsec) + finish_steer.tv_nsec;
-		// time_steer = (msec_steer + sec_steer * 1000000000.0)/1000000000.0;
 		v_time_cat.push_back(time_cat);
 
 
 		if (!exist_q_new_){
 			if ((count_loop%samp_goal_rate)==0)
 				count_fail_connect_goal++;
-			// ROS_INFO( PRINTF_CYAN"  RRTPlanner::extendGraph : Not new point q_new=[%f %f %f / %f %f %f]  q_nearest=[%f %f %f / %f %f %f]",
-            //        q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_new.point_uav.x*step, q_new.point_uav.y*step, q_new.point_uav.z*step,
-            //        q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step, q_nearest->point_uav.x*step, q_nearest->point_uav.y*step, q_nearest->point_uav.z*step);
-			/********************* To graph Catenary Node *********************/
-			// std::string y_ ;
-			// std::cin >> y_ ;
-			// std::cout << "Continue DO-WHILE loop : " << y_ << std::endl;
-			/******************************************************************/
 			if (debug_rrt) 
 				printf(" exist_q_new_=%s\n", exist_q_new_? "true" : "false");
 			return false;
@@ -498,27 +468,17 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		
 		RRTNode *q_min;
 		q_min = q_nearest;
-		// ROS_INFO(PRINTF_BLUE"  RRTPlanner::extendGraph : Not Obstacle Free q_new=[%f %f %f / %f %f %f]  q_nearest=[%f %f %f / %f %f %f]", q_new.point.x*step, 
-					// q_new.point.y*step, q_new.point.z*step, q_new.point_uav.x*step, q_new.point_uav.y*step, q_new.point_uav.z*step, q_nearest->point.x*step, 
-					// q_nearest->point.y*step, q_nearest->point.z*step, q_nearest->point_uav.x*step, q_nearest->point_uav.y*step, q_nearest->point_uav.z*step);
 
 		if (debug_rrt)
 			printf(" q_min = [%f %f %f / %f %f %f] \n", q_min->point.x*step,q_min->point.y*step,q_min->point.z*step,q_min->point_uav.x*step,q_min->point_uav.y*step,q_min->point_uav.z*step);
 
-        // clock_gettime(CLOCK_REALTIME, &start_near);
 		std::vector<int> v_near_nodes = getNearNodes(q_new, radius_near_nodes) ;
-		// clock_gettime(CLOCK_REALTIME, &finish_near);
-		// sec_near = finish_near.tv_sec - start_near.tv_sec - 1;
-        // msec_near = (1000000000 - start_near.tv_nsec) + finish_near.tv_nsec;
-		// time_near = (msec_near + sec_near * 1000000000.0)/1000000000.0;
 
 		updateKdtreeNode(q_new); 	//KdTree is updated after get Near Nodes because to not take it own node as a near node
 		updateKdtreeUGV(q_new);
 		updateKdtreeUAV(q_new);
 		bool new_parentNode_ = false;
 
-		
-        // clock_gettime(CLOCK_REALTIME, &start_connect);
 			// I . Open near nodes and connected with minimum accumulated cost
 			if (planner_type == "rrt_star"){
 				for (size_t i = 0 ; i < v_near_nodes.size(); i++){
@@ -536,10 +496,6 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 					}
 				}
 			}
-		// clock_gettime(CLOCK_REALTIME, &finish_connect);
-		// sec_connect = finish_connect.tv_sec - start_connect.tv_sec - 1;
-        // msec_connect = (1000000000 - start_connect.tv_nsec) + finish_connect.tv_nsec;
-		// time_connect = (msec_connect + sec_connect * 1000000000.0)/1000000000.0;
 		if (new_parentNode_ ){
 			q_new.parentNode = q_min;
 			updateParamsNode(q_new);
@@ -547,7 +503,6 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 
 		*new_node = q_new;
 		
-        // clock_gettime(CLOCK_REALTIME, &start_rewire);
 			// II . Rewire Proccess for UGV
 			if (planner_type == "rrt_star"){
 				for (size_t i = 0 ; i < v_near_nodes.size(); i++){
@@ -563,10 +518,6 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 					}
 				}
 			}
-		// clock_gettime(CLOCK_REALTIME, &finish_rewire);
-		// sec_rewire = finish_rewire.tv_sec - start_rewire.tv_sec - 1;
-        // msec_rewire = (1000000000 - start_rewire.tv_nsec) + finish_rewire.tv_nsec;
-		// time_rewire = (msec_rewire + sec_rewire * 1000000000.0)/1000000000.0;
 
 		int got_goal_aux_ = got_to_goal; 
 		isGoal(q_new);
@@ -592,18 +543,11 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			v_length_cat.push_back(length_cat_);
 		}
 		
-		if(nodes_marker_debug){
-			count_graph++;
-			rrtgm.getGraphMarker(new_node, count_graph, tree_rrt_star_ugv_pub_, tree_rrt_star_uav_pub_);
-		}
-
-		// ROS_INFO(PRINTF_ROSE"  new node->point : [%f %f %f/%f %f %f] , catenary= %s , length_cat= %f , min_dist_obs_cat = %f , cost=%f\n" ,
-		// 				  new_node->point.x*step, new_node->point.y*step, new_node->point.z*step,
-		// 				  new_node->point_uav.x*step, new_node->point_uav.y*step, new_node->point_uav.z*step,
-		// 				  new_node->catenary? "true":"false", new_node->length_cat, new_node->min_dist_obs_cat, new_node->cost);
-		// std::cout << "points_catenary_.size() = " << points_catenary_new_node.size()  << std::endl <<std::endl;
-		
 		rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
+
+		for(size_t i=0 ; i < points_catenary_new_node.size() ; i++){
+			std::cout << "points_catenary_new_node [ " << points_catenary_new_node[i].x << " , " << points_catenary_new_node[i].y << " , " << points_catenary_new_node[i].z <<" ]" << std::endl;
+		}
 		
 		return true;
 	}
@@ -873,20 +817,13 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 			bool check_cat_feasible_ = checkCatenary(q1_, 2, points_catenary_new_node);
 			// Mode I: just steer UAV
 			if (debug_rrt) {
-				// if (!checkNodeFeasibility(q1_,false) || !checkNodeFeasibility(q1_,true) || !checkCatenary(q1_, 2, points_catenary_new_node)){
 					printf(" q_new I: q_ugv[%f %f %f] q_uav[%f %f %f]\n", q1_.point.x*step, q1_.point.y*step, q1_.point.z*step, q1_.point_uav.x*step,q1_.point_uav.y*step ,q1_.point_uav.z*step); 
 					printf(" checkNodeFeasibility(q1_,false) = %s\n",check_ugv_feasible_? "true" : "false");
 					printf(" checkNodeFeasibility(q1_,true) = %s\n",check_uav_feasible_? "true" : "false");
 					printf(" checkCatenary(q1_, 2, points_catenary_new_node) = %s\n",check_cat_feasible_? "true" : "false");
-				// }
 			}
 		
-			clock_gettime(CLOCK_REALTIME, &start_cat);
 			if (check_ugv_feasible_ && check_uav_feasible_ && check_cat_feasible_ && q1_.length_cat < min_dist_for_steer_ugv) {
-				clock_gettime(CLOCK_REALTIME, &finish_cat);
-				sec_cat = finish_cat.tv_sec - start_cat.tv_sec - 1;
-				msec_cat = (1000000000 - start_cat.tv_nsec) + finish_cat.tv_nsec;
-				time_cat = (msec_cat + sec_cat * 1000000000.0)/1000000000.0;
 				bool obt_free_col_1_ = obstacleFreeBetweenNodes(q_nearest_, q1_);
 				if (debug_rrt)
 					printf(" obstacleFreeBetweenNodes(q_nearest_, q1_)=%s\n",obt_free_col_1_?"true":"false");
@@ -909,20 +846,13 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 			check_uav_feasible_ = checkNodeFeasibility(q_new_,true);
 			check_cat_feasible_ = checkCatenary(q_new_, 2, points_catenary_new_node);
 			if (debug_rrt) {
-				// if (!checkNodeFeasibility(q_new_,false) || !checkNodeFeasibility(q_new_,true) || !checkCatenary(q_new_, 2, points_catenary_new_node)){
 					printf(" q_new II: q_ugv[%f %f %f] q_uav[%f %f %f]\n", q_new_.point.x*step, q_new_.point.y*step, q_new_.point.z*step, q_new_.point_uav.x*step ,q_new_.point_uav.y*step ,q_new_.point_uav.z*step); 
 					printf(" checkNodeFeasibility(q_new_,false) = %s\n",check_ugv_feasible_? "true" : "false");
 					printf(" checkNodeFeasibility(q_new_,true) = %s\n",check_uav_feasible_? "true" : "false");
 					printf(" checkCatenary(q_new_, 2, points_catenary_new_node) = %s\n",check_cat_feasible_? "true" : "false");
-				// }
 			}
 
-			clock_gettime(CLOCK_REALTIME, &start_cat);
 			if (check_ugv_feasible_ && check_uav_feasible_ && check_cat_feasible_){
-			clock_gettime(CLOCK_REALTIME, &finish_cat);
-			sec_cat = finish_cat.tv_sec - start_cat.tv_sec - 1;
-			msec_cat = (1000000000 - start_cat.tv_nsec) + finish_cat.tv_nsec;
-			time_cat = (msec_cat + sec_cat * 1000000000.0)/1000000000.0;
 			bool obt_free_col_2_ = obstacleFreeBetweenNodes(q_nearest_, q_new_);
 			if (debug_rrt) 
 				printf(" obstacleFreeBetweenNodes(q_nearest_, q_new_)= %s\n",obt_free_col_2_?"true":"false");
@@ -963,20 +893,14 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 			check_uav_feasible_ = checkNodeFeasibility(q2_,true);
 			check_cat_feasible_ = checkCatenary(q2_, 2, points_catenary_new_node);
 			if (debug_rrt) {
-				// if (!checkNodeFeasibility(q2_,false) || !checkNodeFeasibility(q2_,true) || !checkCatenary(q2_, 2, points_catenary_new_node)) {
 					printf(" q_new III: q_ugv[%f %f %f] q_uav[%f %f %f]\n", q2_.point.x*step, q2_.point.y*step, q2_.point.z*step, q2_.point_uav.x*step ,q2_.point_uav.y*step ,q2_.point_uav.z*step); 
 					printf(" checkNodeFeasibility(q2_,false) = %s\n",check_ugv_feasible_? "true" : "false");
 					printf(" checkNodeFeasibility(q2_,true) = %s\n",check_uav_feasible_? "true" : "false");
 					printf(" checkCatenary(q2_, 2, points_catenary_new_node) = %s\n",check_cat_feasible_? "true" : "false");	
-				// }
 			}
+			
 
-			clock_gettime(CLOCK_REALTIME, &start_cat);
 			if (check_ugv_feasible_ && check_uav_feasible_ && check_cat_feasible_ && q2_.length_cat < min_dist_for_steer_ugv) {
-				clock_gettime(CLOCK_REALTIME, &finish_cat);
-				sec_cat = finish_cat.tv_sec - start_cat.tv_sec - 1;
-				msec_cat = (1000000000 - start_cat.tv_nsec) + finish_cat.tv_nsec;
-				time_cat = (msec_cat + sec_cat * 1000000000.0)/1000000000.0;
 				bool obt_free_col_3_ = obstacleFreeBetweenNodes(q_nearest_, q2_);
 				if (debug_rrt) 
 					printf(" obstacleFreeBetweenNodes(q_nearest_, q2_)=%s\n",obt_free_col_3_?"true":"false");
@@ -1039,7 +963,6 @@ bool RandomPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const RRTN
 				check_point_.point.z = (point_obs_.z)*step_inv; 
 				j_++;
 				bool is_feasible_ = checkPointsCatenaryFeasibility(check_point_);
-	// printf("\t 1 RandomPlanner::checkPointsCatenaryFeasibility(check_point_)=%s check_point_[%f %f %f]\n",is_feasible_?"true":"false",(point_obs_.x), (point_obs_.y), (point_obs_.z));
 				if(!is_feasible_){
 					return false;
 				}
@@ -1080,7 +1003,6 @@ bool RandomPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const RRTN
 				check_point_.point.z = (point_obs_.z)*step_inv; 
 				j_++;
 				bool is_feasible_ = checkPointsCatenaryFeasibility(check_point_);
-	// printf("\t 2 checkPointsCatenaryFeasibility(check_point_)=%s check_point_[%f %f %f]\n",is_feasible_?"true":"false", (point_obs_.x), (point_obs_.y), (point_obs_.z));
 				if(!is_feasible_){
 					return false;
 				}
@@ -1119,7 +1041,6 @@ bool RandomPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,const RRTN
 				check_point_.point.z = (point_obs_.z)*step_inv; 
 				j_++;
 				bool is_feasible_ = checkPointsCatenaryFeasibility(check_point_);
-	// printf("\t 3 checkPointsCatenaryFeasibility(check_point_)=%s check_point_[%f %f %f]\n",is_feasible_?"true":"false",(point_obs_.x),(point_obs_.y),(point_obs_.z));
 				if(!is_feasible_){
 					return false;
 				}
@@ -1355,14 +1276,6 @@ void RandomPlanner::getParamsNode(RRTNode &node_, bool is_init_)
 	p_node_uav_.y = node_.point_uav.y * step;
 	p_node_uav_.z = node_.point_uav.z * step;
 	double dist_obs_uav = ccm->getPointDistanceFullMap(use_distance_function, p_node_uav_);
-	// Eigen::Vector3d obs_near_uav_;
-	// point_node_.x() = node_.point_uav.x * step;
-	// point_node_.y() = node_.point_uav.y * step;
-	// point_node_.z() = node_.point_uav.z * step;
-	// bool is_into_ = grid_3D->isIntoMap(point_node_.x(),point_node_.y(),point_node_.z());
-	// double dist_obs_uav;
-	// if (is_into_)
-	// 	dist_obs_uav = grid_3D->getPointDist((double)point_node_.x(),(double)point_node_.y(),(double)point_node_.z());
 
 	node_.id = getWorldIndex(node_.point.x, node_.point.y, node_.point.z);
 	node_.min_dist_obs_ugv = dist_obs_ugv;
@@ -1393,37 +1306,6 @@ void RandomPlanner::updateParamsNode(RRTNode &node_)
 	node_.cost = costNode(node_);
 }
 
-// bool RandomPlanner::checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_)
-// {
-// 	bool ret;
-// 	if(ugv_above_z_){
-// 		if (isUGVInside(pf_.point.x,pf_.point.y,pf_.point.z)){
-// 			Eigen::Vector3d obs_to_ugv, p_ugv;
-// 			p_ugv.x() =pf_.point.x * step ;
-// 			p_ugv.y() =pf_.point.y * step ; 
-// 			p_ugv.z() =pf_.point.z * step ; 
-// 			obs_to_ugv = nn_obs_ugv.nearestObstacleMarsupial(nn_obs_ugv.kdtree, p_ugv, nn_obs_ugv.obs_points);
-// 			double d_ = sqrt(pow(obs_to_ugv.x()-p_ugv.x(),2) + pow(obs_to_ugv.y()-p_ugv.y(),2) + pow(obs_to_ugv.z()-p_ugv.z(),2));
-// 			if (d_ > )
-// 			if (obs_to_ugv.z() < p_ugv.z())
-// 				ret = false;	
-// 			if (isUGVOccupied(pf_))
-// 				ret = true;		
-// 			else
-// 				ret = false;
-// 		}
-// 		else
-// 			ret = false;
-// 	}	
-// 	else{
-// 		if (isUGVOccupied(pf_))
-// 			ret = false;		
-// 		else
-// 			ret = true;
-// 	}
-// 	return ret;	
-// }
-
 bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 {
 	bool ret;
@@ -1448,7 +1330,6 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 	}
 	else{
 		if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
-			// Eigen::Vector3d obs_to_uav, pos_uav;
 			geometry_msgs::Vector3 obs_to_uav, pos_uav; 
 			pos_uav.x =pf_.point_uav.x * step ;
 			pos_uav.y =pf_.point_uav.y * step ; 
@@ -1481,13 +1362,12 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	pos_uav.z =pf_.point.z * step ; 
 	d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
 	if (d_ == -1.0){
-		// printf("d_=%f , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
 		return false;
 	}
+	
 	if (d_ > distance_catenary_obstacle)
 		ret = true;
 	else{
-		// printf("d_=%f < distance_catenary_obstacle , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
 		ret = false;
 	}
 	return ret;
@@ -1845,9 +1725,6 @@ bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)
 
 bool RandomPlanner::setInitialPositionIndependent(RRTNode n_)
 {
-	// printf("isUGVInside = %s\n",isUGVInside(n_.point.x, n_.point.y, n_.point.z)? "true" : "false");
-	// printf("isInside = %s\n",isInside(n_.point_uav.x, n_.point_uav.y, n_.point_uav.z)? "true" : "false");
-	
 	if (isUGVInside(n_.point.x, n_.point.y, n_.point.z) && isInside(n_.point_uav.x, n_.point_uav.y, n_.point_uav.z)){
 		RRTNodeLink3D *initialNodeInWorld = &discrete_world[getWorldIndex(n_.point.x, n_.point.y, n_.point.z)];
 
@@ -2112,27 +1989,5 @@ octomap::OcTree RandomPlanner::checkTraversablePointInsideCircle(Vector3 point_)
 	}
 	return map_circle;
 }
-
-// double RandomPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
-// {
-// 	double dist;
-// 	Eigen::Vector3d obs_, pos_;
-
-// 	if(use_dist_func_){
-// 		bool is_into_ = grid_3D->isIntoMap(p_.x,p_.y,p_.z);
-// 		if(is_into_)
-// 			dist =  grid_3D->getPointDist((double)p_.x,(double)p_.y,(double)p_.z) ;
-// 		else
-// 			dist = -1.0;
-// 	}
-// 	else{
-// 		pos_.x() = p_.x;
-// 		pos_.y() = p_.y; 
-// 		pos_.z() = p_.z; 
-// 		obs_ = nn_obs_uav.nearestObstacleMarsupial(nn_obs_uav.kdtree, pos_, nn_obs_uav.obs_points);
-// 		dist = sqrt(pow(obs_.x()-pos_.x(),2) + pow(obs_.y()-pos_.y(),2) + pow(obs_.z()-pos_.z(),2));
-// 	}
-// 	return dist;
-// }
 
 } // end class 

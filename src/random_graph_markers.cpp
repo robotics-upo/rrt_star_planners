@@ -392,7 +392,7 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
 		len_cat_ = nt_->length_cat;
 
 		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
-		bc.getPointCatenary3D(points_catenary_, true);
+		bc.getPointCatenary3D(points_catenary_, false);
 
 
 		int id_ = nt_->id;
