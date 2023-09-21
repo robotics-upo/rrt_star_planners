@@ -50,6 +50,8 @@
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
 #include "catenary_checker/catenary_checker_manager.h"
+#include <catenary_checker/check_collision_path_planner.h>
+
 
 
 #define PRINTF_REGULAR "\x1B[0m"
@@ -99,7 +101,7 @@ public:
 		**/
 	// RandomPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
 	// 		   float ws_z_min_, float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
-	// 		   double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_);
+	// 		   double goal_gap_m_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_tether_obstacle_, Grid3d *grid3D_);
 
 	/**
 		  Initialization
@@ -115,7 +117,7 @@ public:
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
 			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
-			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
+			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_tether_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
 			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parable_);
 
   	~RandomPlanner();
@@ -580,6 +582,9 @@ protected:
   	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
 	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_, reducedMapPublisher;
 
+            sensor_msgs::PointCloud2::ConstPtr pc_obs_ugv;
+
+
 	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	double goal_gap_m;
 
@@ -608,7 +613,7 @@ protected:
 	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value
 	int samp_goal_rate;
 	int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
-    double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
+    double distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
 	int id_ugv_init, id_uav_init;
 
 	visualization_msgs::MarkerArray catenary_marker;

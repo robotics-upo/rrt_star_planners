@@ -66,7 +66,7 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include "catenary_checker/catenary_checker_manager.h"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
-#include <rrt_planners/check_collision_path_planner.h>
+#include <catenary_checker/check_collision_path_planner.h>
 
 
 
@@ -252,7 +252,7 @@ namespace PathPlanners
             int n_iter, n_loop, samp_goal_rate;
             double goal_gap_m;
             double min_l_steer_ugv;// min distance UGV-UAV to steer a new position of UGV
-            double distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
+            double distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
             int sample_mode; // 0: random sample for UGV and UAV , 1: random sample only for UAV  
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
             double w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth;

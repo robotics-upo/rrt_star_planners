@@ -62,7 +62,7 @@ void RandomGlobalPlanner::configParams()
 
     nh->param("distance_obstacle_ugv", distance_obstacle_ugv, (double)1.0);
     nh->param("distance_obstacle_uav", distance_obstacle_uav, (double)1.0);
-    nh->param("distance_catenary_obstacle", distance_catenary_obstacle, (double)0.1);
+    nh->param("distance_tether_obstacle", distance_tether_obstacle, (double)0.1);
 
     nh->param("length_tether_max", length_tether_max, (double)10.0);
 
@@ -101,13 +101,11 @@ void RandomGlobalPlanner::configParams()
 void RandomGlobalPlanner::configRRTStar()
 {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
-                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
+                    nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
                     map_file, path, get_catenary_data, catenary_analysis_file, use_parable);
     configRandomPlanner();
 
-
-    CheckCM->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
-
+    CheckCM->Init(grid_3D, distance_tether_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
 }
 
 void RandomGlobalPlanner::configTopics()
@@ -213,12 +211,22 @@ void RandomGlobalPlanner::makePlanGoalCB()
         // ros::Duration(5.0).sleep();
 
         ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path before interpolation: %lu ", trajectory.points.size());
-        checkCollisionPathPlanner ccpp(node_name, grid_3D, pc_obs_ugv, pos_reel_ugv);
-        ccpp.CheckStatus(trajectory,randPlanner.length_catenary);
         
+        checkCollisionPathPlanner ccpp(node_name, grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
+        ccpp.CheckStatus(trajectory,randPlanner.length_catenary);
+             
         interpolatePointsGlobalPath(trajectory,randPlanner.length_catenary);
+        for (size_t i=0; i< trajectory.points.size(); i++){
+				printf("\tRandom_gobal_planner_node[%lu/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f \n", 
+                i, trajectory.points.size(),
+				trajectory.points.at(i).transforms[0].translation.x, trajectory.points.at(i).transforms[0].translation.y, trajectory.points.at(i).transforms[0].translation.z, 
+                trajectory.points.at(i).transforms[0].rotation.x, trajectory.points.at(i).transforms[0].rotation.y, trajectory.points.at(i).transforms[0].rotation.z, trajectory.points.at(i).transforms[0].rotation.w,
+                trajectory.points.at(i).transforms[1].translation.x, trajectory.points.at(i).transforms[1].translation.y, trajectory.points.at(i).transforms[1].translation.z, 
+                trajectory.points.at(i).transforms[1].rotation.x, trajectory.points.at(i).transforms[1].rotation.y, trajectory.points.at(i).transforms[1].rotation.z, trajectory.points.at(i).transforms[1].rotation.w,
+                length_catenary[i]);
+		}
 
-        ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
+        ROS_INFO(PRINTF_YELLOW "\nGlobal Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
         randPlanner.clearCatenaryGPMarker();
         randPlanner.clearLinesGPMarker();
         rrtgm.getPathMarker(trajectory,length_catenary,interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
@@ -228,11 +236,10 @@ void RandomGlobalPlanner::makePlanGoalCB()
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
 
         /********************* To obligate pause method and check Planning result *********************/
-                   std::string y_ ;
-                   std::cout << " *** Press key to continue: " << std::endl;
-                   std::cin >> y_ ;
+                //    std::string y_ ;
+                //    std::cout << " *** Press key to continue: " << std::endl;
+                //    std::cin >> y_ ;
         /*************************************************************************************************/
-
 
         sendPathToLocalPlannerServer();
     }
@@ -442,7 +449,6 @@ void RandomGlobalPlanner::sendPathToLocalPlannerServer()
     else{
         ExportPath ep_(goal_action, path);
     }
-
 }
 
 bool RandomGlobalPlanner::setGoal()
@@ -547,15 +553,17 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 		x_ugv_ = trajectory_.points.at(i+1).transforms[0].translation.x - trajectory_.points.at(i).transforms[0].translation.x;
 		y_ugv_ = trajectory_.points.at(i+1).transforms[0].translation.y - trajectory_.points.at(i).transforms[0].translation.y;
 		z_ugv_ = trajectory_.points.at(i+1).transforms[0].translation.z - trajectory_.points.at(i).transforms[0].translation.z;
-        D_ugv_ = sqrt(x_ugv_ * x_ugv_ + y_ugv_ * y_ugv_ + z_ugv_ * z_ugv_);
-
+        
 		// Get position and rotation vector for UAV
 		x_uav_ = trajectory_.points.at(i+1).transforms[1].translation.x - trajectory_.points.at(i).transforms[1].translation.x;
 		y_uav_ = trajectory_.points.at(i+1).transforms[1].translation.y - trajectory_.points.at(i).transforms[1].translation.y;
 		z_uav_ = trajectory_.points.at(i+1).transforms[1].translation.z - trajectory_.points.at(i).transforms[1].translation.z;
+        
+        D_ugv_ = sqrt(x_ugv_ * x_ugv_ + y_ugv_ * y_ugv_ + z_ugv_ * z_ugv_);
         D_uav_ = sqrt(x_uav_ * x_uav_ + y_uav_ * y_uav_ + z_uav_ * z_uav_);
 		
-        int j_ = (int)(l_catenary_.size() - i - 1); // Auxuliar position length catenary
+        // int j_ = (int)(l_catenary_.size() - i - 1); // Auxuliar position length catenary
+        int j_ = (int)(i); // Auxuliar position length catenary
 
 		//First analize if distance between points in bigger that the maximum distance to create a new point
 		if (D_uav_ > min_distance_add_new_point || D_ugv_ > min_distance_add_new_point){
@@ -566,8 +574,6 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 				D_ = D_ugv_;
 			
 			int n_interval_ = ceil(D_/min_distance_add_new_point);	 
-
-            printf("D_ugv_=%f , D_uav_=%f , n_interval_=%i/%lu/%lu\n",D_ugv_, D_uav_,n_interval_,i,trajectory_.points.size());
 
 			for(int j=0 ; j < n_interval_ ; j++){
 				// Get position and rotation vector for UGV
@@ -598,15 +604,16 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
                     p_final_.z = t_.transforms[1].translation.z;
 
                     double l_cat_;
-                    
-                    printf("p_reel_[%f %f %f] p_final_[%f %f %f] p_catenary_[%lu] \n",p_reel_.x,p_reel_.y,p_reel_.z,p_final_.x,p_final_.y,p_final_.z,p_catenary_.size());
                     bool is_cat_ = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
                     if (is_cat_)
                         l_cat_ = CheckCM->length_cat_final;
                     else
-                        l_cat_ = l_catenary_[j_] * 1.01;
+                        l_cat_ = l_catenary_[j_];
                     
                     length_catenary.push_back(l_cat_);
+                    ROS_INFO(PRINTF_YELLOW "Global Planner: interpolatePointsGlobalPath new node in: [%lu] ugv=[%0.3f %0.3f %0.3f] uav=[%0.3f %0.3f %0.3f] l=[%0.3f] %s", 
+                        trajectory_aux_.points.size()-1, t_.transforms[0].translation.x,t_.transforms[0].translation.y,t_.transforms[0].translation.z, 
+                        t_.transforms[1].translation.x, t_.transforms[1].translation.y, t_.transforms[1].translation.z, l_cat_,is_cat_?"true":"false");
                 }
                 else{
                     length_catenary.push_back(l_catenary_[j_]);
@@ -654,7 +661,7 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 	t_.transforms[1].rotation.w = trajectory_.points.at(trajectory_.points.size()-1).transforms[1].rotation.w;
 	trajectory_aux_.points.push_back(t_);
     //Get length catenary
-    length_catenary.push_back(l_catenary_[0]);
+    length_catenary.push_back(l_catenary_[trajectory_.points.size()-1]);
 
     trajectory_.points.clear();
     trajectory_ = trajectory_aux_;

@@ -32,7 +32,7 @@ RandomPlanner::~RandomPlanner()
 // Initialization: creates the occupancy matrix (discrete nodes) from the bounding box sizes, resolution, inflation and optimization arguments
 void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
 				   float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
-				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
+				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_tether_obstacle_, Grid3d *grid3D_,
 				   bool nodes_marker_debug_, bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parable_)
 {
 	// Pointer to the nodeHandler
@@ -87,7 +87,7 @@ void RandomPlanner::init(std::string plannerType, std::string frame_id_, float w
 
 	distance_obstacle_ugv = distance_obstacle_ugv_;
 	distance_obstacle_uav = distance_obstacle_uav_;
-	distance_catenary_obstacle = distance_catenary_obstacle_;
+	distance_tether_obstacle = distance_tether_obstacle_;
 
 	get_catenary_data = get_catenary_data_;
 	catenary_file = catenary_file_;
@@ -247,12 +247,6 @@ int RandomPlanner::computeTreesIndependent()
 		extendGraph(q_rand);
 		count_loop++;
 
-		/********************* To obligate pause method and check Planning result *********************/
-            std::string y_ ;
-            std::cout << " *** Press key to continue: " << std::endl;
-            std::cin >> y_ ;
-        /*************************************************************************************************/
-
 		if ( ( (num_goal_finded>0) && (planner_type == "rrt") ) || 
 			 ( (num_goal_finded>0) && (planner_type == "rrt_star") && (count_loop == n_iter) ) ||
 			 ( (num_goal_finded>0) && (planner_type == "birrt") ) ){
@@ -271,7 +265,7 @@ int RandomPlanner::computeTreesIndependent()
 				i_++;
 			}
 			rrtgm.getPathMarker(rrt_path, lines_ugv_marker_pub_, lines_uav_marker_pub_);
-			rrtgm.getCatenaryPathMarker(rrt_path, catenary_marker_pub_, grid_3D, distance_catenary_obstacle, map, nn_trav_ugv.kdtree, nn_trav_ugv.obs_points);
+			rrtgm.getCatenaryPathMarker(rrt_path, catenary_marker_pub_, grid_3D, distance_tether_obstacle, map, nn_trav_ugv.kdtree, nn_trav_ugv.obs_points);
 			ret_val = rrt_path.size();
 			break;
 		}
@@ -347,10 +341,21 @@ int RandomPlanner::computeTreesIndependent()
   	std::cout << "Finishing Random Planner: Explored Graph Nodes Numbers: " << nodes_tree.size() <<std::endl;
 	std::cout << std::endl << "---------------------------------------------------------------------" << std::endl << std::endl;
 
-	// if (markers_debug)
-	rrtgm.getAllCatenaryMarker(nodes_tree, all_catenary_marker_pub_);
+	if (markers_debug)
+		rrtgm.getAllCatenaryMarker(nodes_tree, all_catenary_marker_pub_);
 
 	ros::Duration(0.0).sleep();
+
+	Trajectory trajectory_;
+	getGlobalPath(trajectory_);
+	checkCollisionPathPlanner ccpp("random_global_planner_node", grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
+	ccpp.CheckStatus(trajectory_,length_catenary);
+
+	/********************* To obligate pause method and check Planning result *********************/
+        // std::string y_ ;
+        // std::cout << " *** Press key to continue: " << std::endl;
+        // std::cin >> y_ ;
+    /*************************************************************************************************/
   	return ret_val; 
 }
 
@@ -545,10 +550,6 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 		
 		rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
 
-		for(size_t i=0 ; i < points_catenary_new_node.size() ; i++){
-			std::cout << "points_catenary_new_node [ " << points_catenary_new_node[i].x << " , " << points_catenary_new_node[i].y << " , " << points_catenary_new_node[i].z <<" ]" << std::endl;
-		}
-		
 		return true;
 	}
 }
@@ -1365,7 +1366,7 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 		return false;
 	}
 	
-	if (d_ > distance_catenary_obstacle)
+	if (d_ > distance_tether_obstacle)
 		ret = true;
 	else{
 		ret = false;
@@ -1467,6 +1468,7 @@ void RandomPlanner::readPointCloudTraversabilityMapUGV(const sensor_msgs::PointC
 void RandomPlanner::readPointCloudMapForUGV(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
 	nn_obs_ugv.setInput(*msg);
+    pc_obs_ugv = msg;
 	ROS_INFO_COND(debug_rrt, PRINTF_BLUE "RandomPlanner Planner: Receiving point cloud map to create Kdtree for UGV Obstacles");
 }
 
@@ -1564,6 +1566,15 @@ std::list<RRTNode*> RandomPlanner::getPath()
 			length_catenary.push_back(current_node->length_cat);
 		// std:cout <<"node: " << current_node <<" , Parent: " << current_node->parentNode<< std::endl;
 		}
+		// to invert catenary length order
+        std::vector<double> lc_;
+		lc_.clear();
+		int m_ = length_catenary.size();
+		for(int j=0 ; j < length_catenary.size() ; j++){
+			lc_.push_back(length_catenary[m_ - j -1]);
+		}
+		length_catenary.clear();
+		length_catenary = lc_;
 	}
 	
 	return path_;
@@ -1680,7 +1691,7 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 	w_nearest_smooth = w_n_smooth_ ;
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
-	ccm->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, step, use_parable, use_distance_function);
+	ccm->Init(grid_3D, distance_tether_obstacle, length_tether_max, ws_z_min, step, use_parable, use_distance_function);
 }
 
 bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)

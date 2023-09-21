@@ -191,7 +191,7 @@ include_directories(
 # )
 
 add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp 
-                                          src/random_graph_markers.cpp src/random_graph_markers.cpp src/export_rrt_path.cpp src/check_collision_path_planner.cpp)
+                                          src/random_graph_markers.cpp src/random_graph_markers.cpp src/export_rrt_path.cpp)
 add_dependencies(random_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(random_global_planner_node  ${catkin_LIBRARIES} Ceres::ceres ${EXTERNAL_LIBS} ${CERES_LIBRARIES} catenary_checker Qt5::Charts
 Qt5::Widgets dbscan_line)

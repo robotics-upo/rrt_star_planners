@@ -201,7 +201,7 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 	for (size_t i= 0 ; i <  mt_.points.size(); i++){
 		_p2.x = mt_.points.at(i).transforms[0].translation.x;
 		_p2.y = mt_.points.at(i).transforms[0].translation.y;
-		_p2.z = mt_.points.at(i).transforms[0].translation.z+0.1;
+		_p2.z = mt_.points.at(i).transforms[0].translation.z;
 		_p2_uav.x = mt_.points.at(i).transforms[1].translation.x;
 		_p2_uav.y = mt_.points.at(i).transforms[1].translation.y;
 		_p2_uav.z = mt_.points.at(i).transforms[1].translation.z;
@@ -250,7 +250,7 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 		}
 		_p1.x = mt_.points.at(i).transforms[0].translation.x;
 		_p1.y = mt_.points.at(i).transforms[0].translation.y;
-		_p1.z = mt_.points.at(i).transforms[0].translation.z+0.1;	//Move in Z to see the point over the map surface
+		_p1.z = mt_.points.at(i).transforms[0].translation.z;	//Move in Z to see the point over the map surface
 		geometry_msgs::Quaternion _q1;
 		_q1.x = mt_.points.at(i).transforms[0].rotation.x;
 		_q1.y = mt_.points.at(i).transforms[0].rotation.y;

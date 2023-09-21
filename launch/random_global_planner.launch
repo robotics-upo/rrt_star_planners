@@ -20,6 +20,10 @@
     <arg name="verbose_optimizer" default="false"/>
     <arg name="debug_msgs" default="false"/>
     <arg name="show_config_msgs" default="true"/>
+    
+    <arg name="distance_obstacle_ugv"    default="0.6"/>   
+    <arg name="distance_obstacle_uav"    default="0.6"/>   
+    <arg name="distance_tether_obstacle"    default="0.12"/>   
 
     <arg name="length_tether_max"    default="30.0"/>   
 
@@ -87,9 +91,9 @@
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>    
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
-        <param name="distance_obstacle_ugv"         value="0.5"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_obstacle_uav"         value="0.5"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_catenary_obstacle"  value="0.05"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_obstacle_ugv"         value="$(arg distance_obstacle_ugv)"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
+        <param name="distance_obstacle_uav"         value="$(arg distance_obstacle_uav)"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
+        <param name="distance_tether_obstacle"  value="$(arg distance_tether_obstacle)"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="save_path_in_file"   value="$(arg save_path_in_file)"/>
 
         <param name="w_nearest_ugv"    value="12"/>   # catenary Obstacles collision 0.00100
@@ -133,7 +137,6 @@
 
         <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
         <param name="pause_end_optimization" value="$(arg pause_execution)"/>
-        <!-- <param name="pause_end_optimization" value="true"/> -->
         <param name="write_data_residual" value="$(arg write_data_residual)"/>
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
             
@@ -176,7 +179,7 @@
 
         <!-- UAV Constraint Parameters -->
         <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
-        <param name="w_beta_uav"    value="0.080"/>   # Obstacles uav 
+        <param name="w_beta_uav"    value="0.090"/>   # Obstacles uav 
         <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
         <param name="w_epsilon_uav"   value="0.05"/>   # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
@@ -185,20 +188,20 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.0250"/>   # catenary Obstacles collision 
-        <param name="w_eta_2"    value="0.1000"/>   # catenary length 0.00150
-        <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
+        <param name="w_eta_1"    value="0.0660"/>   # catenary Obstacles collision 
+        <param name="w_eta_2"    value="0.1200"/>   # catenary length 
+        <param name="w_eta_3"    value="0.0220"/>   # Parameter Parable 
 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
-        <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles [m]-->
-        <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles [m]-->
-        <param name="initial_velocity_ugv"  value="0.25"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
-        <param name="initial_velocity_uav"  value="0.25"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
+        <param name="distance_obstacle_ugv"         value="$(arg distance_obstacle_ugv)"/> <!-- bound distance UGV to obstacles [m]-->
+        <param name="distance_obstacle_uav"         value="$(arg distance_obstacle_uav)"/> <!-- bound distance UAV to obstacles [m]-->
+        <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
+        <param name="initial_velocity_uav"  value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
         <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
         <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
         #Parameter for Catenary
-        <param name="distance_catenary_obstacle"  value="0.10"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_tether_obstacle"  value="$(arg distance_tether_obstacle)"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
