@@ -105,7 +105,9 @@ void RandomGlobalPlanner::configRRTStar()
                     map_file, path, get_catenary_data, catenary_analysis_file, use_parable);
     configRandomPlanner();
 
-    CheckCM->Init(grid_3D, distance_tether_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
+    // CheckCM->Init(grid_3D, distance_tether_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
+    CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, map_resolution, 
+	use_parable, use_distance_function, pos_reel_ugv);
 }
 
 void RandomGlobalPlanner::configTopics()
@@ -206,16 +208,27 @@ void RandomGlobalPlanner::makePlanGoalCB()
     ROS_INFO_COND(debug, "Global Planner: Called Make Plan");
 
     if (calculatePath()){
-        ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n");
-
-        // ros::Duration(5.0).sleep();
+        ROS_INFO(PRINTF_BLUE "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n");
+        ros::Duration(2.0).sleep();
 
         ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path before interpolation: %lu ", trajectory.points.size());
         
-        checkCollisionPathPlanner ccpp(node_name, grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
-        ccpp.CheckStatus(trajectory,randPlanner.length_catenary);
+        // CatenaryCheckerManager CheckCM(node_name, grid_3D, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
+        CheckCM->CheckStatusCollision(trajectory, randPlanner.length_catenary);
+        if (CheckCM->count_tether_coll){ // Here is update vector with collision tether status
+            v_pos_coll_tether.clear();
+            for (size_t i= 0 ; i < CheckCM->v_pos_coll_tether.size(); i++){
+                v_pos_coll_tether = CheckCM->v_pos_coll_tether;
+            }
+        }
+
+        /********************* To obligate pause method and check Planning result *********************/
+                //    std::string w_ ;
+                //    std::cout << " *** Press key to continue: " << std::endl;
+                //    std::cin >> w_ ;
+        /*************************************************************************************************/
              
-        interpolatePointsGlobalPath(trajectory,randPlanner.length_catenary);
+        interpolatePointsGlobalPath(trajectory, randPlanner.length_catenary);
         for (size_t i=0; i< trajectory.points.size(); i++){
 				printf("\tRandom_gobal_planner_node[%lu/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f \n", 
                 i, trajectory.points.size(),
@@ -227,19 +240,19 @@ void RandomGlobalPlanner::makePlanGoalCB()
 		}
 
         ROS_INFO(PRINTF_YELLOW "\nGlobal Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
+        
         randPlanner.clearCatenaryGPMarker();
         randPlanner.clearLinesGPMarker();
-        rrtgm.getPathMarker(trajectory,length_catenary,interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
-        
-        ccpp.CheckStatus(trajectory,length_catenary);
+        rrtgm.getPathMarker(trajectory,length_catenary, interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
+        CheckCM->CheckStatusCollision(trajectory, length_catenary);
 
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
 
-        /********************* To obligate pause method and check Planning result *********************/
-                //    std::string y_ ;
-                //    std::cout << " *** Press key to continue: " << std::endl;
-                //    std::cin >> y_ ;
-        /*************************************************************************************************/
+        // /********************* To obligate pause method and check Planning result *********************/
+        //            std::string y_ ;
+        //            std::cout << " *** Press key to continue: " << std::endl;
+        //            std::cin >> y_ ;
+        // /*************************************************************************************************/
 
         sendPathToLocalPlannerServer();
     }
@@ -546,7 +559,7 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 	t_.accelerations.resize(2);
 
 	bisectionCatenary bc;
-
+    
     for (size_t i = 0; i < trajectory_.points.size()-1; i++)
     {
 		// Get position and rotation vector for UGV
@@ -565,6 +578,18 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
         // int j_ = (int)(l_catenary_.size() - i - 1); // Auxuliar position length catenary
         int j_ = (int)(i); // Auxuliar position length catenary
 
+        if (v_pos_coll_tether.size() > 0){
+            for (size_t i_ = 0 ; i_ < v_pos_coll_tether.size() ; i_++){
+                // printf("RandomGlobalPlanner::interpolatePointsGlobalPath: [%lu/%lu] v_pos_coll_tether= %i/%i\n",i_,v_pos_coll_tether.size(), v_pos_coll_tether[i_],j_);
+                if ((v_pos_coll_tether[i_] == j_)){
+                    double l_;
+                    if(getTetherLength(trajectory_.points.at(i).transforms[0].translation, trajectory_.points.at(i).transforms[0].rotation, trajectory_.points.at(i).transforms[1].translation, l_)){
+                        l_catenary_[j_] = l_;  
+                    }
+                }
+            }           
+        }
+
 		//First analize if distance between points in bigger that the maximum distance to create a new point
 		if (D_uav_ > min_distance_add_new_point || D_ugv_ > min_distance_add_new_point){
 			double D_;
@@ -573,47 +598,88 @@ void RandomGlobalPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_, s
 			else	
 				D_ = D_ugv_;
 			
-			int n_interval_ = ceil(D_/min_distance_add_new_point);	 
+			int n_interval_ = ceil(D_/min_distance_add_new_point);	         
+            
+            // CatenaryCheckerManager ccpp(node_name, grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
 
 			for(int j=0 ; j < n_interval_ ; j++){
 				// Get position and rotation vector for UGV
-				t_.transforms[0].translation.x = trajectory_.points.at(i).transforms[0].translation.x + (x_ugv_/n_interval_)*j ;
-				t_.transforms[0].translation.y = trajectory_.points.at(i).transforms[0].translation.y + (y_ugv_/n_interval_)*j ;
-				t_.transforms[0].translation.z = trajectory_.points.at(i).transforms[0].translation.z + (z_ugv_/n_interval_)*j ;
-				t_.transforms[0].rotation.x = trajectory_.points.at(i).transforms[0].rotation.x;
-				t_.transforms[0].rotation.y = trajectory_.points.at(i).transforms[0].rotation.y;
-				t_.transforms[0].rotation.z = trajectory_.points.at(i).transforms[0].rotation.z;
-				t_.transforms[0].rotation.w = trajectory_.points.at(i).transforms[0].rotation.w;
-				// Get position and rotation vector for UAV
-				t_.transforms[1].translation.x = trajectory_.points.at(i).transforms[1].translation.x + (x_uav_/n_interval_)*j ;
-				t_.transforms[1].translation.y = trajectory_.points.at(i).transforms[1].translation.y + (y_uav_/n_interval_)*j ;
-				t_.transforms[1].translation.z = trajectory_.points.at(i).transforms[1].translation.z + (z_uav_/n_interval_)*j ;
-				t_.transforms[1].rotation.x = trajectory_.points.at(i).transforms[1].rotation.x;
-				t_.transforms[1].rotation.y = trajectory_.points.at(i).transforms[1].rotation.y;
-				t_.transforms[1].rotation.z = trajectory_.points.at(i).transforms[1].rotation.z;
-				t_.transforms[1].rotation.w = trajectory_.points.at(i).transforms[1].rotation.w;
+                geometry_msgs::Vector3 p1_, p2_;
+                geometry_msgs::Quaternion q1_;
+
+                // Get position and rotation vector for UGV
+                p1_.x = trajectory_.points.at(i).transforms[0].translation.x;
+                p1_.y = trajectory_.points.at(i).transforms[0].translation.y;
+                p1_.z = trajectory_.points.at(i).transforms[0].translation.z;
+                q1_.x = trajectory_.points.at(i).transforms[0].rotation.x;
+                q1_.y = trajectory_.points.at(i).transforms[0].rotation.y;
+                q1_.z = trajectory_.points.at(i).transforms[0].rotation.z;
+                q1_.w = trajectory_.points.at(i).transforms[0].rotation.w;
+                p2_.x = p1_.x + (x_ugv_/n_interval_)*j ;
+                p2_.y = p1_.y + (y_ugv_/n_interval_)*j ;
+                p2_.z = p1_.z + (z_ugv_/n_interval_)*j +0.001; 
+
+                bool is_ugv_free_ = CheckCM->CheckFreeCollisionPoint(p2_, "UGV", i);
+                if(is_ugv_free_){
+                    t_.transforms[0].translation = p2_;
+                    t_.transforms[0].rotation = q1_;
+                    ROS_INFO(PRINTF_GREEN"Entro Iteracion UGV[%lu] j_=%i/%i", i,j,n_interval_);
+                }else{
+                    ROS_INFO(PRINTF_GREEN"Entro Random UGV[%lu] j_=%i/%i", i,j,n_interval_);
+                    geometry_msgs::Vector3 p_ugv_;
+                    bool please_ = randomMarsupialStatus(p1_, p2_, i,"UGV", p_ugv_);
+                    if (please_){
+                        ROS_INFO("YES , UGV RANDOM SOLUTION !!!");
+                        t_.transforms[0].translation = p_ugv_;
+                        t_.transforms[0].rotation = q1_;
+                    }else
+                        ROS_ERROR("FUCK, UGV NOT RANDOM SOLUTION !!");
+                }
+
+                // Get position and rotation vector for UAV
+                p1_.x = trajectory_.points.at(i).transforms[1].translation.x;
+                p1_.y = trajectory_.points.at(i).transforms[1].translation.y;
+                p1_.z = trajectory_.points.at(i).transforms[1].translation.z;
+				q1_.x = trajectory_.points.at(i).transforms[1].rotation.x;
+				q1_.y = trajectory_.points.at(i).transforms[1].rotation.y;
+				q1_.z = trajectory_.points.at(i).transforms[1].rotation.z;
+				q1_.w = trajectory_.points.at(i).transforms[1].rotation.w;
+                p2_.x =  p1_.x + (x_uav_/n_interval_)*j ;
+				p2_.y =  p1_.y + (y_uav_/n_interval_)*j ;
+				p2_.z =  p1_.z + (z_uav_/n_interval_)*j ;
+
+                bool is_uav_free_ = CheckCM->CheckFreeCollisionPoint(p2_, "UAV", i);
+                if(is_uav_free_){
+                    t_.transforms[1].translation = p2_;
+                    t_.transforms[1].rotation = q1_;
+                    ROS_INFO(PRINTF_GREEN"Entro Iteracion UAV[%lu] j_=%i/%i", i,j,n_interval_);
+                }else{
+                    ROS_INFO(PRINTF_GREEN"Entro Random UAV[%lu] j_=%i/%i", i,j,n_interval_);
+                    geometry_msgs::Vector3 p_uav_;
+                    bool please_ = randomMarsupialStatus(p1_, p2_, i, "UAV", p_uav_);
+                    if (please_){
+                        ROS_INFO("YES , UAV RANDOM SOLUTION !!!");
+                        t_.transforms[1].translation = p_uav_;
+                        t_.transforms[1].rotation = q1_;
+                    }else
+                        ROS_ERROR("FUCK, UAV NOT RANDOM SOLUTION !!");
+                }
+
 		        trajectory_aux_.points.push_back(t_);
 
-                if(j != 0){                    
-                    geometry_msgs::Vector3 p_reel_, p_final_;
-                    std::vector<geometry_msgs::Vector3> p_catenary_;
-                    p_reel_ = getReelNode(t_.transforms[0].translation.x ,t_.transforms[0].translation.y ,t_.transforms[0].translation.z,
-                                        t_.transforms[0].rotation.x, t_.transforms[0].rotation.y, t_.transforms[0].rotation.z, t_.transforms[0].rotation.w);
-                    p_final_.x = t_.transforms[1].translation.x; 
-                    p_final_.y = t_.transforms[1].translation.y;
-                    p_final_.z = t_.transforms[1].translation.z;
-
-                    double l_cat_;
-                    bool is_cat_ = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
-                    if (is_cat_)
-                        l_cat_ = CheckCM->length_cat_final;
-                    else
-                        l_cat_ = l_catenary_[j_];
+                if(j != 0){  
+                    double l_tether_;
+                    bool is_cat_ = getTetherLength(t_.transforms[0].translation, t_.transforms[0].rotation, t_.transforms[1].translation, l_tether_);             
                     
-                    length_catenary.push_back(l_cat_);
+                    if(!is_cat_){
+                        l_tether_ = l_catenary_[j_];
+                    }
+
+                    
+                    length_catenary.push_back(l_tether_);
                     ROS_INFO(PRINTF_YELLOW "Global Planner: interpolatePointsGlobalPath new node in: [%lu] ugv=[%0.3f %0.3f %0.3f] uav=[%0.3f %0.3f %0.3f] l=[%0.3f] %s", 
                         trajectory_aux_.points.size()-1, t_.transforms[0].translation.x,t_.transforms[0].translation.y,t_.transforms[0].translation.z, 
-                        t_.transforms[1].translation.x, t_.transforms[1].translation.y, t_.transforms[1].translation.z, l_cat_,is_cat_?"true":"false");
+                        t_.transforms[1].translation.x, t_.transforms[1].translation.y, t_.transforms[1].translation.z, l_tether_,is_cat_?"true":"false");
                 }
                 else{
                     length_catenary.push_back(l_catenary_[j_]);
@@ -714,4 +780,78 @@ void RandomGlobalPlanner::clearCatenaryGPMarker()
 	rrtgm.clearCatenaryMarker(interpolated_catenary_marker_pub_); 
 }
 
-} // namespace PathPlanners
+bool RandomGlobalPlanner::randomMarsupialStatus(geometry_msgs::Vector3 p1_ , geometry_msgs::Vector3 p2_, int i_, string s_, geometry_msgs::Vector3 &pf_)
+{
+    geometry_msgs::Vector3 p_status_;
+    vector<geometry_msgs::Vector3> points_catenary_;
+    points_catenary_.clear();
+    bool is_rand_p = true;
+    double distr_x_ugv, distr_y_ugv, z_ugv_, distr_z_ugv, x_min_, x_max_, y_min_, y_max_, z_min_, z_max_;
+    z_ugv_ = p2_.z - p1_.z;
+
+   
+    // CatenaryCheckerManager ccpp(node_name, grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
+    std::random_device rd;   // obtain a random number from hardware
+  	std::mt19937 eng(rd());  // seed the generator
+    if(p1_.x <= p2_.x){
+        x_min_ = p1_.x;
+        x_max_ = p2_.x;
+    } else{
+        x_min_ = p2_.x;
+        x_max_ = p1_.x;
+    }
+    if(p1_.y <= p2_.y){
+        y_min_ = p1_.y;
+        y_max_ = p2_.y;
+    } else{
+        y_min_ = p2_.y;
+        y_max_ = p1_.y;
+    }
+    if(p1_.z <= p2_.z){
+        z_min_ = p1_.z;
+        z_max_ = p2_.z;
+    } else{
+        z_min_ = p2_.z;
+        z_max_ = p1_.z;
+    }
+    std::uniform_real_distribution<double> distr_x_(x_min_ , x_max_);  // define the discrete range
+    std::uniform_real_distribution<double> distr_y_(y_min_ , y_max_);  // define the discrete range
+    std::uniform_real_distribution<double> distr_z_(z_min_ , z_max_);  // define the range 
+
+    int count_ = 0;
+    do{
+        p_status_.x = distr_x_(eng);
+        p_status_.y = distr_y_(eng);
+        p_status_.z = distr_z_(eng);
+        if (count_ > 400){
+            ROS_ERROR("MAS DE 400");
+            is_rand_p = false;
+            break;
+        }
+        count_++; 
+    }while(!CheckCM->CheckFreeCollisionPoint(p_status_, s_, i_));
+	ROS_INFO(PRINTF_GREEN"CatenaryCheckerManager::CheckFreeCollisionPoint :[%i] %s Point Not collision p[%.3f %.3f %.3f]", i_, s_.c_str(), p_status_.x, p_status_.y, p_status_.z);
+
+    pf_ = p_status_;
+    if (!is_rand_p)
+        return false;
+    else
+        return true;
+}
+
+bool RandomGlobalPlanner::getTetherLength(geometry_msgs::Vector3 tp1_ , geometry_msgs::Quaternion tq1_, geometry_msgs::Vector3 tp2_, double &length_)
+{
+    geometry_msgs::Vector3 p_reel_, p_final_;
+    std::vector<geometry_msgs::Vector3> p_catenary_;
+    p_reel_ = getReelNode(tp1_.x ,tp1_.y ,tp1_.z, tq1_.x, tq1_.y, tq1_.z, tq1_.w);
+    p_final_ = tp2_; 
+
+    bool is_cat_ = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
+    if (is_cat_){
+        length_ = CheckCM->length_cat_final;
+        // printf("Founded Length Tether: l=%f\n",length_);
+    }
+    return is_cat_;
+}
+
+} // namespace PathPlannersgeometry_msgs::Vector3

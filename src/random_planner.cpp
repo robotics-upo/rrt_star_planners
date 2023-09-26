@@ -259,9 +259,9 @@ int RandomPlanner::computeTreesIndependent()
 			int i_=0;   
 			printf("\tPrinting the Path Nodes obteinded through planner (%s) : \n",planner_type.c_str());
 			for (auto pt_: rrt_path){
-				printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f    cost=%.3f\n", i_, rrt_path.size(),
+				printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.4f %.4f %.4f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f/%.3f   cost=%.3f\n", i_, rrt_path.size(),
 				pt_->point.x*step, pt_->point.y*step, pt_->point.z*step, pt_->rot_ugv.x, pt_->rot_ugv.y, pt_->rot_ugv.z, pt_->rot_ugv.w, pt_->point_uav.x*step, 
-				pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, pt_->cost);
+				pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, length_catenary[i_], pt_->cost);
 				i_++;
 			}
 			rrtgm.getPathMarker(rrt_path, lines_ugv_marker_pub_, lines_uav_marker_pub_);
@@ -348,8 +348,8 @@ int RandomPlanner::computeTreesIndependent()
 
 	Trajectory trajectory_;
 	getGlobalPath(trajectory_);
-	checkCollisionPathPlanner ccpp("random_global_planner_node", grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
-	ccpp.CheckStatus(trajectory_,length_catenary);
+	// checkCollisionPathPlanner ccpp("random_global_planner_node", grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
+	ccm->CheckStatusCollision(trajectory_,length_catenary);
 
 	/********************* To obligate pause method and check Planning result *********************/
         // std::string y_ ;
@@ -548,7 +548,11 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			v_length_cat.push_back(length_cat_);
 		}
 		
-		rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
+		if(nodes_marker_debug){
+			count_graph++;
+			rrtgm.getGraphMarker(new_node, count_graph, tree_rrt_star_ugv_pub_, tree_rrt_star_uav_pub_);
+			rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
+		}
 
 		return true;
 	}
@@ -1276,7 +1280,7 @@ void RandomPlanner::getParamsNode(RRTNode &node_, bool is_init_)
 	p_node_uav_.x = node_.point_uav.x * step;
 	p_node_uav_.y = node_.point_uav.y * step;
 	p_node_uav_.z = node_.point_uav.z * step;
-	double dist_obs_uav = ccm->getPointDistanceFullMap(use_distance_function, p_node_uav_);
+	double dist_obs_uav = ccm->getPointDistanceObstaclesMap(use_distance_function, p_node_uav_);
 
 	node_.id = getWorldIndex(node_.point.x, node_.point.y, node_.point.z);
 	node_.min_dist_obs_ugv = dist_obs_ugv;
@@ -1335,15 +1339,14 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 			pos_uav.x =pf_.point_uav.x * step ;
 			pos_uav.y =pf_.point_uav.y * step ; 
 			pos_uav.z =pf_.point_uav.z * step ; 
-			d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
-			// printf("getPointDistanceFullMap= %f , distance_obstacle_uav= %f\n",d_, distance_obstacle_uav);
+			d_ = ccm->getPointDistanceObstaclesMap(use_distance_function, pos_uav);
 			if (d_ == -1.0)
 				return false;
 
-			if (d_ > distance_obstacle_uav)
-				ret = true;
-			else
+			if (d_ < distance_obstacle_uav)
 				ret = false;
+			else
+				ret = true;
 		}
 		else
 			ret = false;
@@ -1361,15 +1364,15 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	pos_uav.x =pf_.point.x * step ;
 	pos_uav.y =pf_.point.y * step ; 
 	pos_uav.z =pf_.point.z * step ; 
-	d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
+	d_ = ccm->getPointDistanceObstaclesMap(use_distance_function, pos_uav);
 	if (d_ == -1.0){
 		return false;
 	}
 	
-	if (d_ > distance_tether_obstacle)
-		ret = true;
-	else{
+	if (d_ < distance_tether_obstacle)
 		ret = false;
+	else{
+		ret = true;
 	}
 	return ret;
 }
@@ -1627,10 +1630,7 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 	for(auto nt_ : rrt_path){
 		traj_marsupial_.transforms[0].translation.x = nt_->point.x*step;
 		traj_marsupial_.transforms[0].translation.y = nt_->point.y*step;
-		if (nt_->point.z*step == 0.0)
-			traj_marsupial_.transforms[0].translation.z = nt_->point.z*step + step/2.0;
-		else
-			traj_marsupial_.transforms[0].translation.z = nt_->point.z*step;
+		traj_marsupial_.transforms[0].translation.z = nt_->point.z*step;
 		traj_marsupial_.transforms[0].rotation.x = nt_->rot_ugv.x;
 		traj_marsupial_.transforms[0].rotation.y = nt_->rot_ugv.y;
 		traj_marsupial_.transforms[0].rotation.z = nt_->rot_ugv.z;
@@ -1666,16 +1666,9 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 									double w_n_ugv_, double w_n_uav_, double w_n_smooth_)
 {
 	length_tether_max = _l_m;
-	pos_reel_ugv.x = _p_reel.x;
-	pos_reel_ugv.y = _p_reel.y;
-	pos_reel_ugv.z = _p_reel.z;
-	pos_tf_ugv.x = _p_ugv.x;
-	pos_tf_ugv.y = _p_ugv.y;
-	pos_tf_ugv.z = _p_ugv.z;
-	rot_tf_ugv.x = _r_ugv.x;
-	rot_tf_ugv.y = _r_ugv.y;
-	rot_tf_ugv.z = _r_ugv.z;
-	rot_tf_ugv.w = _r_ugv.w;
+	pos_reel_ugv = _p_reel;
+	pos_tf_ugv = _p_ugv;
+	rot_tf_ugv = _r_ugv;
 	is_coupled = coupled_;
 	n_iter = n_iter_;
 	n_loop = n_loop_;
@@ -1691,7 +1684,8 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 	w_nearest_smooth = w_n_smooth_ ;
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
-	ccm->Init(grid_3D, distance_tether_obstacle, length_tether_max, ws_z_min, step, use_parable, use_distance_function);
+	ccm->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
+	use_parable, use_distance_function, pos_reel_ugv);
 }
 
 bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)

@@ -66,7 +66,7 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include "catenary_checker/catenary_checker_manager.h"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
-#include <catenary_checker/check_collision_path_planner.h>
+// #include <catenary_checker/check_collision_path_planner.h>
 
 
 
@@ -139,6 +139,8 @@ namespace PathPlanners
             void deleteNodesMarkersCallBack(const std_msgs::BoolConstPtr &msg);
             void deleteCatenaryGPCallBack(const std_msgs::BoolConstPtr &msg);
             void pointsSub(const PointCloud::ConstPtr &points);
+            bool randomMarsupialStatus(geometry_msgs::Vector3 p_ , geometry_msgs::Vector3 p1_, int i_, string s_, geometry_msgs::Vector3 &pf_);
+            bool getTetherLength(geometry_msgs::Vector3 tp1_ , geometry_msgs::Quaternion tq1_, geometry_msgs::Vector3 tp2_, double &length_);
             /*
             @brief: 
             */
@@ -175,6 +177,8 @@ namespace PathPlanners
             geometry_msgs::Vector3Stamped goal;
             geometry_msgs::Vector3 start_rpy;
             geometry_msgs::Vector3 pos_reel_ugv;
+            vector<int> v_pos_coll_tether;
+
 
             //Publishers and Subscribers
             ros::Publisher replan_status_pub, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
