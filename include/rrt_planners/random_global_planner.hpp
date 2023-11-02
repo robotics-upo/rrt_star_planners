@@ -66,9 +66,6 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include "catenary_checker/catenary_checker_manager.h"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
-// #include <catenary_checker/check_collision_path_planner.h>
-
-
 
 namespace PathPlanners
 {
@@ -209,6 +206,8 @@ namespace PathPlanners
 
             //These two flags can be configured as parameters
             bool showConfig, debug, debug_rrt, nodes_marker_debug, save_path_in_file;
+            bool just_line_of_sigth; // This variable allow the class just compute the straigth state of the tether 
+
 
 	        std::string path, name_output_file, map_file;
 	        int num_pos_initial;

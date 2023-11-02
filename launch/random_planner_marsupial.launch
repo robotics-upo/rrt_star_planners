@@ -1,28 +1,26 @@
 <launch>
-
     <!-- Loading Arguments -->
     <arg name="planner_type"        default="rrt_star"/>
-    <arg name="map"        default="stage_1"/>
+    <arg name="map"        default="teatro"/> #stage_1
     <arg name="save_path_in_file"   default="false"/>
     
     <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->
-    <arg name="num_pos_initial"         default="2"/>
-    <arg name="pos_uav_above_ugv"     default="1.0"/> #meters UAV above UGV
+    <arg name="num_pos_initial"         default="4"/>
+    <arg name="pos_uav_above_ugv"     default="2.0"/> #meters UAV above UGV
     <arg name="using_pc"    default="true"/> 
     <arg name="rviz"    default="false"/> 
     <arg name="viz_file"    default="random_planner"/>
     <arg name="is_coupled"    default="false"/>
-    <arg name="sample_mode"    default="1"/>
+    <arg name="sample_mode"    default="2"/> # Values: 1= Priority is move UAV , UAV and UGV , UGV ; 2= Priority is move UAV and UGV , UAV , UGV 
     <arg name="write_data_files" default="true"/>
-    <arg name="pc_user"    default="simon"/>     
     
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
-    <arg name="pos_reel_z"    default="0.5"/> #position reel on UGV
+    <arg name="pos_reel_z"    default="0.8"/> #position reel on UGV
     <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
     <arg name="use_parable"   default="false"/>
     <arg name="use_distance_function"   default="true"/>
-
+    <arg name="just_line_of_sigth"   default="true"/>
 
     <!-- Publishing UGV and UAV tf -->
     <node pkg="marsupial_optimizer" type="optimizer_publisher_tf_node" name="optimizer_publisher_tf_node" output="screen">
@@ -62,10 +60,10 @@
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
-        <arg name="pc_user_name" value="$(arg pc_user)" /> 
         <arg name="use_parable"   value="$(arg use_parable)"/>
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
         <arg name="save_path_in_file"   value="$(arg save_path_in_file)"/>
+        <arg name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/>
     </include>    
 
     <!-- RViz -->

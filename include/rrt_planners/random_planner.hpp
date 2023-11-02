@@ -118,7 +118,7 @@ public:
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
 			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
 			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_tether_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
-			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parable_);
+			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parable_, bool jlos_);
 
   	~RandomPlanner();
   
@@ -240,7 +240,7 @@ public:
 		}
 		else
 		{
-			ROS_WARN("RandomPlanner: Final position outside the workspace attempt!! [%d, %d, %d]", p.x, p.y, p.z);
+			ROS_WARN("RandomPlanner: Final position outside the workspace attempt!! [%f, %f, %f]", p.x*step, p.y*step, p.z*step);
 		}
 
 		return false;
@@ -383,7 +383,8 @@ public:
 	std::vector<double> v_length_cat, v_min_dist_obs_cat, v_time_cat;
 	bool get_catenary_data, use_parable;
 	std::string catenary_file;
-
+    bool just_line_of_sigth; // This variable allow the class just compute the straigth state of the tether 
+	bool flag_print_, flag_print_2;
 
 protected:
 	

@@ -76,7 +76,7 @@ void RandomGlobalPlanner::configParams()
 	nh->param("path", path, (std::string) "~/");
 	nh->param("map_file", map_file, (std::string) "my_map");
 
-    nh->param("sample_mode", sample_mode, (int)0);
+    nh->param("sample_mode", sample_mode, (int)1); // value 1 or 2
     nh->param("do_steer_ugv", do_steer_ugv, (bool)true);
     nh->param("coupled", coupled, (bool)true);
     nh->param("samp_goal_rate", samp_goal_rate, (int)10);
@@ -84,6 +84,7 @@ void RandomGlobalPlanner::configParams()
     nh->param("nodes_marker_debug", nodes_marker_debug, (bool)true);
     nh->param("pause_execution", pause_execution, (bool)true);
     nh->param("use_distance_function", use_distance_function, (bool)true); //Only related with tether and UAV distance
+    nh->param("just_line_of_sigth", just_line_of_sigth, (bool)false); //Only related with tether and UAV distance
     
     nh->param("get_catenary_data", get_catenary_data, (bool)false);
     nh->param("catenary_file", catenary_file, (std::string) "catenary_file");
@@ -102,12 +103,12 @@ void RandomGlobalPlanner::configRRTStar()
 {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
                     nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                    map_file, path, get_catenary_data, catenary_analysis_file, use_parable);
+                    map_file, path, get_catenary_data, catenary_analysis_file, use_parable, just_line_of_sigth);
     configRandomPlanner();
 
     // CheckCM->Init(grid_3D, distance_tether_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
     CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, map_resolution, 
-	use_parable, use_distance_function, pos_reel_ugv);
+	use_parable, use_distance_function, pos_reel_ugv, just_line_of_sigth);
 }
 
 void RandomGlobalPlanner::configTopics()
@@ -214,7 +215,7 @@ void RandomGlobalPlanner::makePlanGoalCB()
         ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path before interpolation: %lu ", trajectory.points.size());
         
         // CatenaryCheckerManager CheckCM(node_name, grid_3D, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
-        CheckCM->CheckStatusCollision(trajectory, randPlanner.length_catenary);
+        // CheckCM->CheckStatusCollision(trajectory, randPlanner.length_catenary);
         if (CheckCM->count_tether_coll){ // Here is update vector with collision tether status
             v_pos_coll_tether.clear();
             for (size_t i= 0 ; i < CheckCM->v_pos_coll_tether.size(); i++){
@@ -244,7 +245,7 @@ void RandomGlobalPlanner::makePlanGoalCB()
         randPlanner.clearCatenaryGPMarker();
         randPlanner.clearLinesGPMarker();
         rrtgm.getPathMarker(trajectory,length_catenary, interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
-        CheckCM->CheckStatusCollision(trajectory, length_catenary);
+        // CheckCM->CheckStatusCollision(trajectory, length_catenary);
 
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
 
@@ -337,8 +338,6 @@ void RandomGlobalPlanner::replan()
    
         if (!save_path_in_file)
             execute_path_client_ptr->cancelAllGoals();
-    
-    // return false;
     }
 }
 
@@ -788,7 +787,6 @@ bool RandomGlobalPlanner::randomMarsupialStatus(geometry_msgs::Vector3 p1_ , geo
     bool is_rand_p = true;
     double distr_x_ugv, distr_y_ugv, z_ugv_, distr_z_ugv, x_min_, x_max_, y_min_, y_max_, z_min_, z_max_;
     z_ugv_ = p2_.z - p1_.z;
-
    
     // CatenaryCheckerManager ccpp(node_name, grid_3D, pc_obs_ugv, pos_reel_ugv, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
     std::random_device rd;   // obtain a random number from hardware
@@ -849,7 +847,6 @@ bool RandomGlobalPlanner::getTetherLength(geometry_msgs::Vector3 tp1_ , geometry
     bool is_cat_ = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
     if (is_cat_){
         length_ = CheckCM->length_cat_final;
-        // printf("Founded Length Tether: l=%f\n",length_);
     }
     return is_cat_;
 }
