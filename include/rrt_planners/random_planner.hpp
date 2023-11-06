@@ -384,7 +384,7 @@ public:
 	bool get_catenary_data, use_parable;
 	std::string catenary_file;
     bool just_line_of_sigth; // This variable allow the class just compute the straigth state of the tether 
-	bool flag_print_, flag_print_2;
+	bool flag_print_, flag_print_2, keep_fix_orientation;
 
 protected:
 	

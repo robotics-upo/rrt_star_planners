@@ -140,17 +140,16 @@
         <param name="write_data_residual" value="$(arg write_data_residual)"/>
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="use_parable"   value="true"/>
-        <param name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
 
-        <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="0"/>  #0  <!-- number max. of iterations per optimization --> 
        
         <param name="fix_last_position_ugv"   value="false"/> 
         <param name="use_loss_function"   value="$(arg use_loss_function)"/> 
-        <param name="optimize_ugv"      value="true"/>  # UGV
-        <param name="optimize_uav"      value="true"/>  # UAV
-        <param name="optimize_tether"   value="true"/>  # CAT
+        <param name="optimize_ugv"   value="true"/>  # UGV
+        <param name="optimize_uav"   value="true"/>  # UAV
+        <param name="optimize_cat"   value="true"/>  # CAT
 
         <param name="equidistance_ugv_constraint"   value="true"/>   # equidistance_ugv_constraint
         <param name="obstacles_ugv_constraint"      value="true"/>   # obstacles_ugv_constraint
@@ -167,21 +166,21 @@
         <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
         <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
 
-        <param name="tether_obstacle_constraint"   value="true"/>    # Tether_constraint
-        <param name="tether_length_constraint"     value="true"/>    # Tether_length_constraint 
-        <param name="tether_parameters_constraint" value="false"/>    # Tether_parameters_constraint  
+        <param name="parable_obstacle_constraint"   value="true"/>    # Parable_constraint
+        <param name="parable_length_constraint"     value="true"/>    # parable_length_constraint 
+        <param name="parable_parameters_constraint" value="true"/>    # parable_parameters_constraint  
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
-        <param name="w_beta_ugv"    value="0.050"/>   # Obstacles ugv
+        <param name="w_beta_ugv"    value="0.090"/>   # Obstacles ugv
         <param name="w_theta_ugv"   value="0.5000"/>   # Traversability ugv
-        <param name="w_gamma_ugv"   value="0.100"/>   # Smoothness ugv 
+        <param name="w_gamma_ugv"   value="0.120"/>   # Smoothness ugv 
         <param name="w_epsilon_ugv"   value="0.05"/>   # Velocity 
         <param name="w_zeta_ugv"      value="0.005"/>   # Acceleration 
 
         <!-- UAV Constraint Parameters -->
         <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
-        <param name="w_beta_uav"    value="0.020"/>   # Obstacles uav 
+        <param name="w_beta_uav"    value="0.080"/>   # Obstacles uav 
         <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
         <param name="w_epsilon_uav"   value="0.05"/>   # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
@@ -190,17 +189,15 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Catenary Constraint Parameters -->
-        <!-- <param name="w_eta_1"    value="0.085"/>   # Tether Obstacles collision  -->
-        <!-- <param name="w_eta_2"    value="0.100"/>   # Tether parable length  -->
         <param name="w_eta_1"    value="0.085"/>   # Tether Obstacles collision 
-        <param name="w_eta_2"    value="0.200"/>   # Tether Straight length 
+        <param name="w_eta_2"    value="0.100"/>   # Tether length 
         <param name="w_eta_3"    value="1.000"/>   # Parameter Parable 
 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
-        <param name="distance_obstacle_ugv"         value="0.8"/> <!-- bound distance UGV to obstacles [m]-->
+        <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles [m]-->
         <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles [m]-->
-        <param name="initial_velocity_ugv"  value="0.1"/> <!-- 1.0[m/seg]  Constant velocity UGV during trajectory-->
-        <param name="initial_velocity_uav"  value="0.1"/> <!-- 1.0[m/seg]  Constant velocity UAV during trajectory-->
+        <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
+        <param name="initial_velocity_uav"  value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
         <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
         <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
@@ -212,7 +209,8 @@
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <!-- <param name="scenario_number"    value="$(arg scenario_number)"/>      -->
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
-        <param name="path"   value="$(env HOME)/"/>     
+        <param name="path"   value="$(env HOME)/$(arg files_results)/"/>     
+        <param name="pc_user_name"  value="$(env HOME)/$(arg files_results)/"/>     
         <param name="path_mission_file"  value="$(find marsupial_mission_interface)/cfg/optimized_path/"/>     
         <param name="files_results"   value="$(arg files_results)"/>     
         <param name="files_residuals"   value="$(arg files_residuals)"/>     
@@ -222,7 +220,7 @@
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
-    </node>
+    </node>    
    
     <!-- Robot Marker -->
     <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">

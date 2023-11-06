@@ -12,6 +12,7 @@ RandomPlanner::RandomPlanner()
 	// std::string node_name_ = "grid3D_node";
 	// grid_3D = new Grid3d(node_name_);
 	ccm = new CatenaryCheckerManager("random_planner");
+	keep_fix_orientation = true;
 }
 
 RandomPlanner::~RandomPlanner()
@@ -1231,22 +1232,36 @@ void RandomPlanner::getOrientation(RRTNode &n_ , RRTNode p_, bool is_uav_)
 	float yaw_;
 	tf::Quaternion _quat;
 
-	if (!is_uav_){
-		yaw_ = atan2(n_.point.y - p_.point.y, n_.point.x - p_.point.x);
-		_quat.setRPY(0.0, 0.0, yaw_);
-		n_.rot_ugv.x = _quat.x();
-		n_.rot_ugv.y = _quat.y();
-		n_.rot_ugv.z = _quat.z();
-		n_.rot_ugv.w = _quat.w();
-	}
-	else {
-		yaw_ = atan2(n_.point_uav.y - p_.point_uav.y, n_.point_uav.x - p_.point_uav.x);
-		_quat.setRPY(0.0, 0.0, yaw_);
-		n_.rot_uav.x = _quat.x();
-		n_.rot_uav.y = _quat.y();
-		n_.rot_uav.z = _quat.z();
-		n_.rot_uav.w = _quat.w();
-
+	if (!keep_fix_orientation)
+		if (!is_uav_){
+			yaw_ = atan2(n_.point.y - p_.point.y, n_.point.x - p_.point.x);
+			_quat.setRPY(0.0, 0.0, yaw_);
+			n_.rot_ugv.x = _quat.x();
+			n_.rot_ugv.y = _quat.y();
+			n_.rot_ugv.z = _quat.z();
+			n_.rot_ugv.w = _quat.w();
+		}
+		else {
+			yaw_ = atan2(n_.point_uav.y - p_.point_uav.y, n_.point_uav.x - p_.point_uav.x);
+			_quat.setRPY(0.0, 0.0, yaw_);
+			n_.rot_uav.x = _quat.x();
+			n_.rot_uav.y = _quat.y();
+			n_.rot_uav.z = _quat.z();
+			n_.rot_uav.w = _quat.w();
+		}
+	else{
+		if (!is_uav_){
+			n_.rot_ugv.x = 0.0;
+			n_.rot_ugv.y = 0.0;
+			n_.rot_ugv.z = 1.0;
+			n_.rot_ugv.w = 0.0;
+		}
+		else {
+			n_.rot_uav.x = 0.0;
+			n_.rot_uav.y = 0.0;
+			n_.rot_uav.z = 1.0;
+			n_.rot_uav.w = 0.0;
+		}
 	}
 }
 
@@ -1386,7 +1401,7 @@ void RandomPlanner::getParamsNode(RRTNode &node_, bool is_init_)
 				// printf("node UGV=%.2f %.2f %.2f  UAV=%.2f %.2f %.2f\n", node_.point.x*step, node_.point.y*step, node_.point.z*step, node_.point_uav.x*step, node_.point_uav.y*step, node_.point_uav.z*step);
 				// for (size_t i = 0; i < points_catenary_new_node.size() ; i++){
 					// printf("[%lu/%lu]points_catenary_new_node = %f %f %f\n",i, points_catenary_new_node.size(), points_catenary_new_node[i].x, points_catenary_new_node[i].y, points_catenary_new_node[i].z);
-				}
+				// }
 			id_ugv_init = node_.id;
 			id_uav_init = node_.id_uav;
 		}

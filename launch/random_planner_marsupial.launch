@@ -1,7 +1,7 @@
 <launch>
     <!-- Loading Arguments -->
     <arg name="planner_type"        default="rrt_star"/>
-    <arg name="map"        default="teatro"/> #stage_1
+    <arg name="map"        default="teatro_obstacle"/> #stage_1
     <arg name="save_path_in_file"   default="false"/>
     
     <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->
@@ -11,7 +11,7 @@
     <arg name="rviz"    default="false"/> 
     <arg name="viz_file"    default="random_planner"/>
     <arg name="is_coupled"    default="false"/>
-    <arg name="sample_mode"    default="2"/> # Values: 1= Priority is move UAV , UAV and UGV , UGV ; 2= Priority is move UAV and UGV , UAV , UGV 
+    <arg name="sample_mode"    default="1"/> # Values: 1= Priority is move UAV , UAV and UGV , UGV ; 2= Priority is move UAV and UGV , UAV , UGV 
     <arg name="write_data_files" default="true"/>
     
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
