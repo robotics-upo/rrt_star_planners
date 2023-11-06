@@ -92,9 +92,6 @@ public:
 		   @param simetric or asimetric workspace centered at (0,0,0) [meters]
 		   @param occupancy matrix resolution [meters]
 		   @param occupancy matrix nodes inflation (horizontal and vertical, real + safety) [meters]
-		   @param Lazy Theta* with Optimization: goal point factor [0 to inf]. Bigger -> distance to target more weight than distance to origin -> minor exploration -> shorter runtime, grater path length
-		   @param Lazy Theta* weighted: Z axis weight cost [0 to inf]. 0 to 1 for Z priority exploration, 1 for symetric exploration and inf(~100) to not explore in Z.
-		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
 	RRTPlanner(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, 
@@ -108,9 +105,6 @@ public:
 		   @param simetric or asimetric workspace centered at (0,0,0) [meters]
 		   @param occupancy matrix resolution [meters]
 		   @param occupancy matrix nodes inflation (horizontal and vertical, real + safety) [meters]
-		   @param Lazy Theta* with Optimization: goal point factor [0 to inf]. Bigger -> distance to target more weight than distance to origin -> minor exploration -> shorter runtime, grater path length
-		   @param Lazy Theta* weighted: Z axis weight cost [0 to inf]. 0 to 1 for Z priority exploration, 1 for symetric exploration and inf(~100) to not explore in Z.
-		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 

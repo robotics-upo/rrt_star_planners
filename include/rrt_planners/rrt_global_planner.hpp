@@ -35,7 +35,6 @@ Global Planner Class using RRT Algorithms
 
 //Dynamic reconfigure auto generated libraries
 #include <dynamic_reconfigure/server.h>
-#include <theta_star_2d/GlobalPlannerConfig.h>
 
 #include <ctime>
 #include <sys/timeb.h>
@@ -189,7 +188,6 @@ namespace PathPlanners
             //Services servers
             ros::ServiceServer global_replanning_service, reset_global_costmap_service, plan_request_service;
             ros::ServiceClient recovery_rot_srv_client;
-            //ThetaStar object
 
             //tf buffer used to get the base_link position on the map(i.e. tf base_link-map)
             std::shared_ptr<tf2_ros::Buffer> tfBuffer;
