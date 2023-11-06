@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
+# set (CMAKE -DCMAKE_C_FLAGS=-pg -DCMAKE_CXX_FLAGS=-pg -DCMAKE_BUILD_TYPE=Debug)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+
 if($ENV{ROS_DISTRO} STREQUAL "melodic" )
 add_definitions(-DMELODIC)
 endif()
@@ -13,6 +18,7 @@ find_package(PCL REQUIRED COMPONENTS)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   marsupial_optimizer
+  catenary_checker
   octomap_msgs
   octomap_ros
   pcl_ros
@@ -22,9 +28,15 @@ find_package(catkin REQUIRED COMPONENTS
   upo_actions
   costmap_2d
   trajectory_msgs
-  kdtree_pkg
 )
 find_package(Boost REQUIRED COMPONENTS system)
+
+find_package(Qt5 REQUIRED COMPONENTS
+  Charts
+  Widgets
+)
+
+find_package(Qt5Charts REQUIRED)
 
 message(STATUS "System: ${CMAKE_SYSTEM}")
 ## System dependencies are found with CMake's conventions
@@ -122,10 +134,20 @@ find_package(Ceres REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
-  CATKIN_DEPENDS roscpp upo_actions message_runtime octomap_msgs octomap_ros pcl_conversions pcl_ros marsupial_optimizer kdtree_pkg
-  DEPENDS octomap_msgs octomap_ros
+  INCLUDE_DIRS include 
+  ${EXTERNAL_INCLUDE_DIRS}
   LIBRARIES ${EXTERNAL_LIBS} 
+  CATKIN_DEPENDS 
+  roscpp 
+  upo_actions 
+  message_runtime 
+  octomap_msgs 
+  octomap_ros 
+  pcl_conversions 
+  pcl_ros 
+  marsupial_optimizer 
+  catenary_checker
+  DEPENDS octomap_msgs octomap_ros
 )
 
 set(EXTERNAL_INCLUDE_DIRS ${Eigen_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} )
@@ -135,12 +157,26 @@ if (BUILD_SHARED_LIBS)
   remove_definitions(-DCERES_BUILDING_SHARED_LIBRARY)
 endif()
 
-include_directories(include)
+message(STATUS "RRT_PRINT include dir: ${catkin_INCLUDE_DIRS}")
 
 include_directories(
+  include/
   ${catkin_INCLUDE_DIRS}
+  ${PROJECT_SOURCE_DIR}
   ${CERES_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${Qt5_INCLUDE_DIRS}
+  ${Qt5Charts_INCLUDE_DIRS}
+  ${Qt5Widgets_INCLUDE_DIRS}
 )
+# add_library(${PROJECT_NAME}
+# )
+# target_link_libraries(${PROJECT_NAME}
+#    ${EXTERNAL_LIBS}
+#    ${catkin_LIBRARIES}
+#    ${EXTERNAL_INCLUDE_DIRS}
+#    ${catkin_INCLUDE_DIRS}
+# )
 
 ###########
 ## Build ##
@@ -148,21 +184,17 @@ include_directories(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-  
-  ${catkin_INCLUDE_DIRS}
-  ${PROJECT_SOURCE_DIR}
-  ${Boost_INCLUDE_DIRS}
-)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/rrt_planners.cpp
 # )
 
-add_executable(rrt_global_planner_node src/rrt_global_planner_node.cpp src/rrt_global_planner.cpp src/rrt_planner.cpp src/kdtree.cpp src/rrt_graph_markers.cpp)
-target_link_libraries(rrt_global_planner_node  marsupial_optimizer ${catkin_LIBRARIES} ${EXTERNAL_LIBS} Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
-add_dependencies(rrt_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp src/random_graph_markers.cpp )
+add_dependencies(random_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(random_global_planner_node  ${catkin_LIBRARIES} Ceres::ceres ${EXTERNAL_LIBS} ${CERES_LIBRARIES} catenary_checker Qt5::Charts
+Qt5::Widgets dbscan_line)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
