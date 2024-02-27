@@ -3,9 +3,9 @@
     <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
 
-    <arg name="graph_traj_in_rviz" default="true"/>  <!-- Execute Trajectory computed and translating tf robots-->
+    <arg name="graph_traj_in_rviz" default="false"/>  <!-- Execute Trajectory computed and translating tf robots-->
     <arg name="pause_execution" default="false"/>
-    <arg name="write_data_files" default="false"/>
+    <arg name="write_data_files" default="true"/>
     <arg name="use_distance_function" default="true"/>  
 
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
@@ -21,8 +21,8 @@
     <arg name="show_config_msgs" default="true"/>
     <arg name="just_line_of_sigth" default="false"/>
     
-    <arg name="distance_obstacle_ugv"    default="1.0"/>   
-    <arg name="distance_obstacle_uav"    default="1.0"/>   
+    <arg name="distance_obstacle_ugv"    default="0.5"/>   
+    <arg name="distance_obstacle_uav"    default="0.5"/>   
     <arg name="distance_tether_obstacle"    default="0.12"/>   
 
     <arg name="length_tether_max"    default="30.0"/>   
@@ -33,7 +33,7 @@
     <arg name="map_file"        default="stage_1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
-    <arg name="files_results"    default="results_marsupial_optimizer/"/>     
+    <arg name="files_results"    default="results_marsupial_optimizer"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
     <arg name="n_iter_rrt"          default="100"/>
@@ -65,7 +65,7 @@
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>        
         <remap from="/Make_Plan" to="Make_Plan"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
-        <param name="path"   value="$(env HOME)/$(arg files_results)"/>  
+        <param name="path"   value="$(env HOME)/$(arg files_results)/"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
         <param name="planner_type" value="$(arg planner_type)"/> 
         <param name="world_frame" value="$(arg world_frame)"/> 
@@ -140,10 +140,11 @@
         <param name="write_data_residual" value="$(arg write_data_residual)"/>
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="use_parable"   value="true"/>
+        <param name="export_path"   value="false"/>
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
 
-        <param name="n_iter_opt"    value="0"/>  #0  <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="100"/>  #0  <!-- number max. of iterations per optimization --> 
        
         <param name="fix_last_position_ugv"   value="false"/> 
         <param name="use_loss_function"   value="$(arg use_loss_function)"/> 
@@ -166,9 +167,9 @@
         <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
         <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
 
-        <param name="parable_obstacle_constraint"   value="true"/>    # Parable_constraint
-        <param name="parable_length_constraint"     value="true"/>    # parable_length_constraint 
-        <param name="parable_parameters_constraint" value="true"/>    # parable_parameters_constraint  
+        <param name="tether_obstacle_constraint"   value="true"/>    # tether_constraint
+        <param name="tether_length_constraint"     value="true"/>    # tether_length_constraint 
+        <param name="tether_parameters_constraint" value="true"/>    # tether_parameters_constraint  
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
@@ -212,7 +213,6 @@
         <param name="path"   value="$(env HOME)/$(arg files_results)/"/>     
         <param name="pc_user_name"  value="$(env HOME)/$(arg files_results)/"/>     
         <param name="path_mission_file"  value="$(find marsupial_mission_interface)/cfg/optimized_path/"/>     
-        <param name="files_results"   value="$(arg files_results)"/>     
         <param name="files_residuals"   value="$(arg files_residuals)"/>     
         <param name="scenario_name"   value="$(arg map_file)"/>     
 
@@ -222,35 +222,4 @@
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>    
    
-    <!-- Robot Marker -->
-    <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
-        <param name="frame_id" value="$(arg ugv_frame)"/>
-        <param name="scale" value="2.0"/>
-    </node>
-
-     <!-- Robot Marker -->
-    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="m100"/> <!-- m600 or m100 -->
-        <param name="color" value="0.0"/> 
-        <param name="color_r" value="0.0"/> 
-        <param name="color_g" value="0.0"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale" value="1.5"/>
-    </node>
-
-    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="circle"/> 
-        <param name="radius" value="0.6"/> 
-        <param name="color" value="0.5"/> 
-        <param name="color_r" value="0.8"/> 
-        <param name="color_g" value="0.4"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale_x" value="0.2"/> 
-        <param name="scale_y" value="0.2"/> 
-        <param name="scale_z" value="0.2"/> 
-        <param name="scale" value="1.0"/>
-    </node>
-
 </launch>
