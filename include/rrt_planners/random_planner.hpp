@@ -129,10 +129,14 @@ public:
 	// float getYawFromQuat(Quaternion quat);
 
   	std::list<RRTNode*> nodes_tree; // TODO: single tree planners
-  	// std::list<RRTNode *> nodes_tree_ugv, nodes_tree_uav; // TODO: single tree planners
   	std::list<RRTNode*> take_off_nodes; // TODO: single 
 
+	std::list<RRTNode*> rrt_path;
+
   	virtual void clearStatus();
+	
+	void getParamsCatenary(std::vector<Vector3> &v_params_);
+
 	bool getGlobalPath(Trajectory &trajectory);
 
 	/**
@@ -589,7 +593,7 @@ protected:
 	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	double goal_gap_m;
 
-	std::list<RRTNode*> rrt_path;
+	
 
 	// Max time to get path
 	int timeout;

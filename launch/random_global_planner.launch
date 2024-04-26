@@ -15,15 +15,14 @@
     <arg name="uav_frame" default="uav_base_link"/>
     <arg name="reel_frame" default="reel_base_link"/>
     
-    <arg name="use_octomap" default="true"/>
     <arg name="verbose_optimizer" default="false"/>
     <arg name="debug_msgs" default="false"/>
-    <arg name="show_config_msgs" default="true"/>
+    <arg name="show_config_msgs" default="false"/>
     <arg name="just_line_of_sigth" default="false"/>
     
     <arg name="distance_obstacle_ugv"    default="0.5"/>   
     <arg name="distance_obstacle_uav"    default="0.5"/>   
-    <arg name="distance_tether_obstacle"    default="0.12"/>   
+    <arg name="distance_tether_obstacle"    default="0.15"/>   
 
     <arg name="length_tether_max"    default="30.0"/>   
 
@@ -167,9 +166,10 @@
         <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
         <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
 
-        <param name="tether_obstacle_constraint"   value="true"/>    # tether_constraint
+        <param name="catenary_constraint"   value="1"/>    # 1= Autodiff or 0 = Numerical
         <param name="tether_length_constraint"     value="true"/>    # tether_length_constraint 
         <param name="tether_parameters_constraint" value="true"/>    # tether_parameters_constraint  
+        <param name="tether_obstacle_constraint"   value="true"/>    # tether_constraint
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
@@ -190,9 +190,9 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.085"/>   # Tether Obstacles collision 
-        <param name="w_eta_2"    value="0.100"/>   # Tether length 
-        <param name="w_eta_3"    value="1.000"/>   # Parameter Parable 
+        <param name="w_eta_1"    value="0.010"/>   # Tether Obstacles collision 
+        <param name="w_eta_2"    value="0.400"/>   # Tether length 
+        <param name="w_eta_3"    value="7.00"/>   # Parameter Parable 
 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
         <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles [m]-->

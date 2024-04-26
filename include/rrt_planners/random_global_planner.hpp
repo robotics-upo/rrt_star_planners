@@ -201,6 +201,9 @@ namespace PathPlanners
             int number_of_points;
             int seq;
             Trajectory trajectory;
+            vector<Vector3> v_params_catenary;
+            double param_cat_x0, param_cat_y0, param_cat_a ;
+
 
 	        Grid3d *grid_3D;
 
@@ -236,6 +239,7 @@ namespace PathPlanners
             RandomPlanner randPlanner;
 	        PlannerGraphMarkers rrtgm;
             sensor_msgs::PointCloud2::ConstPtr pc_obs_ugv;
+            std::vector<geometry_msgs::Vector3> v_p_catenary;
 
             octomap_msgs::OctomapConstPtr map;
 
