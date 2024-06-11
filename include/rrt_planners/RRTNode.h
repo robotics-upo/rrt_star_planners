@@ -54,6 +54,7 @@ public:
 	double param_cat_x0;
 	double param_cat_y0;
 	double param_cat_a ;
+	float dist;
 	std::vector<geometry_msgs::Vector3> p_cat;
 	// double h_cost;
 	RRTNode *parentNode;

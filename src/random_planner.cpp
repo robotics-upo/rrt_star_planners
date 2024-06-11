@@ -263,7 +263,7 @@ int RandomPlanner::computeTreesIndependent()
 			for (auto pt_: rrt_path){
 				printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.4f %.4f %.4f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f/%.3f   cost=%.3f  params=[%.3f %.3f %.3f]\n", i_, rrt_path.size(),
 				pt_->point.x*step, pt_->point.y*step, pt_->point.z*step, pt_->rot_ugv.x, pt_->rot_ugv.y, pt_->rot_ugv.z, pt_->rot_ugv.w, pt_->point_uav.x*step, 
-				pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, length_catenary[i_], pt_->cost, pt_->param_cat_x0, pt_->param_cat_y0, pt_->param_cat_a);
+				pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, pt_->dist, pt_->cost, pt_->param_cat_x0, pt_->param_cat_y0, pt_->param_cat_a);
 				i_++;
 			}
 			rrtgm.getPathMarker(rrt_path, lines_ugv_marker_pub_, lines_uav_marker_pub_);
@@ -1496,6 +1496,11 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 	}
 
 	bool founded_catenary = ccm->SearchCatenary(p_reel_, p_final_, points_catenary_);
+	float diff_x_ = p_reel_.x-p_final_.x;
+	float diff_y_ = p_reel_.y-p_final_.y;
+	float diff_z_ = p_reel_.z-p_final_.z;
+	float dist_ = sqrt(diff_x_*diff_x_ + diff_y_*diff_y_ + diff_z_*diff_z_);
+
 	if(founded_catenary){
 		q_init_.p_cat = points_catenary_;
 		q_init_.min_dist_obs_cat = ccm->min_dist_obs_cat;
@@ -1504,6 +1509,7 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 		q_init_.param_cat_x0 = ccm->param_cat_x0;
 		q_init_.param_cat_y0 = ccm->param_cat_y0;
 		q_init_.param_cat_a  = ccm->param_cat_a ;
+		q_init_.dist = dist_;
 	}
 	
 	return founded_catenary;
@@ -1804,7 +1810,8 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
 	ccm->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
-	use_parable, use_distance_function, pos_reel_ugv, just_line_of_sigth); 
+	use_parable, use_distance_function, pos_reel_ugv, just_line_of_sigth, true); 
+	ROS_INFO_COND(true, PRINTF_BLUE "RandomPlanner::configRRTParameters :  distance_tether_obstacle=%f , use_distance_function=%s",distance_tether_obstacle, use_distance_function?"true":"false");
 }
 
 bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)

@@ -5,7 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /TF1/Frames1
-      Splitter Ratio: 0.4424460530281067
+      Splitter Ratio: 0.47302159667015076
     Tree Height: 797
   - Class: rviz/Selection
     Name: Selection
@@ -128,7 +128,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 6.025000095367432
+        Max Value: 4.625
         Min Value: 0.02500000037252903
         Value: true
       Axis: Z
@@ -256,47 +256,37 @@ Visualization Manager:
       Marker Topic: /optimizer_local_planner_node/opt_trajectory_uav_marker
       Name: OptImized_trajectory_uav
       Namespaces:
-        lines_uav_m: true
-        points_uav_m: true
-        points_ugv_m: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /random_planner_node/catenary_marsupial
       Name: Tether_RRT_marsupial_path
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /random_planner_node/interpolated_catenary_marsupial
       Name: Tether_Interpolated
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
+      Enabled: true
       Marker Topic: /optimizer_local_planner_node/catenary_marker
       Name: Tether Marker
       Namespaces:
         {}
       Queue Size: 100
-      Value: false
-    - Class: rviz/MarkerArray
-      Enabled: false
-      Marker Topic: /optimizer_local_planner_node/init_tether_marker
-      Name: Tether_Optimization_initial
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /optimizer_local_planner_node/opt_tether_marker
-      Name: Tether_Optimization_final
+      Marker Topic: /optimizer_local_planner_node/init_tether_marker
+      Name: Tether_Optimization_initial
       Namespaces:
         catenary_0: true
         catenary_1: true
@@ -305,13 +295,9 @@ Visualization Manager:
         catenary_12: true
         catenary_13: true
         catenary_14: true
-        catenary_15: true
-        catenary_16: true
-        catenary_17: true
         catenary_18: true
         catenary_19: true
         catenary_2: true
-        catenary_20: true
         catenary_21: true
         catenary_22: true
         catenary_23: true
@@ -322,20 +308,7 @@ Visualization Manager:
         catenary_28: true
         catenary_29: true
         catenary_3: true
-        catenary_30: true
-        catenary_31: true
-        catenary_32: true
-        catenary_33: true
-        catenary_34: true
-        catenary_35: true
-        catenary_36: true
-        catenary_37: true
-        catenary_38: true
-        catenary_39: true
         catenary_4: true
-        catenary_40: true
-        catenary_41: true
-        catenary_42: true
         catenary_5: true
         catenary_6: true
         catenary_7: true
@@ -345,12 +318,20 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
+      Marker Topic: /optimizer_local_planner_node/opt_tether_marker
+      Name: Tether_Optimization_final
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: false
       Marker Topic: /random_planner_node/tree_rrt_star_ugv
       Name: RRTStar_nodes_ugv
       Namespaces:
-        tree_RRTStar_ugv: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /random_planner_node/tree_rrt_star_uav
@@ -443,7 +424,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 8.938742637634277
+      Distance: 10.994643211364746
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -451,17 +432,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 4.601535320281982
-        Y: 0.22411036491394043
-        Z: -7.228663162095472e-05
+        X: -0.641339898109436
+        Y: 1.282530426979065
+        Z: -7.252505020005628e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.019796494394540787
+      Pitch: 0.11479590833187103
       Target Frame: <Fixed Frame>
-      Yaw: 4.565743923187256
+      Yaw: 4.585729598999023
     Saved: ~
 Window Geometry:
   Displays:

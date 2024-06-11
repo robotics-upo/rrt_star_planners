@@ -7,6 +7,7 @@
     <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="true"/>
     <arg name="use_distance_function" default="true"/>  
+    <arg name="use_catenary_as_tether" default="true"/>  
 
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
 
@@ -35,7 +36,7 @@
     <arg name="files_results"    default="results_marsupial_optimizer"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
-    <arg name="n_iter_rrt"          default="100"/>
+    <arg name="n_iter_rrt"          default="20"/>
     <arg name="n_loop_rrt"          default="100"/>
     <arg name="radius_near_nodes"   default="1.2"/> 
     <arg name="goal_gap_m"          default="0.2"/> # 1.4
@@ -90,9 +91,12 @@
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>    
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
-        <param name="distance_obstacle_ugv"         value="$(arg distance_obstacle_ugv)"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_obstacle_uav"         value="$(arg distance_obstacle_uav)"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_tether_obstacle"  value="$(arg distance_tether_obstacle)"/> <!--bound distance catenary to obstacles [m] -->   
+        <!-- <param name="distance_obstacle_ugv"         value="$(arg distance_obstacle_ugv)"/> # bound distance UGV to obstacles 0.05[m] resolution of the map -->
+        <!-- <param name="distance_obstacle_uav"         value="$(arg distance_obstacle_uav)"/> # bound distance UAV to obstacles 0.05[m] resolution of the map -->
+        <!-- <param name="distance_tether_obstacle"  value="$(arg distance_tether_obstacle)"/> # bound distance catenary to obstacles [m]   -->
+        <param name="distance_obstacle_ugv"         value="0.2"/> # bound distance UGV to obstacles 0.05[m] resolution of the map
+        <param name="distance_obstacle_uav"         value="0.2"/> # bound distance UAV to obstacles 0.05[m] resolution of the map
+        <param name="distance_tether_obstacle"  value="0.10"/> # bound distance catenary to obstacles [m]  
         <param name="save_path_in_file"   value="$(arg save_path_in_file)"/>
         <param name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/>
 
@@ -143,13 +147,14 @@
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
 
-        <param name="n_iter_opt"    value="100"/>  #0  <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="500"/>  #0  <!-- number max. of iterations per optimization --> 
        
         <param name="fix_last_position_ugv"   value="false"/> 
         <param name="use_loss_function"   value="$(arg use_loss_function)"/> 
         <param name="optimize_ugv"   value="true"/>  # UGV
         <param name="optimize_uav"   value="true"/>  # UAV
-        <param name="optimize_cat"   value="true"/>  # CAT
+        <param name="optimize_tether"   value="true"/>  # TETHER
+        <param name="use_catenary_as_tether"    value="$(arg use_catenary_as_tether)"/>  # TETHER     
 
         <param name="equidistance_ugv_constraint"   value="true"/>   # equidistance_ugv_constraint
         <param name="obstacles_ugv_constraint"      value="true"/>   # obstacles_ugv_constraint
@@ -167,9 +172,9 @@
         <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
 
         <param name="catenary_constraint"   value="1"/>    # 1= Autodiff or 0 = Numerical
+        <param name="tether_obstacle_constraint"   value="false"/>    # tether_constraint
         <param name="tether_length_constraint"     value="true"/>    # tether_length_constraint 
         <param name="tether_parameters_constraint" value="true"/>    # tether_parameters_constraint  
-        <param name="tether_obstacle_constraint"   value="true"/>    # tether_constraint
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
@@ -181,7 +186,7 @@
 
         <!-- UAV Constraint Parameters -->
         <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
-        <param name="w_beta_uav"    value="0.080"/>   # Obstacles uav 
+        <param name="w_beta_uav"    value="0.100"/>   # Obstacles uav 
         <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
         <param name="w_epsilon_uav"   value="0.05"/>   # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
@@ -190,9 +195,12 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Catenary Constraint Parameters -->
-        <param name="w_eta_1"    value="0.010"/>   # Tether Obstacles collision 
-        <param name="w_eta_2"    value="0.400"/>   # Tether length 
-        <param name="w_eta_3"    value="7.00"/>   # Parameter Parable 
+        <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.001" />     # Catenary Obstacles collision 
+        <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.400" />     # Catenary length 
+        <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="1.0" />       # Catenary Parameter 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.001" />     # Parabola Obstacles collision 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />     # Parabola length 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.2" />       # Parabola Parameter 
 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
         <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles [m]-->

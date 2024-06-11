@@ -111,7 +111,7 @@ void RandomGlobalPlanner::configRRTStar()
     configRandomPlanner();
 
     CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, map_resolution, 
-	use_parable, use_distance_function, pos_reel_ugv, just_line_of_sigth);
+	use_parable, use_distance_function, pos_reel_ugv, just_line_of_sigth, true);
 }
 
 void RandomGlobalPlanner::configTopics()
@@ -121,6 +121,7 @@ void RandomGlobalPlanner::configTopics()
     interpolated_path_ugv_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_path_ugv_rrt_star", 2, true);
 	interpolated_path_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_path_uav_rrt_star", 2, true);
     interpolated_catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("interpolated_catenary_marsupial", 1000, true);
+    initial_catenary_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marsupial", 1000, true);
 
     sub_map = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary", 1, &RandomGlobalPlanner::collisionMapCallBack, this);
     clean_nodes_marker_gp_sub_ = nh->subscribe("/clean_nodes_marker_gp", 1, &RandomGlobalPlanner::deleteNodesMarkersCallBack, this);
@@ -223,6 +224,12 @@ void RandomGlobalPlanner::makePlanGoalCB()
                 v_pos_coll_tether = CheckCM->v_pos_coll_tether;
             }
         }
+
+        /********************* To obligate pause method and check Planning result *********************/
+                //    std::string y_ ;
+                //    std::cout << " *** Graphed Path from RRT* : Press key to continue: " << std::endl;
+                //    std::cin >> y_ ;
+        /*************************************************************************************************/
              
         interpolatePointsGlobalPath(trajectory, randPlanner.length_catenary);
         for (size_t i=0; i< trajectory.points.size(); i++){
@@ -244,9 +251,9 @@ void RandomGlobalPlanner::makePlanGoalCB()
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
 
         /********************* To obligate pause method and check Planning result *********************/
-                //    std::string y_ ;
-                //    std::cout << " *** Press key to continue: " << std::endl;
-                //    std::cin >> y_ ;
+                //    std::string yy_ ;
+                //    std::cout << " *** Graphed Intepolated Path : Press key to continue: " << std::endl;
+                //    std::cin >> yy_ ;
         /*************************************************************************************************/
 
         sendPathToLocalPlannerServer();
