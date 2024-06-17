@@ -23,7 +23,7 @@
     
     <arg name="distance_obstacle_ugv"    default="0.5"/>   
     <arg name="distance_obstacle_uav"    default="0.5"/>   
-    <arg name="distance_tether_obstacle"    default="0.15"/>   
+    <arg name="distance_tether_obstacle"    default="0.10"/>   
 
     <arg name="length_tether_max"    default="30.0"/>   
 
@@ -172,23 +172,23 @@
         <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
 
         <param name="catenary_constraint"   value="1"/>    # 1= Autodiff or 0 = Numerical
-        <param name="tether_obstacle_constraint"   value="false"/>    # tether_constraint
+        <param name="tether_obstacle_constraint"   value="true"/>    # tether_constraint
         <param name="tether_length_constraint"     value="true"/>    # tether_length_constraint 
         <param name="tether_parameters_constraint" value="true"/>    # tether_parameters_constraint  
 
         <!-- UGV Constraint Parameters -->
-        <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
-        <param name="w_beta_ugv"    value="0.090"/>   # Obstacles ugv
-        <param name="w_theta_ugv"   value="0.5000"/>   # Traversability ugv
-        <param name="w_gamma_ugv"   value="0.120"/>   # Smoothness ugv 
-        <param name="w_epsilon_ugv"   value="0.05"/>   # Velocity 
+        <param name="w_alpha_ugv"   value="0.200"/>     # Equi-distance ugv
+        <param name="w_beta_ugv"    value="0.090"/>     # Obstacles ugv
+        <param name="w_theta_ugv"   value="0.5000"/>    # Traversability ugv
+        <param name="w_gamma_ugv"   value="0.120"/>     # Smoothness ugv 
+        <param name="w_epsilon_ugv"   value="0.05"/>    # Velocity 
         <param name="w_zeta_ugv"      value="0.005"/>   # Acceleration 
 
         <!-- UAV Constraint Parameters -->
-        <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
-        <param name="w_beta_uav"    value="0.100"/>   # Obstacles uav 
-        <param name="w_gamma_uav"   value="0.140"/>   # Smoothness uav
-        <param name="w_epsilon_uav"   value="0.05"/>   # Velocity 
+        <param name="w_alpha_uav"   value="0.250"/>     # Equi-distance uav 
+        <param name="w_beta_uav"    value="0.080"/>     # Obstacles uav 
+        <param name="w_gamma_uav"   value="0.140"/>     # Smoothness uav
+        <param name="w_epsilon_uav"   value="0.05"/>    # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
         
         <!-- Time Constraint Parameters -->
@@ -198,9 +198,9 @@
         <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.001" />     # Catenary Obstacles collision 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.400" />     # Catenary length 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="1.0" />       # Catenary Parameter 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.001" />     # Parabola Obstacles collision 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />     # Parabola length 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.2" />       # Parabola Parameter 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.060" />      # Parabola Obstacles collision 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />       # Parabola length 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.600" />       # Parabola Parameter 
 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
         <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles [m]-->
