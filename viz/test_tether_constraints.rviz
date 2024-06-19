@@ -5,7 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /TF1/Frames1
-      Splitter Ratio: 0.8088235259056091
+      Splitter Ratio: 0.7735294103622437
     Tree Height: 797
   - Class: rviz/Selection
     Name: Selection
@@ -198,21 +198,19 @@ Visualization Manager:
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /test_tether_constraints_node/init_tether_marker
-      Name: Tether_Optimization_initial
+      Name: Tether_initial
       Namespaces:
         catenary_0: true
         catenary_1: true
-        catenary_2: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /test_tether_constraints_node/opt_tether_marker
-      Name: Tether_Optimization_final
+      Name: Tether_final
       Namespaces:
         catenary_0: true
         catenary_1: true
-        catenary_2: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -243,7 +241,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 16.545289993286133
+      Distance: 14.559855461120605
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -259,9 +257,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.1302041858434677
+      Pitch: -0.16020415723323822
       Target Frame: <Fixed Frame>
-      Yaw: 4.810732364654541
+      Yaw: 4.760729789733887
     Saved: ~
 Window Geometry:
   Displays:
