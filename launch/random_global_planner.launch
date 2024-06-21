@@ -21,9 +21,9 @@
     <arg name="show_config_msgs" default="false"/>
     <arg name="just_line_of_sigth" default="false"/>
     
-    <arg name="distance_obstacle_ugv"    default="0.5"/>   
-    <arg name="distance_obstacle_uav"    default="0.5"/>   
-    <arg name="distance_tether_obstacle"    default="0.10"/>   
+    <arg name="distance_obstacle_ugv"    default="0.40"/>   
+    <arg name="distance_obstacle_uav"    default="0.40"/>   
+    <arg name="distance_tether_obstacle"    default="0.12"/>   
 
     <arg name="length_tether_max"    default="30.0"/>   
 
@@ -91,12 +91,9 @@
         <param name="sample_mode"    value="$(arg sample_mode_rrt)"/>    
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
-        <!-- <param name="distance_obstacle_ugv"         value="$(arg distance_obstacle_ugv)"/> # bound distance UGV to obstacles 0.05[m] resolution of the map -->
-        <!-- <param name="distance_obstacle_uav"         value="$(arg distance_obstacle_uav)"/> # bound distance UAV to obstacles 0.05[m] resolution of the map -->
-        <!-- <param name="distance_tether_obstacle"  value="$(arg distance_tether_obstacle)"/> # bound distance catenary to obstacles [m]   -->
-        <param name="distance_obstacle_ugv"         value="0.2"/> # bound distance UGV to obstacles 0.05[m] resolution of the map
-        <param name="distance_obstacle_uav"         value="0.2"/> # bound distance UAV to obstacles 0.05[m] resolution of the map
-        <param name="distance_tether_obstacle"  value="0.10"/> # bound distance catenary to obstacles [m]  
+        <param name="distance_obstacle_ugv"         value="$(arg distance_obstacle_ugv)"/> # bound distance UGV to obstacles 0.05[m] resolution of the map
+        <param name="distance_obstacle_uav"         value="$(arg distance_obstacle_uav)"/> # bound distance UAV to obstacles 0.05[m] resolution of the map
+        <param name="distance_tether_obstacle"  value="$(arg distance_tether_obstacle)"/> # bound distance catenary to obstacles [m]  
         <param name="save_path_in_file"   value="$(arg save_path_in_file)"/>
         <param name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/>
 
@@ -178,7 +175,7 @@
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.200"/>     # Equi-distance ugv
-        <param name="w_beta_ugv"    value="0.090"/>     # Obstacles ugv
+        <param name="w_beta_ugv"    value="0.120"/>     # Obstacles ugv
         <param name="w_theta_ugv"   value="0.5000"/>    # Traversability ugv
         <param name="w_gamma_ugv"   value="0.120"/>     # Smoothness ugv 
         <param name="w_epsilon_ugv"   value="0.05"/>    # Velocity 
@@ -186,7 +183,7 @@
 
         <!-- UAV Constraint Parameters -->
         <param name="w_alpha_uav"   value="0.250"/>     # Equi-distance uav 
-        <param name="w_beta_uav"    value="0.080"/>     # Obstacles uav 
+        <param name="w_beta_uav"    value="0.120"/>     # Obstacles uav 
         <param name="w_gamma_uav"   value="0.140"/>     # Smoothness uav
         <param name="w_epsilon_uav"   value="0.05"/>    # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
@@ -198,7 +195,7 @@
         <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.001" />     # Catenary Obstacles collision 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.400" />     # Catenary length 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="1.0" />       # Catenary Parameter 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.010" />      # Parabola Obstacles collision 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.005" />      # Parabola Obstacles collision 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />       # Parabola length 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.600" />       # Parabola Parameter 
 
@@ -226,6 +223,8 @@
 
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
+        <param name="map_path_trav"   value="$(find marsupial_optimizer)/maps/$(arg map_file)_traversability.bt"/>
+        <param name="map_path_obst"   value="$(find marsupial_optimizer)/maps/$(arg map_file)_obstacles.bt"/>
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>    
