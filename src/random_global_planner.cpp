@@ -185,8 +185,11 @@ void RandomGlobalPlanner::deleteNodesMarkersCallBack(const std_msgs::Bool::Const
 
 void RandomGlobalPlanner::deleteCatenaryGPCallBack(const std_msgs::Bool::ConstPtr &msg)
 {
-	if (msg->data == true)
+	if (msg->data == true){
+        randPlanner.clearCatenaryGPMarker();
+        randPlanner.clearLinesGPMarker();
 		clearCatenaryGPMarker();
+    }
 }
 
 void RandomGlobalPlanner::makePlanGoalCB()
@@ -244,16 +247,16 @@ void RandomGlobalPlanner::makePlanGoalCB()
 
         ROS_INFO(PRINTF_YELLOW "\nGlobal Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
         
-        randPlanner.clearCatenaryGPMarker();
-        randPlanner.clearLinesGPMarker();
+        // randPlanner.clearCatenaryGPMarker();
+        // randPlanner.clearLinesGPMarker();
         rrtgm.getPathMarker(trajectory,length_catenary, interpolated_path_ugv_marker_pub_, interpolated_path_uav_marker_pub_, interpolated_catenary_marker_pub_);
 
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Interpolated Global Path\n");
 
-        /********************* To obligate pause method and check Planning result *********************/
-                //    std::string yy_ ;
-                //    std::cout << " *** Graphed Intepolated Path : Press key to continue: " << std::endl;
-                //    std::cin >> yy_ ;
+        // /********************* To obligate pause method and check Planning result *********************/
+        //            std::string yy_ ;
+        //            std::cout << " *** Graphed Intepolated Path : Press key to continue: " << std::endl;
+        //            std::cin >> yy_ ;
         /*************************************************************************************************/
 
         sendPathToLocalPlannerServer();

@@ -297,10 +297,10 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 			catenaryMarker.markers[i].id = id_ + i*10.0;
 			catenaryMarker.markers[i].action = visualization_msgs::Marker::ADD;
 			 if (i % 5 == 0)
-            catenaryMarker.markers[i].type = visualization_msgs::Marker::CUBE;
+            	catenaryMarker.markers[i].type = visualization_msgs::Marker::CUBE;
         	else
-            catenaryMarker.markers[i].type = visualization_msgs::Marker::SPHERE;
-			catenaryMarker.markers[i].lifetime = ros::Duration(180);
+            	catenaryMarker.markers[i].type = visualization_msgs::Marker::SPHERE;
+			catenaryMarker.markers[i].lifetime = ros::Duration(0);
 			catenaryMarker.markers[i].pose.position.x = points_catenary_[i].x; 
 			catenaryMarker.markers[i].pose.position.y = points_catenary_[i].y; 
 			catenaryMarker.markers[i].pose.position.z = points_catenary_[i].z; //Move in Z to see the point over the map surface
@@ -321,7 +321,6 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 	}
 	lines_ugv_marker_pub_.publish(lines_ugv_marker);
 	lines_uav_marker_pub_.publish(lines_uav_marker);
-			
 }
 
 void PlannerGraphMarkers::getCatenaryMarker(vector<geometry_msgs::Vector3> points_catenary_, ros::Publisher one_catenary_marker_pub_){

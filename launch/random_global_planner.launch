@@ -21,8 +21,8 @@
     <arg name="show_config_msgs" default="false"/>
     <arg name="just_line_of_sigth" default="false"/>
     
-    <arg name="distance_obstacle_ugv"    default="0.40"/>   
-    <arg name="distance_obstacle_uav"    default="0.40"/>   
+    <arg name="distance_obstacle_ugv"    default="0.45"/>   
+    <arg name="distance_obstacle_uav"    default="0.45"/>   
     <arg name="distance_tether_obstacle"    default="0.12"/>   
 
     <arg name="length_tether_max"    default="30.0"/>   
@@ -144,7 +144,7 @@
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
 
-        <param name="n_iter_opt"    value="500"/>  #0  <!-- number max. of iterations per optimization --> 
+        <param name="n_iter_opt"    value="100"/>  #0  <!-- number max. of iterations per optimization --> 
        
         <param name="fix_last_position_ugv"   value="false"/> 
         <param name="use_loss_function"   value="$(arg use_loss_function)"/> 
@@ -193,9 +193,9 @@
 
         <!-- Catenary Constraint Parameters -->
         <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.001" />     # Catenary Obstacles collision 
-        <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.400" />     # Catenary length 
-        <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="1.0" />       # Catenary Parameter 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.005" />      # Parabola Obstacles collision 
+        <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.300" />     # Catenary length 
+        <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="0.800" />       # Catenary Parameter 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.0001" />      # Parabola Obstacles collision 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />       # Parabola length 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.600" />       # Parabola Parameter 
 
@@ -208,7 +208,7 @@
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
         <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
         #Parameter for Tether
-        <param name="distance_tether_obstacle"  value="$(arg distance_tether_obstacle)"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_tether_obstacle"  value="0.1"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
