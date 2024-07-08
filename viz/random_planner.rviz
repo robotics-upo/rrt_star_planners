@@ -137,7 +137,7 @@ Visualization Manager:
       Color: 159; 198; 231
       Color Transformer: AxisColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
@@ -152,7 +152,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /occupied_cells_vis_array
@@ -297,7 +297,10 @@ Visualization Manager:
         catenary_36: true
         catenary_37: true
         catenary_38: true
+        catenary_39: true
         catenary_4: true
+        catenary_40: true
+        catenary_41: true
         catenary_5: true
         catenary_6: true
         catenary_7: true
@@ -345,6 +348,9 @@ Visualization Manager:
         catenary_38: true
         catenary_39: true
         catenary_4: true
+        catenary_40: true
+        catenary_41: true
+        catenary_42: true
         catenary_5: true
         catenary_6: true
         catenary_7: true
@@ -359,10 +365,47 @@ Visualization Manager:
       Namespaces:
         catenary_0: true
         catenary_1: true
+        catenary_10: true
+        catenary_11: true
+        catenary_12: true
+        catenary_13: true
+        catenary_14: true
+        catenary_15: true
+        catenary_16: true
+        catenary_17: true
+        catenary_18: true
+        catenary_19: true
         catenary_2: true
+        catenary_20: true
+        catenary_21: true
+        catenary_22: true
+        catenary_23: true
+        catenary_24: true
+        catenary_25: true
+        catenary_26: true
+        catenary_27: true
+        catenary_28: true
+        catenary_29: true
         catenary_3: true
+        catenary_30: true
+        catenary_31: true
+        catenary_32: true
+        catenary_33: true
+        catenary_34: true
+        catenary_35: true
+        catenary_36: true
+        catenary_37: true
+        catenary_38: true
+        catenary_39: true
         catenary_4: true
+        catenary_40: true
+        catenary_41: true
+        catenary_42: true
         catenary_5: true
+        catenary_6: true
+        catenary_7: true
+        catenary_8: true
+        catenary_9: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -481,7 +524,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 8.073211669921875
+      Distance: 12.799379348754883
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -497,9 +540,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.07520422339439392
+      Pitch: -0.06020422279834747
       Target Frame: <Fixed Frame>
-      Yaw: 5.350712776184082
+      Yaw: 4.585737705230713
     Saved: ~
 Window Geometry:
   Displays:

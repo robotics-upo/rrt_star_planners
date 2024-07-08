@@ -21,9 +21,9 @@
     <arg name="show_config_msgs" default="false"/>
     <arg name="just_line_of_sigth" default="false"/>
     
-    <arg name="distance_obstacle_ugv"    default="0.45"/>   
-    <arg name="distance_obstacle_uav"    default="0.45"/>   
-    <arg name="distance_tether_obstacle"    default="0.12"/>   
+    <arg name="distance_obstacle_ugv"    default="0.5"/>   
+    <arg name="distance_obstacle_uav"    default="0.5"/>   
+    <arg name="distance_tether_obstacle"    default="0.14"/>   
 
     <arg name="length_tether_max"    default="30.0"/>   
 
@@ -182,9 +182,9 @@
         <param name="w_zeta_ugv"      value="0.005"/>   # Acceleration 
 
         <!-- UAV Constraint Parameters -->
-        <param name="w_alpha_uav"   value="0.250"/>     # Equi-distance uav 
-        <param name="w_beta_uav"    value="0.120"/>     # Obstacles uav 
-        <param name="w_gamma_uav"   value="0.140"/>     # Smoothness uav
+        <param name="w_alpha_uav"   value="0.350"/>     # Equi-distance uav 
+        <param name="w_beta_uav"    value="0.300"/>     # Obstacles uav 
+        <param name="w_gamma_uav"   value="0.200"/>     # Smoothness uav
         <param name="w_epsilon_uav"   value="0.05"/>    # Velocity 
         <param name="w_zeta_uav"      value="0.005"/>   # Acceleration 
         
@@ -193,9 +193,9 @@
 
         <!-- Catenary Constraint Parameters -->
         <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.001" />     # Catenary Obstacles collision 
-        <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.300" />     # Catenary length 
-        <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="0.800" />       # Catenary Parameter 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.0001" />      # Parabola Obstacles collision 
+        <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.400" />     # Catenary length 
+        <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="0.600" />       # Catenary Parameter 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.010" />      # Parabola Obstacles collision 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />       # Parabola length 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.600" />       # Parabola Parameter 
 
