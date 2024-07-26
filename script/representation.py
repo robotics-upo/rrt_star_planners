@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def format_func(value, tick_number):
-    # find number of multiples of pi/2
     if value == 1:
         return "Parabol"
     else:
@@ -21,6 +20,7 @@ def setViolinFormat(parts, data, ax):
 
     perc = [2, 25, 50, 75, 98]
     min_, quartile1, medians, quartile3, max_ = np.percentile(data.transpose(), perc, axis=1)
+    print("Medians: ", medians)
 
     inds = np.arange(1, len(medians) + 1)
     ax.scatter(inds, medians, marker='o', color='white', s=30, zorder=3)
