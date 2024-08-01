@@ -128,7 +128,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 6.025000095367432
+        Max Value: 4.625
         Min Value: 0.02500000037252903
         Value: true
       Axis: Z
@@ -200,7 +200,7 @@ Visualization Manager:
       Marker Topic: /random_planner_node/path_ugv_rrt_star
       Name: Random_path_ugv
       Namespaces:
-        Line_ugv_RRTStar_Path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -208,7 +208,7 @@ Visualization Manager:
       Marker Topic: /random_planner_node/path_uav_rrt_star
       Name: Random_path_uav
       Namespaces:
-        Line_uav_RRTStar_Path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -216,7 +216,7 @@ Visualization Manager:
       Marker Topic: /random_planner_node/interpolated_path_ugv_rrt_star
       Name: Interpolated_path_ugv
       Namespaces:
-        Line_ugv_Global_Path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -224,7 +224,7 @@ Visualization Manager:
       Marker Topic: /random_planner_node/interpolated_path_uav_rrt_star
       Name: Interpolated_path_uav
       Namespaces:
-        Line_uav_Global_Path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -264,48 +264,7 @@ Visualization Manager:
       Marker Topic: /random_planner_node/catenary_marsupial
       Name: Tether_RRT_marsupial_path
       Namespaces:
-        catenary_0: true
-        catenary_1: true
-        catenary_10: true
-        catenary_11: true
-        catenary_12: true
-        catenary_13: true
-        catenary_14: true
-        catenary_15: true
-        catenary_16: true
-        catenary_17: true
-        catenary_18: true
-        catenary_19: true
-        catenary_2: true
-        catenary_20: true
-        catenary_21: true
-        catenary_22: true
-        catenary_23: true
-        catenary_24: true
-        catenary_25: true
-        catenary_26: true
-        catenary_27: true
-        catenary_28: true
-        catenary_29: true
-        catenary_3: true
-        catenary_30: true
-        catenary_31: true
-        catenary_32: true
-        catenary_33: true
-        catenary_34: true
-        catenary_35: true
-        catenary_36: true
-        catenary_37: true
-        catenary_38: true
-        catenary_39: true
-        catenary_4: true
-        catenary_40: true
-        catenary_41: true
-        catenary_5: true
-        catenary_6: true
-        catenary_7: true
-        catenary_8: true
-        catenary_9: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -313,49 +272,7 @@ Visualization Manager:
       Marker Topic: /random_planner_node/interpolated_catenary_marsupial
       Name: Tether_Interpolated
       Namespaces:
-        catenary_0: true
-        catenary_1: true
-        catenary_10: true
-        catenary_11: true
-        catenary_12: true
-        catenary_13: true
-        catenary_14: true
-        catenary_15: true
-        catenary_16: true
-        catenary_17: true
-        catenary_18: true
-        catenary_19: true
-        catenary_2: true
-        catenary_20: true
-        catenary_21: true
-        catenary_22: true
-        catenary_23: true
-        catenary_24: true
-        catenary_25: true
-        catenary_26: true
-        catenary_27: true
-        catenary_28: true
-        catenary_29: true
-        catenary_3: true
-        catenary_30: true
-        catenary_31: true
-        catenary_32: true
-        catenary_33: true
-        catenary_34: true
-        catenary_35: true
-        catenary_36: true
-        catenary_37: true
-        catenary_38: true
-        catenary_39: true
-        catenary_4: true
-        catenary_40: true
-        catenary_41: true
-        catenary_42: true
-        catenary_5: true
-        catenary_6: true
-        catenary_7: true
-        catenary_8: true
-        catenary_9: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -363,49 +280,7 @@ Visualization Manager:
       Marker Topic: /optimizer_local_planner_node/catenary_marker
       Name: Tether Marker
       Namespaces:
-        catenary_0: true
-        catenary_1: true
-        catenary_10: true
-        catenary_11: true
-        catenary_12: true
-        catenary_13: true
-        catenary_14: true
-        catenary_15: true
-        catenary_16: true
-        catenary_17: true
-        catenary_18: true
-        catenary_19: true
-        catenary_2: true
-        catenary_20: true
-        catenary_21: true
-        catenary_22: true
-        catenary_23: true
-        catenary_24: true
-        catenary_25: true
-        catenary_26: true
-        catenary_27: true
-        catenary_28: true
-        catenary_29: true
-        catenary_3: true
-        catenary_30: true
-        catenary_31: true
-        catenary_32: true
-        catenary_33: true
-        catenary_34: true
-        catenary_35: true
-        catenary_36: true
-        catenary_37: true
-        catenary_38: true
-        catenary_39: true
-        catenary_4: true
-        catenary_40: true
-        catenary_41: true
-        catenary_42: true
-        catenary_5: true
-        catenary_6: true
-        catenary_7: true
-        catenary_8: true
-        catenary_9: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -469,7 +344,7 @@ Visualization Manager:
       Marker Topic: /random_planner_node/goal_point
       Name: RRT_Goal_point
       Namespaces:
-        goal_point: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -524,7 +399,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 12.799379348754883
+      Distance: 12.433411598205566
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -532,17 +407,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 4.353283882141113
-        Y: 1.0971264839172363
-        Z: -7.335951522691175e-05
+        X: -0.6474123001098633
+        Y: 2.163963794708252
+        Z: -7.312109664781019e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.06020422279834747
+      Pitch: 0.05979575589299202
       Target Frame: <Fixed Frame>
-      Yaw: 4.585737705230713
+      Yaw: 4.695738792419434
     Saved: ~
 Window Geometry:
   Displays:
