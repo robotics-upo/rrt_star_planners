@@ -41,7 +41,7 @@
     <arg name="samp_goal_rate"      default="15"/>
     <arg name="sample_mode_rrt"     default="1"/>
         <!-- Catenaty Checker-->
-    <arg name="plane_dist" default="0.5"/>
+    <arg name="precomputed_file" default="$(arg map_file).tar.gz"/>
     <arg name="dbscan_epsilon" default="0.5"/>
     <arg name="dbscan_gamma" default="0.1"/>
     <arg name="dbscan_theta" default="0.1"/>
@@ -53,7 +53,7 @@
     <arg name="do_steer_ugv" default="false"/>
 
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen"> #launch-prefix="gdb -ex run --args">
+    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" launch-prefix="gdb --args">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
@@ -99,7 +99,7 @@
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
         <!-- Catenaty Checker-->
         <param name="use_parable"   value="$(arg use_parable)"/>
-        <param name="plane_dist" value="$(arg plane_dist)"/>
+        <param name="precomputed_file" value="$(arg precomputed_file)"/>
         <param name="dbscan_min_points" value="$(arg dbscan_min_points)"/>
         <param name="dbscan_epsilon" value="$(arg dbscan_epsilon)"/>
         <param name="dbscan_gamma" value="$(arg dbscan_gamma)"/>
