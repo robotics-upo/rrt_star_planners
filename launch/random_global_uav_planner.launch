@@ -1,6 +1,5 @@
 <launch>
     <arg name="planner_type" default="rrt_star"/>
-    <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
 
     <arg name="graph_traj_in_rviz" default="false"/>
