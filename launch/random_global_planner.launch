@@ -53,7 +53,10 @@
     <arg name="do_steer_ugv" default="false"/>
 
     <!-- Global Planner: RRT* -->
-    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" launch-prefix="gdb --args">
+    <arg name="debug" default="false"/>
+    <arg name="prefix_" default="" unless="$(arg debug)"/>
+    <arg name="prefix_" default="gdb --args" if="$(arg debug)"/>
+    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" launch-prefix="$(arg prefix_) ">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
