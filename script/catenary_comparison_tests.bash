@@ -2,6 +2,11 @@
 
 # Check for the correct number of arguments (two: the number of stage and the number of initial condition)
 
+# TODO: Use the same tests as Simon for the comparison and the marsupial whole planner
+# TODO: The goal are the same for each scenario --> marsupial_optimizer/trees/,,,,
+# TODO: The initial conditions vary --> marsupial_optimizer/cfg/stage_....
+
+
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <init stage number> <final stage number>"
     exit 1

@@ -3,7 +3,6 @@
     <!-- Loading Arguments -->
     <arg name="planner_type"        default="rrt_star"/>
     <arg name="map"        default="teatro_wall"/>
-    <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->
     <arg name="num_pos_initial"         default="1"/>
     <arg name="pos_uav_above_ugv"     default="3.0"/> #meters UAV above UGV
     <arg name="using_pc"    default="true"/> 
@@ -12,7 +11,7 @@
     <arg name="is_coupled"    default="false"/>
     <arg name="sample_mode"    default="1"/>
     <arg name="write_data_files" default="false"/>
-    <arg name="pc_user"    default="simon"/>     
+    <arg name="pc_user"    default="$(env HOME)"/>     
     
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
@@ -42,6 +41,7 @@
 
 
     <!-- Launch  region_growing-->
+    <!-- Note: if it is precalculated you can load the bt directly with octomap -->
     <!-- <include file="$(find rrt_planners)/launch/region_growing.launch">
         <param name="ugv_base_frame" value="$(arg ugv_base_frame)"/>
     </include>  -->
@@ -57,6 +57,7 @@
     </include>
 
     <!-- Launch Optimizer and Global Planner-->
+    <arg name="debug" default="false"/>
     <include file="$(find rrt_planners)/launch/random_global_planner.launch">
         <arg name="coupled" value="$(arg is_coupled)"/> 
         <arg name="map_file" value="$(arg map)"/> 
@@ -67,6 +68,7 @@
         <arg name="pc_user_name" value="$(arg pc_user)" /> 
         <arg name="use_parable"   value="$(arg use_parable)"/>
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
+        <arg name="debug" value="$(arg debug)"/>
     </include>    
 
     <!-- RViz -->
