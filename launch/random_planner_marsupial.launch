@@ -39,6 +39,10 @@
         <arg name="map_file"  value="$(arg map)"/>    
     </include>
 
+    <include file="$(find marsupial_optimizer)/launch/behavior_tree_node_marsupial.launch"/>
+    <include file="$(find rrt_planners)/launch/test.launch">
+      <arg name="map_file" value="$(arg map)"/>
+    </include>
 
     <!-- Launch  region_growing-->
     <!-- Note: if it is precalculated you can load the bt directly with octomap -->
@@ -73,5 +77,4 @@
 
     <!-- RViz -->
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find rrt_planners)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
-
 </launch>
