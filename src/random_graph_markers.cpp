@@ -301,7 +301,7 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 		len_cat_ = ct_[i];
 
 		points_catenary_.clear();
-		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, false);
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
 		bc.getPointCatenary3D(points_catenary_);
 
 		int id_ = i;
@@ -423,7 +423,7 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
 		len_cat_ = nt_->length_cat;
 
 		bc.readDataForCollisionAnalisys(g_3D_ , bound_obst_, octotree_full_, trav_kdT_, trav_pc_);
-		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, true);
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
 		bc.getPointCatenary3D(points_catenary_, false);
 		// printf("Catenary[%i]: L=[%f] reel=[%f %f %f] uav=[%f %f %f] \n",count, len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
 		// for (int i=0 ; i < bc.dist_obst_cat.size() ;  i++){
@@ -495,7 +495,7 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
 		p_uav_.z = nt_->point_uav.z*step;
 		double l_cat_ = nt_->length_cat;
 
-		bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z, false);
+		bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z);
 		bc.getPointCatenary3D(points_catenary_);
 
 

@@ -79,7 +79,7 @@ void RandomGlobalUAVPlanner::configParams()
     
   nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
   nh->param("catenary_file", catenary_file, (std::string) "catenary_stats");
-  nh->param("use_parable", use_parable, (bool)false);
+  nh->param("use_parabola", use_parabola, (bool)false);
   nh->param("use_both", use_both, (bool)false);
   catenary_analysis_file = path + catenary_file + ".txt";
 
@@ -101,11 +101,19 @@ void RandomGlobalUAVPlanner::configRRTStar()
                      map_resolution, map_h_inflaction, map_v_inflaction,
                      nh, goal_gap_m, debug_rrt, distance_obstacle_uav,
                      distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                     map_file, get_catenary_data, catenary_analysis_file, use_parable, CheckCM);
+                     map_file, get_catenary_data, catenary_analysis_file, use_parabola, CheckCM);
     configRandomPlanner();
 
-    CheckCM->Init(distance_catenary_obstacle, length_tether_max, ws_z_min,
-                  map_resolution, use_parable, use_distance_function, use_both);
+    geometry_msgs::Point pos_r;
+    pos_r.x = pos_reel_x;
+    pos_r.y = pos_reel_y;
+    pos_r.z = pos_reel_z;
+
+    CheckCM->init(grid_3D, distance_catenary_obstacle, 0.0, distance_obstacle_uav,
+	                length_tether_max, ws_z_min, map_resolution, use_parabola, use_distance_function, pos_r,
+			            false, !use_parabola, use_both);
+    // CheckCM->init(distance_catenary_obstacle, length_tether_max, ws_z_min,
+    //               map_resolution, use_parabola, use_distance_function, use_both);
 
 }
 
@@ -523,7 +531,7 @@ void RandomGlobalUAVPlanner::interpolatePointsGlobalPath(Trajectory &trajectory_
               printf("p_reel_[%f %f %f] p_final_[%f %f %f] p_catenary_[%lu] \n",
                      p_reel_.x,p_reel_.y,p_reel_.z,p_final_.x,p_final_.y,p_final_.z,
                      p_catenary_.size());
-              check_catenary = CheckCM->SearchCatenary(p_reel_, p_final_, p_catenary_);
+              check_catenary = CheckCM->searchCatenary(p_reel_, p_final_, p_catenary_);
               look_for_catenary = !check_catenary;
               l_cat_ = CheckCM->length_cat_final;
               length_catenary.push_back(l_cat_);

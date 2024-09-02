@@ -96,7 +96,7 @@ public:
             ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_uav_,
             double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_,
             bool use_distance_function_, std::string map_file_, bool get_catenary_data_,
-            std::string catenary_file_, bool use_parable_, CatenaryCheckerManager *catenary_manager);
+            std::string catenary_file_, bool use_parabola_, CatenaryCheckerManager *catenary_manager);
 
   ~RandomUAVPlanner();
 
@@ -135,7 +135,7 @@ public:
       std::vector <geometry_msgs::Point> pts_cat;
       geometry_msgs::Point p_i;
       p_i.x = initial_position_uav.x; p_i.y = initial_position_uav.y; p_i.z = initial_position_uav.z;
-      bool ret_val = ccm->SearchCatenary(p_reel_, p_i, pts_cat);
+      bool ret_val = ccm->searchCatenary(p_reel_, p_i, pts_cat);
       if (ret_val)
         disc_initial->length_cat = ccm->length_cat_final;
 
@@ -311,7 +311,7 @@ public:
 	std::string path;
 	bool new_solution;
 	std::vector<double> v_length_cat, v_min_dist_obs_cat, v_time_cat;
-	bool get_catenary_data, use_parable;
+	bool get_catenary_data, use_parabola;
 	std::string catenary_file;
 
 

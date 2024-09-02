@@ -33,7 +33,7 @@ RandomPlanner::~RandomPlanner()
 void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
 				   float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
 				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
-				   bool nodes_marker_debug_, bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parable_)
+				   bool nodes_marker_debug_, bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -91,7 +91,7 @@ void RandomPlanner::init(std::string plannerType, std::string frame_id_, float w
 
 	get_catenary_data = get_catenary_data_;
 	catenary_file = catenary_file_;
-	use_parable = use_parable_;
+	use_parabola = use_parabola_;
 
 	lines_ugv_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("path_ugv_rrt_star", 2, true);
 	lines_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("path_uav_rrt_star", 2, true);
@@ -1384,7 +1384,7 @@ void RandomPlanner::getParamsNode(RRTNode &node_, bool is_init_)
 	obs_near_ugv_ = nn_obs_ugv.nearestObstacleMarsupial(nn_obs_ugv.kdtree, point_node_, nn_obs_ugv.obs_points);
 	double dist_obs_ugv = (point_node_ - obs_near_ugv_).norm();
 
-	geometry_msgs::Vector3 p_node_uav_;
+	geometry_msgs::Point p_node_uav_;
 	p_node_uav_.x = node_.point_uav.x * step;
 	p_node_uav_.y = node_.point_uav.y * step;
 	p_node_uav_.z = node_.point_uav.z * step;
@@ -1488,7 +1488,7 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 		// printf("step[%f] pf_ : [%f %f %f]\n", step, pf_.point_uav.x*step, pf_.point_uav.y*step, pf_.point_uav.z*step);
 		if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
 			// Eigen::Vector3d obs_to_uav, pos_uav;
-			geometry_msgs::Vector3 obs_to_uav, pos_uav; 
+			geometry_msgs::Point obs_to_uav, pos_uav; 
 			pos_uav.x =pf_.point_uav.x * step ;
 			pos_uav.y =pf_.point_uav.y * step ; 
 			pos_uav.z =pf_.point_uav.z * step ; 
@@ -1520,7 +1520,7 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	bool ret;
 	double d_;
 
-	geometry_msgs::Vector3 obs_to_uav, pos_uav; 
+	geometry_msgs::Point obs_to_uav, pos_uav; 
 	pos_uav.x =pf_.point.x * step ;
 	pos_uav.y =pf_.point.y * step ; 
 	pos_uav.z =pf_.point.z * step ; 
@@ -1556,7 +1556,7 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_m
 		p_final_.z = q_init_.point_uav.z * step ;   
 	}
 
-	bool founded_catenary = ccm->SearchCatenary(p_reel_, p_final_, points_catenary_);
+	bool founded_catenary = ccm->searchCatenary(p_reel_, p_final_, points_catenary_);
 	if(founded_catenary){
 		// printf("\t RandomPlanner::checkCatenary: points_catenary_=%lu\n",points_catenary_.size());
 		q_init_.p_cat = points_catenary_;
@@ -1823,16 +1823,18 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
                                         double w_n_ugv_, double w_n_uav_, double w_n_smooth_)
 {
 	length_tether_max = _l_m;
-	pos_reel_ugv.x = _p_reel.x;
-	pos_reel_ugv.y = _p_reel.y;
-	pos_reel_ugv.z = _p_reel.z;
-	pos_tf_ugv.x = _p_ugv.x;
-	pos_tf_ugv.y = _p_ugv.y;
-	pos_tf_ugv.z = _p_ugv.z;
-	rot_tf_ugv.x = _r_ugv.x;
-	rot_tf_ugv.y = _r_ugv.y;
-	rot_tf_ugv.z = _r_ugv.z;
-	rot_tf_ugv.w = _r_ugv.w;
+
+	geometry_msgs::Point pos_reel;
+
+	pos_reel_ugv = _p_reel;
+
+	pos_reel.x = _p_reel.x;
+	pos_reel.y = _p_reel.y;
+	pos_reel.z = _p_reel.z;
+
+	pos_tf_ugv = _p_ugv;
+	rot_tf_ugv = _r_ugv;
+	
 	is_coupled = coupled_;
 	n_iter = n_iter_;
 	n_loop = n_loop_;
@@ -1848,7 +1850,10 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 	w_nearest_smooth = w_n_smooth_ ;
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
-	ccm->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, step, use_parable, use_distance_function);
+
+    ccm->init(grid_3D, distance_catenary_obstacle, distance_obstacle_ugv, distance_obstacle_uav,
+	          length_tether_max, ws_z_min, step, use_parabola, use_distance_function, pos_reel,
+			  false, !use_parabola);
 }
 
 bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)

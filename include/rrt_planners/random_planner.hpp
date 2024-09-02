@@ -116,7 +116,7 @@ public:
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
 			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
 			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
-			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parable_);
+			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_);
 
   	~RandomPlanner();
   
@@ -379,7 +379,7 @@ public:
 	std::string path;
 	bool new_solution;
 	std::vector<double> v_length_cat, v_min_dist_obs_cat, v_time_cat;
-	bool get_catenary_data, use_parable;
+	bool get_catenary_data, use_parabola;
 	std::string catenary_file;
 
 
