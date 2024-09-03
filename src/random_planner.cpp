@@ -239,7 +239,7 @@ int RandomPlanner::computeTreesIndependent()
 			if ((count_loop%samp_goal_rate)!=0)
 				q_rand = getRandomNode();	
 			else
-				q_rand = getRandomNode(true);	
+				q_rand = getGoalNode();	
 
 		if (debug_rrt)
 			printf(" q_rand = [%f %f %f / %f %f %f] \n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
@@ -261,9 +261,9 @@ int RandomPlanner::computeTreesIndependent()
 			 ( (num_goal_finded>0) && (planner_type == "rrt_star") && (count_loop == n_iter) ) ||
 			 ( (num_goal_finded>0) && (planner_type == "birrt") ) ){
 
-			printf("\n\n\nRandomPlanner::computeTreesIndependent -->  finded goal for Coupled Marsupial Configuration.\n")	; 
+			printf("\n\n\nRandomPlanner::computeTreesIndependent -->  goal found for Coupled Marsupial Configuration.\n")	; 
 			rrt_path = getPath(); 
-			printf("RandomPlanner::computeTreesIndependent -->  finded path for Coupled Marsupial Configuration--> (path size: %lu , iteration numbers: %i) : \n",rrt_path.size(), (count_loop)+(500*count_total_loop)); 
+			printf("RandomPlanner::computeTreesIndependent -->  path found for Coupled Marsupial Configuration--> (path size: %lu , iteration numbers: %i) : \n",rrt_path.size(), (count_loop)+(500*count_total_loop)); 
 			if (planner_type == "rrt_star")
 				printf("RandomPlanner::computeTreesIndependent -->  number of goals finded: %i\n",num_goal_finded); 
 			int i_=0;   
@@ -606,7 +606,7 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 	}
 }
 
-RRTNode RandomPlanner::getRandomNode(bool go_to_goal_) 
+RRTNode RandomPlanner::getRandomNode() 
 {
 	// Random numbers
     std::random_device rd;   // obtain a random number from hardware
@@ -618,60 +618,71 @@ RRTNode RandomPlanner::getRandomNode(bool go_to_goal_)
   	std::uniform_int_distribution<int> distr_z_uav(ws_z_min+(0.0+0.6*step_inv), ws_z_max);  // define the range 1.0+0.6*step_inv
 
 	RRTNode randomState_;
-	bool finded_node = false;
+	bool found_node = false;
 	bool catenary_state = false;
 
 
 	// Get random position for UAV
 	if (!is_coupled){
-		if (!go_to_goal_){
-			do{
-				randomState_.point_uav.x = distr_x_uav(eng);
-				randomState_.point_uav.y = distr_y_uav(eng);
-				randomState_.point_uav.z = distr_z_uav(eng);
-				finded_node = checkNodeFeasibility(randomState_,true);
+		do{
+			randomState_.point_uav.x = distr_x_uav(eng);
+			randomState_.point_uav.y = distr_y_uav(eng);
+			randomState_.point_uav.z = distr_z_uav(eng);
+			found_node = checkNodeFeasibility(randomState_,true);
 
-			}while(finded_node == false);		
-		}
-		else{
-			do{
-				randomState_.point_uav.x = disc_final->point_uav.x;
-				randomState_.point_uav.y = disc_final->point_uav.y;
-				randomState_.point_uav.z = disc_final->point_uav.z;
-				finded_node = checkNodeFeasibility(randomState_,true);
-			}while(finded_node == false);
-		}
+		}while(found_node == false);		
+	} else {
+		do{
+			randomState_.point_uav.x = disc_final->point_uav.x;
+			randomState_.point_uav.y = disc_final->point_uav.y;
+			randomState_.point_uav.z = disc_final->point_uav.z;
+			found_node = checkNodeFeasibility(randomState_,true);
+		} while(found_node == false);
 	}
 	
 	// Get random position for UGV
-	if (!go_to_goal_){
-		do{
-			int num_rand = distr_ugv(eng);
-			randomState_.point.x = v_points_ws_ugv[num_rand].x*step_inv;
-			randomState_.point.y = v_points_ws_ugv[num_rand].y*step_inv;
-			randomState_.point.z = v_points_ws_ugv[num_rand].z*step_inv;  
-			if (randomState_.point.z < 1){
-				finded_node = checkNodeFeasibility(randomState_,false); 
-			}
-			else {
-				finded_node = checkNodeFeasibility(randomState_,true); 
-			}
-		}while(finded_node == false);		
-	}
-	else{ // Instead to go to goal, UGV fallow UAV
-		if(sample_mode == 0){
-			randomState_.point.x = disc_final->point_uav.x;
-			randomState_.point.y = disc_final->point_uav.y;
-			randomState_.point.z = disc_initial->point.z;   
+	do{
+		int num_rand = distr_ugv(eng);
+		randomState_.point.x = v_points_ws_ugv[num_rand].x*step_inv;
+		randomState_.point.y = v_points_ws_ugv[num_rand].y*step_inv;
+		randomState_.point.z = v_points_ws_ugv[num_rand].z*step_inv;  
+		if (randomState_.point.z < 1){
+			found_node = checkNodeFeasibility(randomState_,false); 
 		}
-		else if(sample_mode == 1){
-			randomState_.point.x = disc_final->point.x;
-			randomState_.point.y = disc_final->point.y;
-			randomState_.point.z = disc_final->point.z;
+		else {
+			found_node = checkNodeFeasibility(randomState_,true); 
 		}
-	}
+	}while(found_node == false);		
+	
 
 	return randomState_;
+}
+
+RRTNode RandomPlanner::getGoalNode() {
+	RRTNode goalState;
+	bool found_node = false;
+	bool catenary_state = false;
+
+
+	// Get random position for UAV
+	if (!is_coupled){
+		goalState.point_uav.x = disc_final->point_uav.x;
+		goalState.point_uav.y = disc_final->point_uav.y;
+		goalState.point_uav.z = disc_final->point_uav.z;
+		found_node = checkNodeFeasibility(goalState,true);
+	} else {
+		if(sample_mode == 0){
+			goalState.point.x = disc_final->point_uav.x;
+			goalState.point.y = disc_final->point_uav.y;
+			goalState.point.z = disc_initial->point.z;   
+		}
+		else if(sample_mode == 1){
+			goalState.point.x = disc_final->point.x;
+			goalState.point.y = disc_final->point.y;
+			goalState.point.z = disc_final->point.z;
+		}
+	}
+	return goalState;
 }
 
 RRTNode* RandomPlanner::getNearestNode(const RRTNode q_rand_) 
@@ -2038,26 +2049,17 @@ inline void RandomPlanner::setInitialCostGoal(RRTNode* p_)
 
 bool RandomPlanner::isInitialPositionUGVOccupied()
 {
-	if (isUGVOccupied(*disc_initial))
-		return true;
-	else
-		return false;
+	return isUGVOccupied(*disc_initial);
 }
 
 bool RandomPlanner::isInitialPositionUAVOccupied()
 {
-	if (isOccupied(*disc_initial, true))
-		return true;
-	else
-		return false;
+	return isOccupied(*disc_initial, true);
 }
 
 bool RandomPlanner::isFinalPositionOccupied()
 {
-	if (isOccupied(*disc_final,true))
-		return true;
-	else
-		return false;
+	return isOccupied(*disc_final,true);
 }
 
 bool RandomPlanner::isOccupied(RRTNode n_, bool check_uav_)

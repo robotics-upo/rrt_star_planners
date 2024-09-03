@@ -204,11 +204,12 @@ void RandomGlobalPlanner::makePlanGoalCB()
     goal.vector.z = goalPoseStamped.pose.position.z;
     goal.header = goalPoseStamped.header;
 
+
     clearLinesGPMarker();
 
     ROS_INFO_COND(debug, "Global Planner: Called Make Plan");
 
-    if (calculatePath()){
+    if ( calculatePath()){ // Calculate path checks the validity of the goal
         ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n");
         if(pause_execution){
             /********************* To obligate pause method and check Planning result *********************/
@@ -475,6 +476,8 @@ bool RandomGlobalPlanner::setStart()
         ret = true;
     }else
         ROS_ERROR("Global Planner 3D: Failed to set UGV initial global position(after search around): [%.2f, %.2f, %.2f]", start_ugv_.vector.x, start_ugv_.vector.y, start_ugv_.vector.z);
+
+
 
     return ret;
 }

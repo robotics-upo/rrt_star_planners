@@ -384,8 +384,10 @@ public:
 
 
 protected:
-	
-	RRTNode getRandomNode(bool go_to_goal_ = false); 
+	// RRT Basic procedures
+	RRTNode getRandomNode(); 
+	RRTNode getGoalNode();
+
 	bool extendGraph(const RRTNode q_rand_);
 	RRTNode* getNearestNode(const RRTNode q_rand_);
   	bool steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, float factor_steer_, RRTNode &q_new_);
