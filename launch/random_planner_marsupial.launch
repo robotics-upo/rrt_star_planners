@@ -40,8 +40,11 @@
     </include>
 
     <include file="$(find marsupial_optimizer)/launch/behavior_tree_node_marsupial.launch"/>
+
+    <arg name="debug_optimizer" default="false"/>
     <include file="$(find rrt_planners)/launch/test.launch">
       <arg name="map_file" value="$(arg map)"/>
+      <arg name="debug" value="$(arg debug_optimizer)"/>
     </include>
 
     <!-- Launch  region_growing-->

@@ -55,7 +55,7 @@
     <!-- Global Planner: RRT* -->
     <arg name="debug" default="false"/>
     <arg name="prefix_" default="" unless="$(arg debug)"/>
-    <arg name="prefix_" default="gdb --args" if="$(arg debug)"/>
+    <arg name="prefix_" default="xterm -e gdb --args" if="$(arg debug)"/>
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" launch-prefix="$(arg prefix_) ">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
@@ -88,7 +88,7 @@
         <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
         <param name="min_distance_add_new_point" value="1.0"/>  
         <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_obstacle_uav"         value="1.0"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
+        <param name="distance_obstacle_uav"         value="0.6"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
 
         <param name="w_nearest_ugv"    value="12"/>   # catenary Obstacles collision 0.00100
