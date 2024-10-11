@@ -15,9 +15,9 @@ quant = [0.02, 0.25, 0.75, 0.98]
 # Helper functions
 def format_func(value, tick_number):
     if value == 1:
-        return "Parabol"
+        return "Parabola"
     else:
-        return "Naive"
+        return "Catenary"
 
 def setViolinFormat(parts, data, ax):
     for pc in parts['bodies']:
@@ -74,7 +74,7 @@ for i in range(1,7):
 figManager = plt.get_current_fig_manager()
 figManager.window.attributes('-fullscreen', True)
 fig.set_size_inches(16.5, 10.5)
-plt.savefig('/home/muten/paper_marsupial/git/Images/results_rrt_2.png', bbox_inches='tight')
+plt.savefig('results_rrt_2.png', bbox_inches='tight')
 plt.show()
 
 # Cluttered ones

@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 def format_func(value, tick_number):
     if value == 1:
-        return "Parabol"
+        return "Parabola"
     else:
-        return "Naive"
+        return "Catenary"
 
 
 
@@ -66,7 +66,7 @@ for i in range(1,7):
 figManager = plt.get_current_fig_manager()
 figManager.window.attributes('-fullscreen', True)
 fig.set_size_inches(17, 10.5)
-plt.savefig('/home/muten/paper_marsupial/git/Images/results_1.png', bbox_inches='tight')
+plt.savefig('results_1.png', bbox_inches='tight')
 plt.show()
 
 fig, ax = plt.subplots(2, 3)
