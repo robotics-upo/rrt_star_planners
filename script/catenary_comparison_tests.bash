@@ -15,23 +15,23 @@ fi
 # Add a number of tests --> this is not necessary: 
 CONTADOR=$1
 until [ $CONTADOR -gt $2 ]; do
-    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR &
-    sleep 20
-    cd $HOME/marsupial_ws/src/marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_${CONTADOR}.xml
-    rostopic echo -n 1 /behavior_tree/load_tree_action/result  # Wait for the response before the next
-    rosnode kill /random_planner_node
-    sleep 15
+    # roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR &
+    # sleep 20
+    # cd $HOME/marsupial_ws/src/marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_${CONTADOR}.xml
+    # rostopic echo -n 1 /behavior_tree/load_tree_action/result  # Wait for the response before the next
+    # rosnode kill /random_planner_node
+    # sleep 15
      
-    # # # Second problem, bisection
-    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR num_pos_initial:="2" &
-    sleep 20
-    cd $HOME/marsupial_ws/src/marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_${CONTADOR}_2.xml
-    rostopic echo /behavior_tree/load_tree_action/result -n 1
-    rosnode kill /random_planner_node
-    sleep 15
+    # # # # Second problem, bisection
+    # roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR num_pos_initial:="2" &
+    # sleep 20
+    # cd $HOME/marsupial_ws/src/marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_${CONTADOR}_2.xml
+    # rostopic echo /behavior_tree/load_tree_action/result -n 1
+    # rosnode kill /random_planner_node
+    # sleep 15
 
     # # Parabola approximation
-    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR use_parable:=true &
+    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR use_parabola:=true &
     sleep 20
     cd $HOME/marsupial_ws/src/marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_${CONTADOR}.xml
     rostopic echo -n 1 /behavior_tree/load_tree_action/result
@@ -39,7 +39,7 @@ until [ $CONTADOR -gt $2 ]; do
     sleep 15
 
     #Second problem parabola
-    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR use_parable:=true num_pos_initial:="2" &
+    roslaunch rrt_planners random_planner_marsupial.launch map:=stage_$CONTADOR use_parabola:=true num_pos_initial:="2" &
     sleep 20
     cd $HOME/marsupial_ws/src/marsupial_optimizer/trees/script/ && ./execute_tree.sh stage_$CONTADOR.xml
     rostopic echo -n 1 /behavior_tree/load_tree_action/result

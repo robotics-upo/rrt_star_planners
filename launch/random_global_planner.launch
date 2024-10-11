@@ -47,7 +47,7 @@
     <arg name="dbscan_theta" default="0.1"/>
     <arg name="use_dbscan_lines" default="false"/>
     <arg name="dbscan_min_points" default="5"/>
-    <arg name="use_parable"   default="false"/>
+    <arg name="use_parabola"   default="false"/>
     <arg name="n_planes" default="100"/>
     <arg name="optimize" default="false"/>
     <arg name="do_steer_ugv" default="false"/>
@@ -106,7 +106,7 @@
         <remap from="points2" to="/octomap_point_cloud_centers"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
         <!-- Catenaty Checker-->
-        <param name="use_parable"   value="$(arg use_parable)"/>
+        <param name="use_parabola"   value="$(arg use_parabola)"/>
         <param name="precomputed_file" value="$(arg precomputed_file)"/>
         <param name="dbscan_min_points" value="$(arg dbscan_min_points)"/>
         <param name="dbscan_epsilon" value="$(arg dbscan_epsilon)"/>
