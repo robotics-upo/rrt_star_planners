@@ -7,7 +7,7 @@
     <arg name="pause_execution" default="true"/>
     <arg name="write_data_files" default="false"/>
     <arg name="use_distance_function" default="true"/>  
-    <arg name="pc_user_name"    default="simon"/>     
+    <arg name="home"    default="$(env HOME)"/>     
 
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
 
@@ -24,7 +24,7 @@
     <arg name="use_search_pyramid_planning" default="false"/>
     <arg name="length_tether_max"    default="20.0"/>   
 
-    <!-- To wirte Files -->
+    <!-- To write Files -->
     <arg name="map_file"        default="stage_1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
@@ -40,7 +40,7 @@
     <arg name="coupled"             default="true"/>
     <arg name="samp_goal_rate"      default="15"/>
     <arg name="sample_mode_rrt"     default="1"/>
-        <!-- Catenaty Checker-->
+        <!-- Catenary Checker-->
     <arg name="precomputed_file" default="$(arg map_file).tar.gz"/>
     <arg name="dbscan_epsilon" default="0.5"/>
     <arg name="dbscan_gamma" default="0.1"/>
@@ -52,17 +52,22 @@
     <arg name="optimize" default="false"/>
     <arg name="do_steer_ugv" default="false"/>
 
+    <arg name="method" default="parable" if="$(arg use_parable)"/>
+    <arg name="method" default="catenary" unless="$(arg use_parable)"/>
+    <arg name="catenary_file" default="rrt_$(arg map_file)_$(arg num_pos_initial)_$(arg method)"/>
+
     <!-- Global Planner: RRT* -->
     <arg name="debug" default="false"/>
     <arg name="prefix_" default="" unless="$(arg debug)"/>
     <arg name="prefix_" default="xterm -e gdb --args" if="$(arg debug)"/>
-    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" launch-prefix="$(arg prefix_) ">
+    <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" required="true" launch-prefix="$(arg prefix_) ">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Make_Plan" to="Make_Plan"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
-        <param name="path"   value="/home/$(arg pc_user_name)/$(arg files_results)"/>  
+        <param name="path"   value="$(arg home)/$(arg files_results)"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
+        <param name="catenary_file" value="$(arg catenary_file)"/>
         <param name="planner_type" value="$(arg planner_type)"/> 
         <param name="world_frame" value="$(arg world_frame)"/> 
         <param name="ugv_base_frame" value="$(arg ugv_frame)"/> 
