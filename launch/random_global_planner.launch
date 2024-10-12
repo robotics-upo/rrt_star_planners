@@ -18,7 +18,7 @@
     
     <arg name="use_octomap" default="true"/>
     <arg name="verbose_optimizer" default="false"/>
-    <arg name="debug_msgs" default="true"/>
+    <arg name="debug_msgs" default="false"/>
     <arg name="show_config_msgs" default="true"/>
 
     <arg name="use_search_pyramid_planning" default="false"/>
@@ -41,7 +41,7 @@
     <arg name="samp_goal_rate"      default="15"/>
     <arg name="sample_mode_rrt"     default="1"/>
         <!-- Catenary Checker-->
-    <arg name="precomputed_file" default="$(arg map_file).tar.gz"/>
+    <arg name="precomputed_file" default="$(find marsupial_optimizer)/maps/$(arg map_file).tar.gz"/>
     <arg name="dbscan_epsilon" default="0.5"/>
     <arg name="dbscan_gamma" default="0.1"/>
     <arg name="dbscan_theta" default="0.1"/>
