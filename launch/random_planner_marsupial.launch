@@ -71,7 +71,7 @@
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
-        <arg name="use_parable"   value="$(arg use_parabola)"/>
+        <arg name="use_parabola"   value="$(arg use_parabola)"/>
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
         <arg name="debug" value="$(arg debug)"/>
         <arg name="pause_execution" value="false"/>

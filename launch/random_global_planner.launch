@@ -52,8 +52,8 @@
     <arg name="optimize" default="false"/>
     <arg name="do_steer_ugv" default="false"/>
 
-    <arg name="method" default="parable" if="$(arg use_parable)"/>
-    <arg name="method" default="catenary" unless="$(arg use_parable)"/>
+    <arg name="method" default="parable" if="$(arg use_parabola)"/>
+    <arg name="method" default="catenary" unless="$(arg use_parabola)"/>
     <arg name="catenary_file" default="rrt_$(arg map_file)_$(arg num_pos_initial)_$(arg method)"/>
 
     <!-- Global Planner: RRT* -->
