@@ -232,7 +232,7 @@ int RandomPlanner::computeTreesIndependent()
 
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
 		// printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\n",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
-		printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
+		// printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
 		
 		RRTNode q_rand;
 		
@@ -261,17 +261,21 @@ int RandomPlanner::computeTreesIndependent()
 			 ( (num_goal_finded>0) && (planner_type == "rrt_star") && (count_loop == n_iter) ) ||
 			 ( (num_goal_finded>0) && (planner_type == "birrt") ) ){
 
-			printf("\n\n\nRandomPlanner::computeTreesIndependent -->  goal found for Coupled Marsupial Configuration.\n")	; 
-			rrt_path = getPath(); 
-			printf("RandomPlanner::computeTreesIndependent -->  path found for Coupled Marsupial Configuration--> (path size: %lu , iteration numbers: %i) : \n",rrt_path.size(), (count_loop)+(500*count_total_loop)); 
+			if (debug_rrt)
+				printf("\n\n\nRandomPlanner::computeTreesIndependent -->  goal found for Coupled Marsupial Configuration.\n")	; 
+			rrt_path = getPath();
+			if (debug_rrt) 
+				printf("RandomPlanner::computeTreesIndependent -->  path found for Coupled Marsupial Configuration--> (path size: %lu , iteration numbers: %i) : \n",rrt_path.size(), (count_loop)+(500*count_total_loop)); 
 			if (planner_type == "rrt_star")
 				printf("RandomPlanner::computeTreesIndependent -->  number of goals finded: %i\n",num_goal_finded); 
-			int i_=0;   
-			printf("\tPrinting the Path Nodes obteinded through planner (%s) : \n",planner_type.c_str());
+			int i_=0;
+			if (debug_rrt)   
+				printf("\tPrinting the Path Nodes obteinded through planner (%s) : \n",planner_type.c_str());
 			for (auto pt_: rrt_path){
-				printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f    cost=%.3f\n", i_, rrt_path.size(),
-				pt_->point.x*step, pt_->point.y*step, pt_->point.z*step, pt_->rot_ugv.x, pt_->rot_ugv.y, pt_->rot_ugv.z, pt_->rot_ugv.w, pt_->point_uav.x*step, 
-				pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, pt_->cost);
+				if (debug_rrt) 
+					printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f    cost=%.3f\n", i_, rrt_path.size(),
+						   pt_->point.x*step, pt_->point.y*step, pt_->point.z*step, pt_->rot_ugv.x, pt_->rot_ugv.y, pt_->rot_ugv.z, pt_->rot_ugv.w, pt_->point_uav.x*step, 
+						   pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, pt_->cost);
 				i_++;
 			}
 			rrtgm.getPathMarker(rrt_path, lines_ugv_marker_pub_, lines_uav_marker_pub_);
@@ -284,12 +288,16 @@ int RandomPlanner::computeTreesIndependent()
 			count_total_loop++;
 			count_loop = 0;
 			if (count_total_loop > n_loop-1){
-				printf("RandomPlanner::computeTreesIndependent -->  could't find path for Coupled Marsupial Configuration-->  number iteration: %lu \n\n", nodes_tree.size());    
+				if (debug_rrt)
+					printf("RandomPlanner::computeTreesIndependent -->  could't find path for Coupled Marsupial Configuration-->  number iteration: %lu \n\n", nodes_tree.size());    
 				ret_val = 0;
 				break;
 			}
-			else
-				printf("\n\t\t       Planner (%s) :: computeTreeIndependent: Starting new Loop      \n",planner_type.c_str());
+			else {
+
+				if (debug_rrt)
+					printf("\n\t\t       Planner (%s) :: computeTreeIndependent: Starting new Loop      \n",planner_type.c_str());
+			}
 		}
 	}
 	// Data Analysis for Catenary 
@@ -304,6 +312,7 @@ int RandomPlanner::computeTreesIndependent()
 		min_dist_obs_cat_ = 10000000.0;
 		double min_time_get_cat = 10000000.0;
 		double max_time_get_cat = 0.0;
+		
 		printf("Catenary Analysis - Size Vectors: dist_cat_obs=[%lu] length_cat=[%lu] v_time_cat=[%lu]", v_min_dist_obs_cat.size(), v_length_cat.size(),v_time_cat.size());
 		for (size_t i=0 ; i < v_min_dist_obs_cat.size(); i++){
 			sum_values_dis_ = sum_values_dis_ + v_min_dist_obs_cat[i];
@@ -571,7 +580,7 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			saveNode(new_node);
 			if(new_node->cost < disc_goal->cost){
 				printf("\n");
-				ROS_INFO(PRINTF_ROSE"\n\n\n\t\t !!!!!!!!!!!!!  Got it GOAL position quien new node->point : [%f %f %f/%f %f %f]  !!!!!!!!!!!!! \n\n",
+				ROS_INFO(PRINTF_ROSE"\n\n\n\t\t !!!!!!!!!!!!!  Got it GOAL position new node->point : [%f %f %f/%f %f %f]  !!!!!!!!!!!!! \n\n",
 						  new_node->point.x*step, new_node->point.y*step, new_node->point.z*step,
 						  new_node->point_uav.x*step, new_node->point_uav.y*step, new_node->point_uav.z*step);
 				disc_goal = new_node;
@@ -926,23 +935,21 @@ bool RandomPlanner::steering(const RRTNode &q_nearest_, const RRTNode &q_rand_, 
 
 			clock_gettime(CLOCK_REALTIME, &start_cat);
 			if (check_ugv_feasible_ && check_uav_feasible_ && check_cat_feasible_){
-			clock_gettime(CLOCK_REALTIME, &finish_cat);
-			sec_cat = finish_cat.tv_sec - start_cat.tv_sec - 1;
-			msec_cat = (1000000000 - start_cat.tv_nsec) + finish_cat.tv_nsec;
-			time_cat = (msec_cat + sec_cat * 1000000000.0)/1000000000.0;
-			bool obt_free_col_2_ = obstacleFreeBetweenNodes(q_nearest_, q_new_);
-			if (debug_rrt) 
-				printf(" obstacleFreeBetweenNodes(q_nearest_, q_new_)= %s\n",obt_free_col_2_?"true":"false");
+				clock_gettime(CLOCK_REALTIME, &finish_cat);
+				sec_cat = finish_cat.tv_sec - start_cat.tv_sec - 1;
+				msec_cat = (1000000000 - start_cat.tv_nsec) + finish_cat.tv_nsec;
+				time_cat = (msec_cat + sec_cat * 1000000000.0)/1000000000.0;
+				bool obt_free_col_2_ = obstacleFreeBetweenNodes(q_nearest_, q_new_);
+				if (debug_rrt) 
+					printf(" obstacleFreeBetweenNodes(q_nearest_, q_new_)= %s\n",obt_free_col_2_?"true":"false");
 				if(obt_free_col_2_){
 					count_qnew_fail = 0;
 					// ROS_INFO(PRINTF_RED"New position steer using random node");
 					return true;
-				}
-				else{
+				} else {
 					// ROS_INFO(PRINTF_RED"NOT POSSIBLE New position: COLLISION TO Steer using random node");
 				}
-			}
-			else{
+			} else {
 				// ROS_INFO(PRINTF_RED"NOT POSSIBLE New position: Steer using random node");
 			}
 
