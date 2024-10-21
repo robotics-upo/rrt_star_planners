@@ -261,7 +261,7 @@ namespace PathPlanners
     std::vector<double> length_catenary;
     std::vector<Catenary> v_catenary;
 
-    bool get_catenary_data, use_parabola;
+    bool get_catenary_data, use_parabola, use_both;
     std::string planner_type, catenary_file, catenary_analysis_file;
 
   }; //class RandomGlobalPlanner

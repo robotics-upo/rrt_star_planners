@@ -86,6 +86,7 @@ namespace PathPlanners
     nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
     nh->param("catenary_file", catenary_file, (std::string) "catenary_file");
     nh->param("use_parabola", use_parabola, (bool)false);
+    nh->param("use_both", use_both, (bool)false);
     catenary_analysis_file = path + catenary_file + ".txt";
 
     nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
@@ -100,7 +101,7 @@ namespace PathPlanners
   {
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min, map_resolution, map_h_inflaction, map_v_inflaction, 
                      nh, goal_gap_m, debug_rrt, distance_obstacle_ugv, distance_obstacle_uav, distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                     map_file, path, get_catenary_data, catenary_analysis_file, use_parabola);
+                     map_file, path, get_catenary_data, catenary_analysis_file, use_parabola, CheckCM);
     configRandomPlanner();
 
 
@@ -111,7 +112,7 @@ namespace PathPlanners
     pos_r.z = pos_reel_z;
     CheckCM->init(grid_3D, distance_catenary_obstacle, distance_obstacle_ugv, distance_obstacle_uav,
 	                length_tether_max, ws_z_min, map_resolution, use_parabola, use_distance_function, pos_r,
-			            false, !use_parabola, false);
+			            false, !use_parabola, use_both);
   }
 
   void RandomGlobalPlanner::configTopics()
@@ -532,8 +533,6 @@ namespace PathPlanners
     t_.velocities.resize(2);
     t_.accelerations.resize(2);
 
-    bisectionCatenary bc;
-
     for (size_t i = 0; i < trajectory_.points.size()-1; i++)
       {
         // Get position and rotation vector for UGV
@@ -591,17 +590,13 @@ namespace PathPlanners
               p_final_.z = t_.transforms[1].translation.z;
 
               bool check_catenary = true;
-              bool look_for_catenary = true;
               double l_cat_;
                     
-              do{
-                printf("p_reel_[%f %f %f] p_final_[%f %f %f] p_catenary_[%lu] \n",p_reel_.x,p_reel_.y,p_reel_.z,p_final_.x,p_final_.y,p_final_.z,p_catenary_.size());
-                check_catenary = CheckCM->searchCatenary(p_reel_, p_final_, p_catenary_);
-                look_for_catenary = !check_catenary;
+              if (CheckCM->searchCatenary(p_reel_, p_final_, p_catenary_)) {
                 l_cat_ = CheckCM->length_cat_final;
                 length_catenary.push_back(l_cat_);
                 v_catenary.push_back(getCatenary(p_reel_, p_final_, l_cat_));
-              } while (look_for_catenary);
+              }
             }
             else{
               geometry_msgs::Point p_reel, p_final;
