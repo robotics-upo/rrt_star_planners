@@ -116,7 +116,8 @@ public:
 	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
 			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
 			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
-			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_);
+			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_,
+			CatenaryCheckerManager *ccm_);
 
   	~RandomPlanner();
   
@@ -400,7 +401,7 @@ protected:
 	// bool checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_);
 	bool checkNodeFeasibility(const RRTNode pf_ , bool check_uav_);
 	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
-	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Point> &points_catenary_);
+	bool checkCatenary(RRTNode &q_init_, vector<geometry_msgs::Point> &points_catenary_);
 	geometry_msgs::Point getReelNode(const RRTNode node_);
 	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtreeNode(const RRTNode ukT_);
