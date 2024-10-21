@@ -48,6 +48,7 @@
     <arg name="use_dbscan_lines" default="false"/>
     <arg name="dbscan_min_points" default="5"/>
     <arg name="use_parabola"   default="false"/>
+    <arg name="use_both"   default="false"/>
     <arg name="n_planes" default="100"/>
     <arg name="optimize" default="false"/>
     <arg name="do_steer_ugv" default="false"/>
@@ -58,6 +59,8 @@
 
     <!-- Global Planner: RRT* -->
     <arg name="debug" default="false"/>
+    <arg name="debug_rrt" default="false"/>
+
     <arg name="prefix_" default="" unless="$(arg debug)"/>
     <arg name="prefix_" default="xterm -e gdb --args" if="$(arg debug)"/>
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" required="true" launch-prefix="$(arg prefix_) ">
@@ -75,7 +78,8 @@
         <param name="reel_base_frame" value="$(arg reel_frame)"/>
         <param name="pause_execution" value="$(arg pause_execution)"/>
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
-        <param name="debug_rrt"    value="false"/>     
+        <param name="debug_rrt"    value="$(arg debug_rrt)"/>     
+        <param name="debug"    value="$(arg debug_rrt)"/>     
         <param name="nodes_marker_debug"    value="true"/>     
         <param name="debug" value="$(arg debug_msgs)"/>
         <param name="showConfig" value="true"/>
@@ -94,7 +98,8 @@
         <param name="min_distance_add_new_point" value="1.0"/>  
         <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles 0.05[m] resolution of the map-->
         <param name="distance_obstacle_uav"         value="0.6"/> <!-- bound distance UAV to obstacles 0.05[m] resolution of the map-->
-        <param name="distance_catenary_obstacle"  value="0.2"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_catenary_obstacle"  value="0.3" unless="$(arg use_parabola)"/> <!--bound distance catenary to obstacles [m] -->   
+        <param name="distance_catenary_obstacle"  value="0.0" if="$(arg use_parabola)"/> <!--bound distance catenary to obstacles [m] -->   
 
         <param name="w_nearest_ugv"    value="12"/>   # catenary Obstacles collision 0.00100
         <param name="w_nearest_uav"    value="6"/>   # catenary length 0.00150
@@ -113,6 +118,7 @@
         <param name="dbscan_gamma" value="$(arg dbscan_gamma)"/>
         <param name="dbscan_theta" value="$(arg dbscan_theta)"/>
         <param name="use_dbscan_lines" value="$(arg use_dbscan_lines)"/>
+        <param name="use_both" value="$(arg use_both)"/>
 
         <param name="n_planes" value="$(arg n_planes)"/>
         <param name="optimize" value="$(arg optimize)"/>

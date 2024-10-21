@@ -47,8 +47,8 @@
     <arg name="prefix_" default="xterm -e gdb --args" if="$(arg debug)"/>
 
     <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"
-     launch-prefix="$(arg prefix_)" > 
+    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" 
+     name="optimizer_local_planner_node" launch-prefix="$(arg prefix_)" output="screen"> 
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
