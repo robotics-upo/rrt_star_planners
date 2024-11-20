@@ -52,8 +52,6 @@
 #include "catenary_checker/catenary_checker_manager.h"
 #include <catenary_checker/check_collision_path_planner.h>
 
-
-
 #define PRINTF_REGULAR "\x1B[0m"
 #define PRINTF_RED "\x1B[31m"
 #define PRINTF_GREEN "\x1B[32m"

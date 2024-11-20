@@ -304,9 +304,7 @@ pointIndexArr KDTree::neighborhood(  //
     return neighborhood_(root, pt, rad, level);
 }
 
-pointVec KDTree::neighborhood_points(  //
-    const point_t &pt,                 //
-    const float &rad) {
+pointVec KDTree::neighborhood_points(const point_t &pt, const float &rad) {
     size_t level = 0;
     pointIndexArr nbh = neighborhood_(root, pt, rad, level);
     pointVec nbhp;

@@ -550,7 +550,6 @@ bool RandomPlanner::extendGraph(const RRTNode q_rand_)
 			rrtgm.getGraphMarker(new_node, count_graph, tree_rrt_star_ugv_pub_, tree_rrt_star_uav_pub_);
 			rrtgm.getCatenaryMarker(points_catenary_new_node, one_catenary_marker_pub_);
 		}
-
 		return true;
 	}
 }
