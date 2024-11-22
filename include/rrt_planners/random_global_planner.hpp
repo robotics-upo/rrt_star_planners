@@ -137,6 +137,8 @@ namespace PathPlanners
             void deleteNodesMarkersCallBack(const std_msgs::BoolConstPtr &msg);
             void deleteCatenaryGPCallBack(const std_msgs::BoolConstPtr &msg);
             void pointsSub(const PointCloud::ConstPtr &points);
+            bool randomMarsupialStatus(geometry_msgs::Point p_ , geometry_msgs::Point p1_, int i_, string s_, geometry_msgs::Point &pf_);
+            bool getTetherLength(geometry_msgs::Vector3 tp1_ , geometry_msgs::Quaternion tq1_, geometry_msgs::Vector3 tp2_, double &length_);
             /*
             @brief: 
             */
@@ -172,7 +174,8 @@ namespace PathPlanners
             geometry_msgs::PoseStamped goalPoseStamped;
             geometry_msgs::Vector3Stamped goal;
             geometry_msgs::Vector3 start_rpy;
-            geometry_msgs::Vector3 pos_reel_ugv;
+            geometry_msgs::Point pos_reel_ugv;
+            vector<int> v_pos_coll_tether;
 
             //Publishers and Subscribers
             ros::Publisher replan_status_pub, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
@@ -198,11 +201,13 @@ namespace PathPlanners
             int number_of_points;
             int seq;
             Trajectory trajectory;
+            double param_cat_x0, param_cat_y0, param_cat_a ;
 
 	        Grid3d *grid_3D;
 
             //These two flags can be configured as parameters
             bool showConfig, debug, debug_rrt, nodes_marker_debug;
+            vector<Vector3> v_params_catenary;
 
 	        std::string path, name_output_file, map_file;
 	        int num_pos_initial;
@@ -230,6 +235,7 @@ namespace PathPlanners
             bool use_distance_function; //Only related with tether and UAV distance
             RandomPlanner randPlanner;
 	        PlannerGraphMarkers rrtgm;
+            std::vector<geometry_msgs::Point> v_p_catenary;
 
             octomap_msgs::OctomapConstPtr map;
 
@@ -254,7 +260,7 @@ namespace PathPlanners
             bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
             double w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth;
 
-            bool coupled, get_catenary_data_;
+            bool coupled, get_catenary_data_, just_line_of_sigth;
             
             double min_distance_add_new_point;
             std::vector<double> length_catenary;

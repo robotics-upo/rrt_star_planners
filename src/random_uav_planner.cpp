@@ -30,7 +30,7 @@ RandomUAVPlanner::~RandomUAVPlanner()
                               ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, double distance_obstacle_uav_,
                               double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_,
                               bool use_distance_function_, std::string map_file_, bool get_catenary_data_,
-                              std::string catenary_file_, bool use_parable_, CatenaryCheckerManager *catenary_manager)
+                              std::string catenary_file_, bool use_parable_, bool jlos_, CatenaryCheckerManager *catenary_manager)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -84,13 +84,14 @@ RandomUAVPlanner::~RandomUAVPlanner()
 	map_file = map_file_;
 
 	distance_obstacle_uav = distance_obstacle_uav_;
-	distance_catenary_obstacle = distance_catenary_obstacle_;
+	distance_tether_obstacle = distance_catenary_obstacle_;
+	just_line_of_sigth = jlos_;
 
 	get_catenary_data = get_catenary_data_;
 	catenary_file = catenary_file_;
 	use_parable = use_parable_;
 
-  nh->param("n_intermediate", n_intermediate, 6);
+  	nh->param("n_intermediate", n_intermediate, 6);
 
 	lines_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("path_uav_rrt_star", 2, true);
 	goal_point_pub_ = nh->advertise<visualization_msgs::Marker>("goal_point", 1, true);
@@ -473,8 +474,8 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
   p_reel_new_ = getReelNode(q_new_); 
 
   bool ret_val = true;
-  ccm->distance_catenary_obstacle = distance_catenary_obstacle;
-  //ROS_INFO("Setting the catenary obstacle dist to: %f", distance_catenary_obstacle);
+  ccm->distance_tether_obstacle = distance_tether_obstacle;
+  //ROS_INFO("Setting the catenary obstacle dist to: %f", distance_tether_obstacle);
   for (int i = 0; i <= n_intermediate && ret_val; i++) {
     float p = i * addition;
     float new_length = q_nearest_.length_cat * p + q_new_.length_cat * (1.0 - p);
@@ -758,7 +759,7 @@ void RandomUAVPlanner::getParamsNode(RRTNode &node_, bool is_init_)
 	Cat2_ = 20.0;
 	double r_security_cat_ = 0.1;
 	
-	geometry_msgs::Vector3 p_node_uav_;
+	geometry_msgs::Point p_node_uav_;
 	p_node_uav_.x = node_.point_uav.x * step;
 	p_node_uav_.y = node_.point_uav.y * step;
 	p_node_uav_.z = node_.point_uav.z * step;
@@ -790,7 +791,7 @@ bool RandomUAVPlanner::checkNodeFeasibility(const RRTNode pf_)
 
   if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
     // Eigen::Vector3d obs_to_uav, pos_uav;
-    geometry_msgs::Vector3 obs_to_uav, pos_uav; 
+    geometry_msgs::Point obs_to_uav, pos_uav; 
     pos_uav.x =pf_.point_uav.x * step ;
     pos_uav.y =pf_.point_uav.y * step ; 
     pos_uav.z =pf_.point_uav.z * step ; 
@@ -812,13 +813,13 @@ bool RandomUAVPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	bool ret = false;
 	double d_;
 
-	geometry_msgs::Vector3 obs_to_uav, pos_uav; 
+	geometry_msgs::Point obs_to_uav, pos_uav; 
 	pos_uav.x = pf_.point.x * step ;
 	pos_uav.y = pf_.point.y * step ; 
 	pos_uav.z = pf_.point.z * step ; 
 	d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
 
-	if (d_ > distance_catenary_obstacle)
+	if (d_ > distance_tether_obstacle)
 		ret = true;
 
 	return ret;
@@ -841,7 +842,7 @@ bool RandomUAVPlanner::checkCatenary(RRTNode &q_init_, vector<geometry_msgs::Poi
            p_final_.x, p_final_.y, p_final_.z);
   }
 
-	bool found_catenary = ccm->SearchCatenary(p_reel_, p_final_, points_catenary_);
+	bool found_catenary = ccm->searchCatenary(p_reel_, p_final_, points_catenary_);
 	if(found_catenary){
 		// printf("\t RandomUAVPlanner::checkCatenary: points_catenary_=%lu\n",points_catenary_.size());
 		q_init_.p_cat = points_catenary_;
@@ -953,7 +954,7 @@ std::list<RRTNode*> RandomUAVPlanner::getPath()
 
 bool RandomUAVPlanner::isGoal(const RRTNode st_) 
 {
-	geometry_msgs::Vector3 point_;
+	geometry_msgs::Point point_;
   bool ret_val = false;
 	
   point_.x = st_.point_uav.x;
@@ -1017,7 +1018,7 @@ bool RandomUAVPlanner::getGlobalPath(Trajectory &trajectory)
 	return true;
 }
 
-void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv,
+void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Point _p_reel , geometry_msgs::Point _p_ugv,
                                            int n_iter_ , int n_loop_, double r_nn_, double s_s_, int s_g_r_)
 {
 	length_tether_max = _l_m;
@@ -1036,7 +1037,9 @@ void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _
 	pos_tf_ugv.z = _p_ugv.z;
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
-	ccm->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, step, use_parable, use_distance_function);
+	// ccm->init(distance_tether_obstacle, length_tether_max, ws_z_min, step, use_parable, use_distance_function);
+	ccm->init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
+	use_parable, use_distance_function, pos_reel_ugv, just_line_of_sigth, true); 
 }
 
 
