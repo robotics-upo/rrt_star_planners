@@ -1,24 +1,21 @@
 <launch>
     <!-- Loading Arguments -->
     <arg name="planner_type"        default="rrt_star"/>
-    <arg name="map"        default="stage_6"/> #stage_1
-    <arg name="save_path_in_file"   default="false"/>
-    
-    <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->
+    <arg name="map"        default="teatro_wall"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="pos_uav_above_ugv"     default="2.0"/> #meters UAV above UGV
     <arg name="using_pc"    default="true"/> 
     <arg name="rviz"    default="true"/> 
-    <arg name="viz_file"    default="random_planner"/>
-    <arg name="sample_mode"    default="1"/> # Values: 1= Priority is move UAV , UAV and UGV , UGV ; 2= Priority is move UAV and UGV , UAV , UGV 
-    <arg name="write_data_files" default="true"/>
+    <arg name="viz_file"    default="rrt_planner"/>
+    <arg name="is_coupled"    default="false"/>
+    <arg name="sample_mode"    default="1"/>
+    <arg name="write_data_files" default="false"/>
     
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
     <arg name="pos_reel_z"    default="0.8"/> #position reel on UGV
     <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
-    <arg name="uav_base_frame"    default="uav_base_link"/> #position reel on UAV
-    <arg name="use_parable"   default="false"/>
+    <arg name="use_parabola"   default="false"/>
     <arg name="use_distance_function"   default="true"/>
     <arg name="just_line_of_sigth"   default="false"/>
 
@@ -41,6 +38,19 @@
         <arg name="map_file"  value="$(arg map)"/>    
     </include>
 
+    <include file="$(find marsupial_optimizer)/launch/behavior_tree_node_marsupial.launch"/>
+
+    <arg name="debug_optimizer" default="false"/>
+    <include file="$(find rrt_planners)/launch/test.launch">
+      <arg name="map_file" value="$(arg map)"/>
+      <arg name="debug" value="$(arg debug_optimizer)"/>
+    </include>
+
+    <!-- Launch  region_growing-->
+    <!-- Note: if it is precalculated you can load the bt directly with octomap -->
+    <!-- <include file="$(find rrt_planners)/launch/region_growing.launch">
+        <param name="ugv_base_frame" value="$(arg ugv_base_frame)"/>
+    </include>  -->
     <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
         <arg name="map_file"  value="$(arg map)_obstacles"/>    
         <arg name="node_name"  value="octomap_server_obstacles"/>  
@@ -53,49 +63,23 @@
     </include>
 
     <!-- Launch Optimizer and Global Planner-->
+    <arg name="debug" default="false"/>
+    <arg name="debug_rrt" default="false"/>
+    <arg name="use_both" default="false"/>
     <include file="$(find rrt_planners)/launch/random_global_planner.launch">
         <arg name="map_file" value="$(arg map)"/> 
         <arg name="num_pos_initial" value="$(arg num_pos_initial)" /> 
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
-        <arg name="use_parable"   value="$(arg use_parable)"/>
+        <arg name="use_parabola"   value="$(arg use_parabola)"/>
+        <arg name="use_both"   value="$(arg use_both)"/>
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
-        <arg name="save_path_in_file"   value="$(arg save_path_in_file)"/>
-        <arg name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="debug_rrt" value="$(arg debug_rrt)"/>
+        <arg name="pause_execution" value="false"/>
     </include>    
 
     <!-- RViz -->
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find rrt_planners)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
-
-    <!-- Robot Marker -->
-    <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
-        <param name="frame_id" value="$(arg ugv_base_frame)"/>
-        <param name="scale" value="2.0"/>
-    </node>
-
-     <!-- Robot Marker -->
-    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_base_frame)"/>
-        <param name="model" value="m100"/> <!-- m600 or m100 -->
-        <param name="color" value="0.0"/> 
-        <param name="color_r" value="0.0"/> 
-        <param name="color_g" value="0.0"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale" value="1.5"/>
-    </node>
-
-    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_base_frame)"/>
-        <param name="model" value="circle"/> 
-        <param name="radius" value="0.6"/> 
-        <param name="color" value="0.5"/> 
-        <param name="color_r" value="0.8"/> 
-        <param name="color_g" value="0.4"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale_x" value="0.2"/> 
-        <param name="scale_y" value="0.2"/> 
-        <param name="scale_z" value="0.2"/> 
-        <param name="scale" value="1.0"/>
-    </node>
 </launch>

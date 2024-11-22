@@ -42,9 +42,13 @@
     <arg name="sample_mode_rrt"     default="1"/>
 
 
+    <arg name="debug" default="false"/>
+    <arg name="prefix_" default="" unless="$(arg debug)"/>
+    <arg name="prefix_" default="xterm -e gdb --args" if="$(arg debug)"/>
 
     <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen" launch-prefix="gdb -ex run --args"> 
+    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" 
+     name="optimizer_local_planner_node" launch-prefix="$(arg prefix_)" output="screen"> 
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
@@ -115,8 +119,8 @@
         <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
         <param name="n_iter_opt"    value="0"/>   <!-- number max. of iterations per optimization --> 
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
-        <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
-        <param name="distance_obstacle_uav"         value="1.2"/> <!-- bound distance UAV to obstacles [m]-->
+        <param name="distance_obstacle_ugv"         value="1.0"/> <!-- bound distance UGV to obstacles [m]-->
+        <param name="distance_obstacle_uav"         value="0.6"/> <!-- bound distance UAV to obstacles [m]-->
         <param name="initial_velocity_ugv"  value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
         <param name="initial_velocity_uav"  value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
         <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
@@ -141,7 +145,5 @@
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>
-
-
 
 </launch>

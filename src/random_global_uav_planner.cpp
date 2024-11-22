@@ -79,8 +79,7 @@ void RandomGlobalUAVPlanner::configParams()
     
   nh->param("get_catenary_data_", get_catenary_data_, (bool)true);
   nh->param("catenary_file", catenary_file, (std::string) "catenary_stats");
-  nh->param("use_parable", use_parable, (bool)false);
-  nh->param("just_line_of_sigth", just_line_of_sigth, (bool)false);
+  nh->param("use_parabola", use_parabola, (bool)false);
   nh->param("use_both", use_both, (bool)false);
   catenary_analysis_file = path + catenary_file + ".txt";
 
@@ -102,12 +101,20 @@ void RandomGlobalUAVPlanner::configRRTStar()
                      map_resolution, map_h_inflaction, map_v_inflaction,
                      nh, goal_gap_m, debug_rrt, distance_obstacle_uav,
                      distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                     map_file, get_catenary_data, catenary_analysis_file, use_parable, just_line_of_sigth, CheckCM);
+                     map_file, get_catenary_data, catenary_analysis_file, use_parabola, CheckCM);
     configRandomPlanner();
 
-    // CheckCM->init(distance_catenary_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function, use_both);
-    CheckCM->init(grid_3D, distance_catenary_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, map_resolution, 
-	  use_parable, use_distance_function, pos_reel_ugv, just_line_of_sigth, true);
+    geometry_msgs::Point pos_r;
+    pos_r.x = pos_reel_x;
+    pos_r.y = pos_reel_y;
+    pos_r.z = pos_reel_z;
+
+    CheckCM->init(grid_3D, distance_catenary_obstacle, 0.0, distance_obstacle_uav,
+	                length_tether_max, ws_z_min, map_resolution, use_parabola, use_distance_function, pos_r,
+			            false, !use_parabola, use_both);
+    // CheckCM->init(distance_catenary_obstacle, length_tether_max, ws_z_min,
+    //               map_resolution, use_parabola, use_distance_function, use_both);
+
 }
 
 void RandomGlobalUAVPlanner::configTopics()

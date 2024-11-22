@@ -3,11 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def format_func(value, tick_number):
-    # find number of multiples of pi/2
     if value == 1:
-        return "Parabol"
+        return "Parabola"
     else:
-        return "Naive"
+        return "Catenary"
 
 
 
@@ -21,6 +20,7 @@ def setViolinFormat(parts, data, ax):
 
     perc = [2, 25, 50, 75, 98]
     min_, quartile1, medians, quartile3, max_ = np.percentile(data.transpose(), perc, axis=1)
+    print("Medians: ", medians)
 
     inds = np.arange(1, len(medians) + 1)
     ax.scatter(inds, medians, marker='o', color='white', s=30, zorder=3)
@@ -66,7 +66,7 @@ for i in range(1,7):
 figManager = plt.get_current_fig_manager()
 figManager.window.attributes('-fullscreen', True)
 fig.set_size_inches(17, 10.5)
-plt.savefig('/home/muten/paper_marsupial/git/Images/results_1.png', bbox_inches='tight')
+plt.savefig('results_1.png', bbox_inches='tight')
 plt.show()
 
 fig, ax = plt.subplots(2, 3)

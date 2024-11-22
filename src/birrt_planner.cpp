@@ -229,7 +229,6 @@ int biRRTPlanner::computeTreesIndependent()
 			printf(" q_rand = [%f %f %f / %f %f %f] \n",q_rand.point.x*step,q_rand.point.y*step,q_rand.point.z*step,q_rand.point_uav.x*step,q_rand.point_uav.y*step,q_rand.point_uav.z*step);
 		
 		rrtgm.randNodeMarker(q_rand, rand_point_pub_, 1);
-		
 		extendGraph(q_rand);
 		count++;
 
@@ -369,8 +368,16 @@ bool biRRTPlanner::extendGraph(const RRTNode q_rand_)
 
 		bool exist_q_new_ = steering(*q_nearest, q_rand_, step_steer, q_new);
 
+		printf(" q_new:  UGV[%f %f %f / %f %f %f %f]  UAV[%f %f %f / %f %f %f %f]  q_new.catenary=[%s]  cost=[%f] \n", 
+                     q_new.point.x*step,q_new.point.y*step,q_new .point.z*step, q_new.rot_ugv.x, q_new.rot_ugv.y, q_new.rot_ugv.z, q_new.rot_ugv.w,
+                     q_new.point_uav.x*step,q_new.point_uav.y*step,q_new.point_uav.z*step, q_new.rot_uav.x, q_new.rot_uav.y, q_new.rot_uav.z, q_new.rot_uav.w,
+                     q_new.catenary ? "true" : "false",q_new.cost);
+
+
 		if (!exist_q_new_){
-			return false;
+		    ROS_INFO( PRINTF_CYAN"  RRTPlanner::extendGraph : Not new point q_new=[%f %f %f / %f %f %f]  q_nearest=[%f %f %f / %f %f %f]",
+                   q_new.point.x*step, q_new.point.y*step, q_new.point.z*step, q_new.point_uav.x*step, q_new.point_uav.y*step, q_new.point_uav.z*step,
+                   q_nearest->point.x*step, q_nearest->point.y*step, q_nearest->point.z*step, q_nearest->point_uav.x*step, q_nearest->point_uav.y*step, q_nearest->point_uav.z*step);
 		}
 
 		rrtgm.randNodeMarker(q_new, new_point_pub_, 2);
@@ -379,6 +386,7 @@ bool biRRTPlanner::extendGraph(const RRTNode q_rand_)
 		getParamsNode(q_new);
 		
 		RRTNode *q_min;
+
 		if (obstacleFreeBetweenNodes(*q_nearest, q_new))
 			q_min = q_nearest;
 		else
@@ -954,6 +962,7 @@ std::vector<float> biRRTPlanner::getNearestUGVNode(const RRTNode &q_new_)
     float y_rot_ugv_ = nearest_[4];
     float z_rot_ugv_ = nearest_[5];
     float w_rot_ugv_ = nearest_[6];
+
     ret_.push_back(x_ugv_to_uav_);
     ret_.push_back(y_ugv_to_uav_);
     ret_.push_back(z_ugv_to_uav_);
@@ -983,6 +992,7 @@ std::vector<float> biRRTPlanner::getNearestUAVNode(const RRTNode &q_new_)
     float y_rot_uav_ = nearest_[4];
     float z_rot_uav_ = nearest_[5];
     float w_rot_uav_ = nearest_[6];
+
     ret_.push_back(x_uav_to_ugv_);
     ret_.push_back(y_uav_to_ugv_);
     ret_.push_back(z_uav_to_ugv_);
@@ -1193,7 +1203,8 @@ bool biRRTPlanner::checkUGVFeasibility(const RRTNode pf_, bool ugv_above_z_)
 	return ret;	
 }
 
-bool biRRTPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
+
+bool RRTPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 {
 	bool ret;
 	double d_;

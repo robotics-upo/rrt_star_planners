@@ -35,7 +35,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: region_growing_traversability
+    SyncSource: PC Octomap
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -83,7 +83,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 4.625
+        Max Value: 9.274999618530273
         Min Value: 0.02500000037252903
         Value: true
       Axis: Z
@@ -204,7 +204,60 @@ Visualization Manager:
       Marker Topic: /optimizer_local_planner_node/catenary_marker
       Name: Optimized_catenary_cable
       Namespaces:
-        {}
+        catenary_0: true
+        catenary_1: true
+        catenary_10: true
+        catenary_11: true
+        catenary_12: true
+        catenary_13: true
+        catenary_14: true
+        catenary_15: true
+        catenary_16: true
+        catenary_17: true
+        catenary_2: true
+        catenary_3: true
+        catenary_30: true
+        catenary_31: true
+        catenary_32: true
+        catenary_33: true
+        catenary_34: true
+        catenary_35: true
+        catenary_36: true
+        catenary_37: true
+        catenary_38: true
+        catenary_39: true
+        catenary_4: true
+        catenary_40: true
+        catenary_41: true
+        catenary_42: true
+        catenary_43: true
+        catenary_44: true
+        catenary_45: true
+        catenary_46: true
+        catenary_47: true
+        catenary_48: true
+        catenary_49: true
+        catenary_5: true
+        catenary_50: true
+        catenary_51: true
+        catenary_52: true
+        catenary_53: true
+        catenary_54: true
+        catenary_55: true
+        catenary_56: true
+        catenary_57: true
+        catenary_58: true
+        catenary_59: true
+        catenary_6: true
+        catenary_60: true
+        catenary_61: true
+        catenary_62: true
+        catenary_63: true
+        catenary_64: true
+        catenary_65: true
+        catenary_7: true
+        catenary_8: true
+        catenary_9: true
       Queue Size: 100
       Value: false
     - Class: rviz/MarkerArray
@@ -300,7 +353,7 @@ Visualization Manager:
       Color: 252; 175; 62
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
@@ -315,7 +368,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
