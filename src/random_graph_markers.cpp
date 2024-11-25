@@ -6,7 +6,7 @@ PlannerGraphMarkers::PlannerGraphMarkers()
 
 }
 
-void PlannerGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv_)
+void PlannerGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Point pos_reel_ugv_)
 {
     frame_id = frame_id_;
     step = step_;
@@ -545,7 +545,7 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
 	}
 }
 
-void PlannerGraphMarkers::goalPointMarker(geometry_msgs::Vector3 final_position_, ros::Publisher goal_point_pub_)
+void PlannerGraphMarkers::goalPointMarker(geometry_msgs::Point final_position_, ros::Publisher goal_point_pub_)
 {
 	visualization_msgs::Marker marker_;
 	marker_.header.frame_id = frame_id;

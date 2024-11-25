@@ -3,9 +3,9 @@
     <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
 
-    <arg name="graph_traj_in_rviz" default="false"/>
-    <arg name="pause_execution" default="true"/>
-    <arg name="write_data_files" default="false"/>
+    <arg name="graph_traj_in_rviz" default="false"/>  <!-- Execute Trajectory computed and translating tf robots-->
+    <arg name="pause_execution" default="false"/>
+    <arg name="write_data_files" default="true"/>
     <arg name="use_distance_function" default="true"/>  
     <arg name="home"    default="$(env HOME)"/>     
 
@@ -16,26 +16,24 @@
     <arg name="uav_frame" default="uav_base_link"/>
     <arg name="reel_frame" default="reel_base_link"/>
     
-    <arg name="use_octomap" default="true"/>
     <arg name="verbose_optimizer" default="false"/>
     <arg name="debug_msgs" default="false"/>
     <arg name="show_config_msgs" default="true"/>
 
-    <arg name="use_search_pyramid_planning" default="false"/>
-    <arg name="length_tether_max"    default="20.0"/>   
+    <arg name="save_path_in_file"   default="false"/>
 
     <!-- To write Files -->
     <arg name="map_file"        default="stage_1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
-    <arg name="files_results"    default="results_marsupial_optimizer/"/>     
+    <arg name="files_results"    default="results_marsupial_optimizer"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
-    <arg name="n_iter_rrt"          default="100"/>
-    <arg name="n_loop_rrt"          default="40"/>
+    <arg name="n_iter_rrt"          default="20"/>
+    <arg name="n_loop_rrt"          default="100"/>
     <arg name="radius_near_nodes"   default="1.2"/> 
-    <arg name="goal_gap_m"          default="1.4"/>
-    <arg name="step_steer"          default="0.2"/>
+    <arg name="goal_gap_m"          default="0.2"/> # 1.4
+    <arg name="step_steer"          default="0.4"/>
     <arg name="min_l_steer_ugv"     default="8.0"/>
     <arg name="coupled"             default="true"/>
     <arg name="samp_goal_rate"      default="15"/>
@@ -50,8 +48,6 @@
     <arg name="use_parabola"   default="false"/>
     <arg name="use_both"   default="false"/>
     <arg name="n_planes" default="100"/>
-    <arg name="optimize" default="false"/>
-    <arg name="do_steer_ugv" default="false"/>
 
     <arg name="method" default="parable" if="$(arg use_parabola)"/>
     <arg name="method" default="catenary" unless="$(arg use_parabola)"/>
@@ -66,7 +62,7 @@
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" required="true" launch-prefix="$(arg prefix_) ">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
-        <remap from="/Make_Plan" to="Make_Plan"/>
+       
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <param name="path"   value="$(arg home)/$(arg files_results)"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
@@ -131,29 +127,15 @@
         <param name="scale" value="2.0"/>
     </node>
 
-     <!-- Robot Marker -->
-    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="m100"/> <!-- m600 or m100 -->
-        <param name="color" value="0.0"/> 
-        <param name="color_r" value="0.0"/> 
-        <param name="color_g" value="0.0"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale" value="1.5"/>
-    </node>
+        <param name="traj_in_rviz"                  value="$(arg graph_traj_in_rviz)"/>
+        <param name="pause_end_optimization"        value="$(arg pause_execution)"/>
+        <param name="write_data_residual"           value="$(arg write_data_residual)"/>
+        <param name="use_distance_function"         value="$(arg use_distance_function)"/>     
+        <param name="use_parable"                   value="true"/>
+        <param name="export_path"                   value="false"/>
+            
+        <param name="verbose_optimizer"             value="$(arg verbose_optimizer)"/>
 
-    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="circle"/> 
-        <param name="radius" value="0.6"/> 
-        <param name="color" value="0.5"/> 
-        <param name="color_r" value="0.8"/> 
-        <param name="color_g" value="0.4"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale_x" value="0.2"/> 
-        <param name="scale_y" value="0.2"/> 
-        <param name="scale_z" value="0.2"/> 
-        <param name="scale" value="1.0"/>
-    </node>
+        <param name="n_iter_opt"                    value="100"/>  #0  <!-- number max. of iterations per optimization --> 
 
 </launch>

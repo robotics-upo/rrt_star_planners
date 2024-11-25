@@ -84,13 +84,14 @@ RandomUAVPlanner::~RandomUAVPlanner()
 	map_file = map_file_;
 
 	distance_obstacle_uav = distance_obstacle_uav_;
-	distance_catenary_obstacle = distance_catenary_obstacle_;
+	distance_tether_obstacle = distance_catenary_obstacle_;
+	just_line_of_sigth = jlos_;
 
 	get_catenary_data = get_catenary_data_;
 	catenary_file = catenary_file_;
 	use_parabola = use_parabola_;
 
-  nh->param("n_intermediate", n_intermediate, 6);
+  	nh->param("n_intermediate", n_intermediate, 6);
 
 	lines_uav_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("path_uav_rrt_star", 2, true);
 	goal_point_pub_ = nh->advertise<visualization_msgs::Marker>("goal_point", 1, true);
@@ -790,10 +791,6 @@ bool RandomUAVPlanner::checkNodeFeasibility(const RRTNode pf_)
 
   if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
     geometry_msgs::Point obs_to_uav, pos_uav; 
-    pos_uav.x =pf_.point_uav.x * step ;
-    pos_uav.y =pf_.point_uav.y * step ; 
-    pos_uav.z =pf_.point_uav.z * step ; 
-    d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
     if (d_ == -1.0)
       return false;
 
@@ -817,7 +814,7 @@ bool RandomUAVPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	pos_uav.z = pf_.point.z * step ; 
 	d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
 
-	if (d_ > distance_catenary_obstacle)
+	if (d_ > distance_tether_obstacle)
 		ret = true;
 
 	return ret;
@@ -952,7 +949,7 @@ std::list<RRTNode*> RandomUAVPlanner::getPath()
 
 bool RandomUAVPlanner::isGoal(const RRTNode st_) 
 {
-	geometry_msgs::Vector3 point_;
+	geometry_msgs::Point point_;
   bool ret_val = false;
 	
   point_.x = st_.point_uav.x;
@@ -1016,7 +1013,7 @@ bool RandomUAVPlanner::getGlobalPath(Trajectory &trajectory)
 	return true;
 }
 
-void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv,
+void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Point _p_reel , geometry_msgs::Point _p_ugv,
                                            int n_iter_ , int n_loop_, double r_nn_, double s_s_, int s_g_r_)
 {
 	length_tether_max = _l_m;
@@ -1040,7 +1037,6 @@ void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _
 	          length_tether_max, ws_z_min, step, use_parabola, use_distance_function, pos_r,
 			  false, !use_parabola);
 }
-
 
 bool RandomUAVPlanner::setInitialPositionIndependent(RRTNode n_)
 {

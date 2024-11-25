@@ -607,12 +607,16 @@ geometry_msgs::Point RandomGlobalUAVPlanner::getReelNode( double x_, double y_, 
 
 void RandomGlobalUAVPlanner::configRandomPlanner()
 {
-  geometry_msgs::Vector3 pos_ugv_;
+  geometry_msgs::Point pos_ugv_;
   geometry_msgs::Quaternion rot_ugv_;
   geometry_msgs::TransformStamped reel_;
-  pos_ugv_ = getRobotPoseUGV().transform.translation;
+  pos_ugv_.x = getRobotPoseUGV().transform.translation.x;
+  pos_ugv_.y = getRobotPoseUGV().transform.translation.y;
+  pos_ugv_.z = getRobotPoseUGV().transform.translation.z;
   reel_ = getLocalPoseReel();
-  pos_reel_ugv = reel_.transform.translation;
+  pos_reel_ugv.x = reel_.transform.translation.x;
+  pos_reel_ugv.y = reel_.transform.translation.y;
+  pos_reel_ugv.z = reel_.transform.translation.z;
   randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv, pos_ugv_, n_iter, n_loop, 
                                   radius_near_nodes, step_steer, samp_goal_rate);
 

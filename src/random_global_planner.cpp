@@ -210,16 +210,15 @@ namespace PathPlanners
 
     ROS_INFO_COND(debug, "Global Planner: Called Make Plan");
 
-    if ( calculatePath()){ // Calculate path checks the validity of the goal
-      ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n");
-      if(pause_execution){
-        /********************* To obligate pause method and check Planning result *********************/
-		    std::string y_ ;
-		    std::cout << " *** Press key to continue: " << std::endl;
-		    std::cin >> y_ ;
-		    /*************************************************************************************************/
-      }
+    if (calculatePath()){
+        ROS_INFO_COND(debug, PRINTF_YELLOW "\n\n     \t\t\t\tGlobal Planner: Succesfully calculated Global Path\n");
+        ros::Duration(2.0).sleep();
 
+        ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path before interpolation: %lu ", trajectory.points.size());
+        if (CheckCM->count_tether_coll){ // Here is update vector with collision tether status
+            v_pos_coll_tether.clear();
+            for (size_t i= 0 ; i < CheckCM->v_pos_coll_tether.size(); i++){
+                v_pos_coll_tether = CheckCM->v_pos_coll_tether;
       interpolatePointsGlobalPath(trajectory,randPlanner.length_catenary);
       ROS_INFO(PRINTF_YELLOW "Global Planner: Number of points in path after interpolation: %lu", trajectory.points.size());
       randPlanner.clearCatenaryGPMarker();
@@ -242,7 +241,6 @@ namespace PathPlanners
       make_plan_server_ptr->setAborted(make_plan_res, "Impossible to calculate a solution");
     }
   }
-
   void RandomGlobalPlanner::makePlanPreemptCB()
   {
     make_plan_res.finished = false;
@@ -426,15 +424,14 @@ namespace PathPlanners
     upo_actions::ExecutePathGoal goal_action;
     goal_action.path = trajectory;
     for(int i= 0; i<length_catenary.size() ; i++){
-      goal_action.length_catenary.push_back(length_catenary[i]);
-      goal_action.cat_param_x0.push_back(v_catenary[i]._x0);
-      goal_action.cat_param_y0.push_back(v_catenary[i]._y0);
-      goal_action.cat_param_a.push_back(v_catenary[i]._a);
+        goal_action.length_catenary.push_back(length_catenary[i]);
+        goal_action.cat_param_x0.push_back(v_params_catenary[i].x);
+        goal_action.cat_param_y0.push_back(v_params_catenary[i].y);
+        goal_action.cat_param_a.push_back(v_params_catenary[i].z);
     }
 
     execute_path_client_ptr->sendGoal(goal_action);
   }
-
   bool RandomGlobalPlanner::setGoal()
   {
     bool ret = false;
@@ -532,6 +529,11 @@ namespace PathPlanners
     t_.transforms.resize(2);
     t_.velocities.resize(2);
     t_.accelerations.resize(2);
+
+    vector<geometry_msgs::Point> points_cat_;
+    vector<geometry_msgs::Vector3> v_params_catenary_aux_;
+    v_params_catenary_aux_.clear();
+    geometry_msgs::Vector3 params_;
 
     for (size_t i = 0; i < trajectory_.points.size()-1; i++)
       {
@@ -659,8 +661,6 @@ namespace PathPlanners
     p_final.x = x_uav_; p_final.y = y_uav_; p_final.z = z_uav_;
     v_catenary.push_back(getCatenary(p_reel, p_final, l_catenary_[0]));
 
-
-
     trajectory_.points.clear();
     trajectory_ = trajectory_aux_;
   }
@@ -684,14 +684,17 @@ namespace PathPlanners
 
   void RandomGlobalPlanner::configRandomPlanner()
   {
-
     geometry_msgs::Vector3 pos_ugv_;
     geometry_msgs::Quaternion rot_ugv_;
     geometry_msgs::TransformStamped reel_;
-    pos_ugv_ = getRobotPoseUGV().transform.translation;
+    pos_ugv_.x = getRobotPoseUGV().transform.translation.x;
+    pos_ugv_.y = getRobotPoseUGV().transform.translation.y;
+    pos_ugv_.z = getRobotPoseUGV().transform.translation.z;
     rot_ugv_ = getRobotPoseUGV().transform.rotation;
     reel_ = getLocalPoseReel();
-    pos_reel_ugv = reel_.transform.translation;
+    pos_reel_ugv.x = reel_.transform.translation.x;
+    pos_reel_ugv.y = reel_.transform.translation.y;
+    pos_reel_ugv.z = reel_.transform.translation.z;
     randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, 
                                     radius_near_nodes, step_steer, samp_goal_rate, sample_mode, min_l_steer_ugv, w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth);
 

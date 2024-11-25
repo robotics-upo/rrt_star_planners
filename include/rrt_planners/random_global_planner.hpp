@@ -204,14 +204,8 @@ namespace PathPlanners
 
     //These two flags can be configured as parameters
     bool showConfig, debug, debug_rrt, nodes_marker_debug;
-
-    std::string path, name_output_file, map_file;
-    int num_pos_initial;
-    int countImpossible = 0;
-
     //Action client stuff
     std::unique_ptr<ExecutePathClient> execute_path_client_ptr;
-
     std::unique_ptr<MakePlanServer> make_plan_server_ptr;
     upo_actions::MakePlanFeedback make_plan_fb;
     upo_actions::MakePlanResult make_plan_res;
@@ -231,20 +225,11 @@ namespace PathPlanners
     bool use_distance_function; //Only related with tether and UAV distance
     RandomPlanner randPlanner;
     PlannerGraphMarkers rrtgm;
-
-    octomap_msgs::OctomapConstPtr map;
-
-    double ws_x_max; // 32.2
-    double ws_y_max; // 32.2
-    double ws_z_max;
-    double ws_x_min;
-    double ws_y_min;
     double ws_z_min;
     double map_resolution;
     double map_h_inflaction;
     double map_v_inflaction; //JAC: Hasta aquí todo cero.
 
-    bool write_data_for_analysis;
     bool pause_execution;
     double length_tether_max, radius_near_nodes, step_steer;
     int n_iter, n_loop, samp_goal_rate;
