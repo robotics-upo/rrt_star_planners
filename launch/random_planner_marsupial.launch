@@ -66,6 +66,7 @@
     <arg name="debug" default="false"/>
     <arg name="debug_rrt" default="false"/>
     <arg name="use_both" default="false"/>
+    <arg name="precompute" default="true"/>
     <include file="$(find rrt_planners)/launch/random_global_planner.launch">
         <arg name="coupled" value="$(arg is_coupled)"/> 
         <arg name="map_file" value="$(arg map)"/> 
@@ -79,6 +80,7 @@
         <arg name="debug" value="$(arg debug)"/>
         <arg name="debug_rrt" value="$(arg debug_rrt)"/>
         <arg name="pause_execution" value="false"/>
+        <arg name="precomputed_file" value="" unless="$(arg precompute)"/>
     </include>    
 
     <!-- RViz -->
