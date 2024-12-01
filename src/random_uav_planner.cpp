@@ -85,7 +85,6 @@ RandomUAVPlanner::~RandomUAVPlanner()
 
 	distance_obstacle_uav = distance_obstacle_uav_;
 	distance_tether_obstacle = distance_catenary_obstacle_;
-	just_line_of_sigth = jlos_;
 
 	get_catenary_data = get_catenary_data_;
 	catenary_file = catenary_file_;
@@ -474,8 +473,8 @@ bool RandomUAVPlanner::obstacleFreeBetweenNodes(const RRTNode q_nearest_,
   p_reel_new_ = getReelNode(q_new_); 
 
   bool ret_val = true;
-  ccm->distance_tether_obstacle = distance_catenary_obstacle;
-  //ROS_INFO("Setting the catenary obstacle dist to: %f", distance_catenary_obstacle);
+  ccm->distance_tether_obstacle = distance_tether_obstacle;
+  //ROS_INFO("Setting the catenary obstacle dist to: %f", distance_teher_obstacle);
   for (int i = 0; i <= n_intermediate && ret_val; i++) {
     float p = i * addition;
     float new_length = q_nearest_.length_cat * p + q_new_.length_cat * (1.0 - p);
@@ -1033,7 +1032,7 @@ void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Point _p_
     pos_r.z = _p_reel.z;
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
-	ccm->init(grid_3D, distance_catenary_obstacle, 0.0, distance_obstacle_uav,
+	ccm->init(grid_3D, distance_tether_obstacle, 0.0, distance_obstacle_uav,
 	          length_tether_max, ws_z_min, step, use_parabola, use_distance_function, pos_r,
 			  false, !use_parabola);
 }

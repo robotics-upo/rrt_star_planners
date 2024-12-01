@@ -100,8 +100,9 @@ void RandomGlobalUAVPlanner::configRRTStar()
     randPlanner.init(planner_type, world_frame, ws_x_max, ws_y_max, ws_z_max, ws_x_min, ws_y_min, ws_z_min,
                      map_resolution, map_h_inflaction, map_v_inflaction,
                      nh, goal_gap_m, debug_rrt, distance_obstacle_uav,
-                     distance_catenary_obstacle, grid_3D, nodes_marker_debug, use_distance_function,
-                     map_file, get_catenary_data, catenary_analysis_file, use_parabola, CheckCM);
+                     distance_catenary_obstacle, grid_3D, nodes_marker_debug, 
+                     use_distance_function, map_file, get_catenary_data, 
+                     catenary_analysis_file, use_parabola, CheckCM);
     configRandomPlanner();
 
     geometry_msgs::Point pos_r;

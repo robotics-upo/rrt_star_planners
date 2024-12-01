@@ -113,11 +113,11 @@ public:
 		   @param Lazy Theta* bounded: Minimum Z that will be inflated vertically 
 		   @param NodeHandle 
 		**/
-	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_, 
-			float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, bool debug_rrt_, 
-			double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_, bool nodes_marker_debug_, 
-			bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_,
-			CatenaryCheckerManager *ccm_);
+	void init(std::string plannerName, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, 
+			float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, 
+			bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
+			bool nodes_marker_debug_, bool use_distance_function_, std::string path_, bool get_catenary_data_, 
+			std::string catenary_file_, bool use_parabola_, CatenaryCheckerManager *ccm_);
 
   	~RandomPlanner();
   
@@ -133,7 +133,7 @@ public:
 
   	virtual void clearStatus();
 	bool getGlobalPath(Trajectory &trajectory);
-	void getParamsCatenary(std::vector<Vector3> &v_params_);
+	void getParamsCatenary(std::vector<geometry_msgs::Point> &v_params_);
 
 	/**
 		  Set initial position of the path only check if 
@@ -350,7 +350,7 @@ public:
 	
 	std::ifstream file_time1, file_time2;
     std::ofstream ofs_time1, ofs_time2;
-	std::string output_file_time_methods, output_file_time_solutions, map_file;
+	std::string output_file_time_methods, output_file_time_solutions;
 	struct timespec start_rand, finish_rand;
 	float sec_rand, msec_rand;
 	float time_random;	
@@ -597,8 +597,8 @@ protected:
 	int count_qnew_fail, count_fail_connect_goal, count_loop; // count times that fail get a new q_new;
 	int matrix_size;
 	int K, n_iter, n_loop, count_graph;
-	int ws_x_max, ws_y_max, ws_z_max; // WorkSpace lenghts from origin (0,0,0)
-	int ws_x_min, ws_y_min, ws_z_min;
+	double ws_x_max, ws_y_max, ws_z_max; // WorkSpace lenghts from origin (0,0,0)
+	double ws_x_min, ws_y_min, ws_z_min;
 	int h_inflation; // Inflation (Real and Safe distances from the MAV CoG)
 	int v_inflation;
 	int ws_x_max_inflated, ws_y_max_inflated, ws_z_max_inflated; // Inflated WorkSpace, the real size of the Occupancy Matrix

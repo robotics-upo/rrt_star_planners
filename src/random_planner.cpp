@@ -32,11 +32,11 @@ RandomPlanner::~RandomPlanner()
 }
 
 // Initialization: creates the occupancy matrix (discrete nodes) from the bounding box sizes, resolution, inflation and optimization arguments
-void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
-				   float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
-				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
-				   bool nodes_marker_debug_, bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_ ,
-				   CatenaryCheckerManager *ccm_)
+void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, 
+				float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, 
+				bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
+				bool nodes_marker_debug_, bool use_distance_function_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_ ,
+				CatenaryCheckerManager *ccm_)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -88,7 +88,6 @@ void RandomPlanner::init(std::string plannerType, std::string frame_id_, float w
 	nodes_marker_debug = nodes_marker_debug_;
 
 	path = path_;
-	map_file = map_file_;
 
 	distance_obstacle_ugv = distance_obstacle_ugv_;
 	distance_obstacle_uav = distance_obstacle_uav_;
@@ -1841,10 +1840,10 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 	return true;
 }
 
-void RandomPlanner::getParamsCatenary(std::vector<Vector3> &v_params_)
+void RandomPlanner::getParamsCatenary(std::vector<geometry_msgs::Point> &v_params_)
 {
 	v_params_.clear();
-	Vector3 param_;
+	geometry_msgs::Point param_;
 
 	for(auto nt_ : rrt_path){
 		param_.x = nt_->param_cat_x0;
@@ -1890,7 +1889,7 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Point _p_ree
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
 
-    ccm->init(grid_3D, distance_catenary_obstacle, distance_obstacle_ugv, distance_obstacle_uav,
+    ccm->init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav,
 	          length_tether_max, ws_z_min, step, use_parabola, use_distance_function, pos_reel,
 			  false, !use_parabola);
 }
