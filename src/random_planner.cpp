@@ -1584,7 +1584,11 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, vector<geometry_msgs::Point>
 	bool found_catenary = ccm->searchCatenary(p_reel_, p_final_, points_catenary_);
 	if(found_catenary){
 		// printf("\t RandomPlanner::checkCatenary: points_catenary_=%lu\n",points_catenary_.size());
-		q_init_.p_cat = points_catenary_;
+		q_init_.p_cat.resize(points_catenary_. size());
+		int i = 0;
+		for (auto &x:points_catenary_) {
+			q_init_.p_cat[i++] = x;
+		}
 		q_init_.min_dist_obs_cat = ccm->min_dist_obs_cat;
 		q_init_.length_cat = ccm->length_cat_final;
 		q_init_.catenary = found_catenary;

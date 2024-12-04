@@ -37,6 +37,10 @@ public:
 class RRTNode
 {
 public:
+	RRTNode() {
+		p_cat.reserve(10000);
+	}
+
 	// NodeState st;
 	DiscretePosition point;
 	DiscretePosition point_uav;
