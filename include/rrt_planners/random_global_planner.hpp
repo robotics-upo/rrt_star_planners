@@ -61,11 +61,13 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 #include "misc/catenary_solver_ceres.hpp"
 #include "catenary_checker/near_neighbor.hpp"
 #include "rrt_planners/random_graph_markers.h"
+#include "rrt_planners/export_rrt_path.hpp"
 
 #include "catenary_checker/catenary_checker_manager.h"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
 #include "catenary_checker/catenary.hpp"
+
 
 namespace PathPlanners
 {
@@ -138,6 +140,8 @@ namespace PathPlanners
     void deleteNodesMarkersCallBack(const std_msgs::BoolConstPtr &msg);
     void deleteCatenaryGPCallBack(const std_msgs::BoolConstPtr &msg);
     void pointsSub(const PointCloud::ConstPtr &points);
+    bool randomMarsupialStatus(geometry_msgs::Point p_ , geometry_msgs::Point p1_, int i_, string s_, geometry_msgs::Point &pf_);
+    bool getTetherLength(geometry_msgs::Vector3 tp1_ , geometry_msgs::Quaternion tq1_, geometry_msgs::Vector3 tp2_, double &length_);
     /*
       @brief: 
     */
@@ -173,7 +177,8 @@ namespace PathPlanners
     geometry_msgs::PoseStamped goalPoseStamped;
     geometry_msgs::Vector3Stamped goal;
     geometry_msgs::Vector3 start_rpy;
-    geometry_msgs::Vector3 pos_reel_ugv;
+    geometry_msgs::Point pos_reel_ugv;
+    vector<int> v_pos_coll_tether;
 
     //Publishers and Subscribers
     ros::Publisher replan_status_pub, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 
@@ -199,25 +204,22 @@ namespace PathPlanners
     int number_of_points;
     int seq;
     Trajectory trajectory;
+    vector<geometry_msgs::Point> v_params_catenary;
+    double param_cat_x0, param_cat_y0, param_cat_a ;
 
     Grid3d *grid_3D;
-
     //These two flags can be configured as parameters
-    bool showConfig, debug, debug_rrt, nodes_marker_debug;
-
-    std::string path, name_output_file, map_file;
-    int num_pos_initial;
-    int countImpossible = 0;
-
+    bool showConfig, debug, debug_rrt, nodes_marker_debug, save_path_in_file;
     //Action client stuff
     std::unique_ptr<ExecutePathClient> execute_path_client_ptr;
-
     std::unique_ptr<MakePlanServer> make_plan_server_ptr;
     upo_actions::MakePlanFeedback make_plan_fb;
     upo_actions::MakePlanResult make_plan_res;
 
     std::unique_ptr<RotationInPlaceClient> rot_in_place_client_ptr;
     upo_actions::RotationInPlaceGoal rot_in_place_goal;
+
+    std::string path;
 
     //Variables to fill up the feedback 
     std_msgs::Duration travel_time;
@@ -231,20 +233,16 @@ namespace PathPlanners
     bool use_distance_function; //Only related with tether and UAV distance
     RandomPlanner randPlanner;
     PlannerGraphMarkers rrtgm;
+    std::vector<geometry_msgs::Point> v_p_catenary;
 
     octomap_msgs::OctomapConstPtr map;
 
-    double ws_x_max; // 32.2
-    double ws_y_max; // 32.2
-    double ws_z_max;
-    double ws_x_min;
-    double ws_y_min;
-    double ws_z_min;
+    double ws_x_max, ws_y_max, ws_z_max; // WorkSpace lenghts from origin (0,0,0)
+	  double ws_x_min, ws_y_min, ws_z_min;
     double map_resolution;
     double map_h_inflaction;
     double map_v_inflaction; //JAC: Hasta aquí todo cero.
 
-    bool write_data_for_analysis;
     bool pause_execution;
     double length_tether_max, radius_near_nodes, step_steer;
     int n_iter, n_loop, samp_goal_rate;

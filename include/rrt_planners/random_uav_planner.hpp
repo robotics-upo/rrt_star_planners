@@ -257,8 +257,8 @@ public:
 		  Publish via topic the discrete map constructed
 		**/
 
-	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel,
-                           geometry_msgs::Vector3 _p_ugv, 
+	void configRRTParameters(double _l_m, geometry_msgs::Point _p_reel,
+                           geometry_msgs::Point _p_ugv, 
                            int n_iter_, int n_loop_, double r_nn_,
                            double s_s_, int s_g_r_);
 
@@ -272,7 +272,7 @@ public:
 	void clearNodesMarker();
 	void clearCatenaryGPMarker();
 	void clearLinesGPMarker();
-	double getPointDistanceFullMap(bool use_distance_function, geometry_msgs::Vector3 p_);
+	double getPointDistanceFullMap(bool use_distance_function, geometry_msgs::Point p_);
 
 	CatenaryCheckerManager *ccm;
 
@@ -281,8 +281,8 @@ public:
 	float step_inv;
 
 	//Shearching Pyramid parameters
-	geometry_msgs::Vector3 pos_reel_ugv, pos_tf_ugv;
-	geometry_msgs::Vector3 new_start, new_goal;
+	geometry_msgs::Point pos_reel_ugv, pos_tf_ugv;
+	geometry_msgs::Point new_start, new_goal;
 	Eigen::Matrix3f base_sp;
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
 	double phi_min, phi_max, theta_min, theta_max ;
@@ -329,7 +329,7 @@ protected:
 	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
 	bool checkCatenary(RRTNode &q_init_, vector<geometry_msgs::Point> &points_catenary_);
 	geometry_msgs::Point getReelNode(const RRTNode node_);
-	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
+	geometry_msgs::Point getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtreeNode(const RRTNode ukT_);
 	void updateKdtreeUAV(const RRTNode ukT_);
 	void getParamsNode(RRTNode &node_, bool is_init_= false);
@@ -492,7 +492,7 @@ p		  occupation matrix nodes that have to be inflated
   ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
 	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_, reducedMapPublisher;
 
-	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
+	geometry_msgs::Point initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	double goal_gap_m;
 
 	std::list<RRTNode*> rrt_path;
@@ -514,13 +514,13 @@ p		  occupation matrix nodes that have to be inflated
 	int Lx, Ly, Lz;												 // Inflated WorkSpace lenghts and theirs pre-computed inverses
 	float Lx_inv, Ly_inv, Lz_inv;
 	std::string frame_id;
-	bool is_coupled; 
+	bool is_coupled, just_line_of_sigth; 
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
 	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value
 	int samp_goal_rate;
 
-  double distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
+  double distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle; //Safe distance to obstacle to accept a point valid for UGV and UAV
 	int id_ugv_init, id_uav_init;
 
 	visualization_msgs::MarkerArray catenary_marker;

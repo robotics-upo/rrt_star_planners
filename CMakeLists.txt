@@ -3,7 +3,7 @@ project(rrt_planners)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # set (CMAKE -DCMAKE_C_FLAGS=-pg -DCMAKE_CXX_FLAGS=-pg -DCMAKE_BUILD_TYPE=Debug)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
@@ -191,7 +191,12 @@ include_directories(
 #   src/${PROJECT_NAME}/rrt_planners.cpp
 # )
 
-add_executable(random_global_planner_node src/random_global_planner_node.cpp src/random_global_planner.cpp src/random_planner.cpp src/kdtree.cpp src/random_graph_markers.cpp )
+add_executable(random_global_planner_node src/random_global_planner_node.cpp 
+                                          src/random_global_planner.cpp 
+                                          src/random_planner.cpp 
+                                          src/kdtree.cpp 
+                                          src/random_graph_markers.cpp
+                                          src/export_rrt_path.cpp)
 add_dependencies(random_global_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(random_global_planner_node  ${catkin_LIBRARIES} Ceres::ceres ${EXTERNAL_LIBS} ${CERES_LIBRARIES} catenary_checker Qt5::Charts Qt5::Widgets dbscan_line)
 

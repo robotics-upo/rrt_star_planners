@@ -32,11 +32,11 @@ RandomPlanner::~RandomPlanner()
 }
 
 // Initialization: creates the occupancy matrix (discrete nodes) from the bounding box sizes, resolution, inflation and optimization arguments
-void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, float ws_y_min_, float ws_z_min_,
-				   float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, 
-				   double goal_gap_m_, bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
-				   bool nodes_marker_debug_, bool use_distance_function_, std::string map_file_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_ ,
-				   CatenaryCheckerManager *ccm_)
+void RandomPlanner::init(std::string plannerType, std::string frame_id_, float ws_x_max_, float ws_y_max_, float ws_z_max_, float ws_x_min_, 
+				float ws_y_min_, float ws_z_min_, float step_, float h_inflation_, float v_inflation_, ros::NodeHandlePtr nh_, double goal_gap_m_, 
+				bool debug_rrt_, double distance_obstacle_ugv_, double distance_obstacle_uav_, double distance_catenary_obstacle_, Grid3d *grid3D_,
+				bool nodes_marker_debug_, bool use_distance_function_, std::string path_, bool get_catenary_data_, std::string catenary_file_, bool use_parabola_ ,
+				CatenaryCheckerManager *ccm_)
 {
 	// Pointer to the nodeHandler
 	nh = nh_;
@@ -88,11 +88,10 @@ void RandomPlanner::init(std::string plannerType, std::string frame_id_, float w
 	nodes_marker_debug = nodes_marker_debug_;
 
 	path = path_;
-	map_file = map_file_;
 
 	distance_obstacle_ugv = distance_obstacle_ugv_;
 	distance_obstacle_uav = distance_obstacle_uav_;
-	distance_catenary_obstacle = distance_catenary_obstacle_;
+	distance_tether_obstacle = distance_catenary_obstacle_;
 
 	get_catenary_data = get_catenary_data_;
 	catenary_file = catenary_file_;
@@ -284,7 +283,7 @@ int RandomPlanner::computeTreesIndependent()
 				i_++;
 			}
 			rrtgm.getPathMarker(rrt_path, lines_ugv_marker_pub_, lines_uav_marker_pub_);
-			rrtgm.getCatenaryPathMarker(rrt_path, catenary_marker_pub_, grid_3D, distance_catenary_obstacle, map, nn_trav_ugv.kdtree, nn_trav_ugv.obs_points);
+			rrtgm.getCatenaryPathMarker(rrt_path, catenary_marker_pub_, grid_3D, distance_tether_obstacle, map, nn_trav_ugv.kdtree, nn_trav_ugv.obs_points);
 			ret_val = rrt_path.size();
 			break;
 		}
@@ -1561,10 +1560,10 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 		// printf("d_=%f , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
 		return false;
 	}
-	if (d_ > distance_catenary_obstacle)
+	if (d_ > distance_tether_obstacle)
 		ret = true;
 	else{
-		// printf("d_=%f < distance_catenary_obstacle , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
+		// printf("d_=%f < distance_tether_obstacle , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
 		ret = false;
 	}
 	return ret;
@@ -1766,7 +1765,7 @@ std::list<RRTNode*> RandomPlanner::getPath()
 
 void RandomPlanner::isGoal(const RRTNode st_) 
 {
-	geometry_msgs::Vector3 point_;
+	geometry_msgs::Point point_;
 
 	if (is_coupled){
 		point_.x = st_.point.x;
@@ -1845,8 +1844,22 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 	return true;
 }
 
-void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel ,
-                                        geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
+void RandomPlanner::getParamsCatenary(std::vector<geometry_msgs::Point> &v_params_)
+{
+	v_params_.clear();
+	geometry_msgs::Point param_;
+
+	for(auto nt_ : rrt_path){
+		param_.x = nt_->param_cat_x0;
+		param_.y = nt_->param_cat_y0;
+		param_.z = nt_->param_cat_a;
+		
+		v_params_.push_back(param_);
+	}
+}
+
+void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Point _p_reel ,
+                                        geometry_msgs::Point _p_ugv, geometry_msgs::Quaternion _r_ugv,
                                         bool coupled_, int n_iter_ , int n_loop_, double r_nn_, double s_s_,
                                         int s_g_r_, int sample_m_, double min_l_steer_ugv_,
                                         double w_n_ugv_, double w_n_uav_, double w_n_smooth_)
@@ -1880,7 +1893,7 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
 
-    ccm->init(grid_3D, distance_catenary_obstacle, distance_obstacle_ugv, distance_obstacle_uav,
+    ccm->init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav,
 	          length_tether_max, ws_z_min, step, use_parabola, use_distance_function, pos_reel,
 			  false, !use_parabola);
 }
@@ -2186,7 +2199,7 @@ octomap::OcTree RandomPlanner::checkTraversablePointInsideCircle(Vector3 point_)
 	return map_circle;
 }
 
-// double RandomPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
+// double RandomPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Point p_)
 // {
 // 	double dist;
 // 	Eigen::Vector3d obs_, pos_;
