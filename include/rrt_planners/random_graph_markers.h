@@ -25,7 +25,7 @@ class PlannerGraphMarkers
 public:
   PlannerGraphMarkers();
 
-  void configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Point pos_reel_ugv);
+  void configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv);
   void getGraphMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_ugv_pub_, ros::Publisher tree_rrt_star_uav_pub_);
   void publishUAVMarker(RRTNode *tree_, int count, ros::Publisher uav_pub);
   void getTakeOffNodesMarker(std::list<RRTNode*> take_off_nodes_, ros::Publisher take_off_nodes_pub_);
@@ -40,7 +40,7 @@ public:
                              double bound_obst_, octomap::OcTree* octotree_full_,
                              pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT_, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc_);
   void getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, ros::Publisher all_catenary_marker_pub_);
-  void goalPointMarker(geometry_msgs::Point final_position_, ros::Publisher goal_point_pub_);
+  void goalPointMarker(geometry_msgs::Vector3 final_position_, ros::Publisher goal_point_pub_);
   void reelPointMarker1(geometry_msgs::Point p_, ros::Publisher reel1_point_pub_);
   void reelPointMarker2(geometry_msgs::Point p_, ros::Publisher reel2_point_pub_);
   void randNodeMarker(RRTNode rn_, ros::Publisher rand_point_pub_, int color_);
@@ -62,7 +62,7 @@ public:
   bool is_coupled;
   int n_iter;
 
-  geometry_msgs::Point pos_reel_ugv;
+  geometry_msgs::Vector3 pos_reel_ugv;
 
   visualization_msgs::MarkerArray pointTreeMarkerUGV, pointTreeMarkerUAV;
   visualization_msgs::MarkerArray pointTakeOffMarker, lines_ugv_marker, lines_uav_marker, catenaryMarker, allCatenaryMarker;

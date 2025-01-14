@@ -3,13 +3,11 @@
     <arg name="use_dron" default="true"/>
     <arg name="launch_robot_marker" default="true"/>
 
-    <arg name="graph_traj_in_rviz" default="false"/>  <!-- Execute Trajectory computed and translating tf robots-->
-    <arg name="pause_execution" default="false"/>
-    <arg name="write_data_files" default="true"/>
+    <arg name="graph_traj_in_rviz" default="false"/>
+    <arg name="pause_execution" default="true"/>
+    <arg name="write_data_files" default="false"/>
     <arg name="use_distance_function" default="true"/>  
     <arg name="home"    default="$(env HOME)"/>     
-    <arg name="use_catenary_as_tether" default="true"/>  
-
 
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
 
@@ -18,39 +16,30 @@
     <arg name="uav_frame" default="uav_base_link"/>
     <arg name="reel_frame" default="reel_base_link"/>
     
+    <arg name="use_octomap" default="true"/>
     <arg name="verbose_optimizer" default="false"/>
     <arg name="debug_msgs" default="false"/>
     <arg name="show_config_msgs" default="true"/>
-     <arg name="just_line_of_sigth" default="false"/>
-    
-    <arg name="distance_obstacle_ugv"    default="0.5"/>   
-    <arg name="distance_obstacle_uav"    default="0.5"/>   
-    <arg name="distance_tether_obstacle"    default="0.14"/>   
 
-    <arg name="length_tether_max"    default="30.0"/>   
-
-    <arg name="save_path_in_file"   default="false"/>
+    <arg name="use_search_pyramid_planning" default="false"/>
+    <arg name="length_tether_max"    default="20.0"/>   
 
     <!-- To write Files -->
     <arg name="map_file"        default="stage_1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="name_output_file"    default="method"/>     
-    <arg name="files_results"    default="results_marsupial_optimizer"/>     
+    <arg name="files_results"    default="results_marsupial_optimizer/"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
-    <arg name="n_iter_rrt"          default="20"/>
-    <arg name="n_loop_rrt"          default="100"/>
+    <arg name="n_iter_rrt"          default="100"/>
+    <arg name="n_loop_rrt"          default="40"/>
     <arg name="radius_near_nodes"   default="1.2"/> 
-    <arg name="goal_gap_m"          default="0.2"/> # 1.4
-    <arg name="step_steer"          default="0.4"/>
+    <arg name="goal_gap_m"          default="1.4"/>
+    <arg name="step_steer"          default="0.2"/>
     <arg name="min_l_steer_ugv"     default="8.0"/>
     <arg name="coupled"             default="true"/>
     <arg name="samp_goal_rate"      default="15"/>
     <arg name="sample_mode_rrt"     default="1"/>
-     <!-- Optimizer Parameter-->
-    <arg name="use_loss_function"   default="false"/> 
-    <arg name="get_path_from_file"    default="false"/>     
-
         <!-- Catenary Checker-->
     <arg name="precomputed_file" default="$(find marsupial_optimizer)/maps/$(arg map_file).tar.gz"/>
     <arg name="dbscan_epsilon" default="0.5"/>
@@ -61,6 +50,8 @@
     <arg name="use_parabola"   default="false"/>
     <arg name="use_both"   default="false"/>
     <arg name="n_planes" default="100"/>
+    <arg name="optimize" default="false"/>
+    <arg name="do_steer_ugv" default="false"/>
 
     <arg name="method" default="parable" if="$(arg use_parabola)"/>
     <arg name="method" default="catenary" unless="$(arg use_parabola)"/>
@@ -72,12 +63,10 @@
 
     <arg name="prefix_" default="" unless="$(arg debug)"/>
     <arg name="prefix_" default="xterm -e gdb --args" if="$(arg debug)"/>
-
-
     <node pkg="rrt_planners" type="random_global_planner_node" name="random_planner_node" output="screen" required="true" launch-prefix="$(arg prefix_) ">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
-       
+        <remap from="/Make_Plan" to="Make_Plan"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <param name="path"   value="$(arg home)/$(arg files_results)"/>  
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
@@ -132,118 +121,39 @@
         <param name="use_both" value="$(arg use_both)"/>
 
         <param name="n_planes" value="$(arg n_planes)"/>
+        <param name="optimize" value="$(arg optimize)"/>
+        <param name="do_steer_ugv" value="$(arg do_steer_ugv)"/>
+    </node>
+   
+    <!-- Robot Marker -->
+    <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
+        <param name="frame_id" value="$(arg ugv_frame)"/>
+        <param name="scale" value="2.0"/>
     </node>
 
-    <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
-        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
-        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
-       
-        <remap from="/Execute_Plan" to="Execute_Plan"/>
-        <remap from="/Navigation" to="Navigation"/>
-        <remap from="/octomap_binary_local" to="/octomap_binary"/>
-       
-        <param name="get_path_from_file"            value="$(arg get_path_from_file)"/>     
-        <param name="world_frame"                   value="$(arg world_frame)"/> 
-        <param name="ugv_base_frame"                value="$(arg ugv_frame)"/> 
-        <param name="uav_base_frame"                value="$(arg uav_frame)"/>
-        <param name="reel_base_frame"               value="$(arg reel_frame)"/>
-        <param name="debug"                         value="$(arg debug_msgs)"/>
-        <param name="show_config"                   value="$(arg show_config_msgs)"/>
-        <param name="traj_dest_frame"               value="uav_base_link"/>
+     <!-- Robot Marker -->
+    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
+        <param name="base_frame_id" value="$(arg uav_frame)"/>
+        <param name="model" value="m100"/> <!-- m600 or m100 -->
+        <param name="color" value="0.0"/> 
+        <param name="color_r" value="0.0"/> 
+        <param name="color_g" value="0.0"/> 
+        <param name="color_b" value="0.0"/> 
+        <param name="scale" value="1.5"/>
+    </node>
 
-        <param name="traj_in_rviz"                  value="$(arg graph_traj_in_rviz)"/>
-        <param name="pause_end_optimization"        value="$(arg pause_execution)"/>
-        <param name="write_data_residual"           value="$(arg write_data_residual)"/>
-        <param name="use_distance_function"         value="$(arg use_distance_function)"/>     
-        <param name="export_path"                   value="false"/>
-            
-        <param name="verbose_optimizer"             value="$(arg verbose_optimizer)"/>
-
-        <param name="n_iter_opt"                    value="100"/>  #0  <!-- number max. of iterations per optimization --> 
-
-        <param name="fix_last_position_ugv"         value="false"/> 
-        <param name="use_loss_function"             value="$(arg use_loss_function)"/> 
-        <param name="optimize_ugv"                  value="true"/>  # UGV
-        <param name="optimize_uav"                  value="true"/>  # UAV
-        <param name="optimize_tether"               value="true"/>  # TETHER
-        <param name="use_catenary_as_tether"        value="$(arg use_catenary_as_tether)"/>  # TETHER     
-
-        <param name="equidistance_ugv_constraint"   value="true"/>    # equidistance_ugv_constraint
-        <param name="obstacles_ugv_constraint"      value="true"/>    # obstacles_ugv_constraint
-        <param name="traversability_ugv_constraint" value="true"/>    # traversability_ugv_constraint
-        <param name="smoothness_ugv_constraint"     value="true"/>    # smoothness_ugv_constraint
-
-        <param name="equidistance_uav_constraint"   value="true"/>    # equidistance_uav_constraint  
-        <param name="obstacles_uav_constraint"      value="true"/>    # use_loss_functionobstacles_uav_constraint   
-        <param name="smoothness_uav_constraint"     value="true"/>    # smoothness_uav_constraint   
-
-        <param name="time_constraint"               value="true"/>    # time_ugv_constraint
-        <param name="velocity_ugv_constraint"       value="true"/>    # velocity_ugv_constraint
-        <param name="acceleration_ugv_constraint"   value="true"/>    # acceleration_ugv_constraint
-        <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
-        <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
-
-        <param name="catenary_constraint"           value="1"/>       # 1= Autodiff or 0 = Numerical
-        <param name="tether_obstacle_constraint"    value="true"/>    # tether_constraint
-        <param name="tether_length_constraint"      value="true"/>    # tether_length_constraint 
-        <param name="tether_parameters_constraint"  value="true"/>    # tether_parameters_constraint  
-
-        <!-- UGV Constraint Parameters -->
-        <param name="w_alpha_ugv"       value="0.200"/>   # Equi-distance ugv
-        <param name="w_beta_ugv"        value="0.120"/>   # Obstacles ugv
-        <param name="w_theta_ugv"       value="0.500"/>   # Traversability ugv
-        <param name="w_gamma_ugv"       value="0.120"/>   # Smoothness ugv 
-        <param name="w_epsilon_ugv"     value="0.050"/>   # Velocity 
-        <param name="w_zeta_ugv"        value="0.005"/>   # Acceleration 
-
-        <!-- UAV Constraint Parameters -->
-        <param name="w_alpha_uav"       value="0.350"/>   # Equi-distance uav 
-        <param name="w_beta_uav"        value="0.300"/>   # Obstacles uav 
-        <param name="w_gamma_uav"       value="0.200"/>   # Smoothness uav
-        <param name="w_epsilon_uav"     value="0.050"/>   # Velocity 
-        <param name="w_zeta_uav"        value="0.005"/>   # Acceleration 
-        
-        <!-- Time Constraint Parameters -->
-        <param name="w_delta"           value="0.001"/>   # time 
-
-        <!-- Catenary Constraint Parameters -->
-        <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.004" />     # Catenary Obstacles collision 
-        <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.010" />     # Catenary length 
-        <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="0.400" />     # Catenary Parameter 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.100" />       # Parabola Obstacles collision 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />       # Parabola length 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="1.000" />       # Parabola Parameter 
-
-        <param name="length_tether_max"         value="$(arg length_tether_max)"/>  
-        <param name="distance_obstacle_ugv"     value="1.0"/> <!-- bound distance UGV to obstacles [m]-->
-        <param name="distance_obstacle_uav"     value="1.0"/> <!-- bound distance UAV to obstacles [m]-->
-        <param name="initial_velocity_ugv"      value="1.0"/> <!-- [m/seg]  Constant velocity UGV during trajectory-->
-        <param name="initial_velocity_uav"      value="1.0"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
-        <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
-        <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
-        <param name="angle_min_traj"            value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
-        #Parameter for Tether
-        <param name="distance_tether_obstacle"  value="0.1"/> <!--bound distance catenary to obstacles [m] -->   
-        <param name="dynamic_catenary"          value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
-        #Parameter to write file 
-        <param name="write_data_for_analysis"   value="$(arg write_data_files)"/>     
-        <param name="name_output_file"          value="$(arg name_output_file)"/>     
-        <!-- <param name="scenario_number"    value="$(arg scenario_number)"/>      -->
-        <param name="num_pos_initial"           value="$(arg num_pos_initial)"/>     
-        <param name="path"                      value="$(env HOME)/$(arg files_results)/"/>     
-        <param name="pc_user_name"              value="$(env HOME)/$(arg files_results)/"/>     
-        <param name="path_mission_file"         value="$(find marsupial_mission_interface)/cfg/optimized_path/"/>     
-        <param name="files_residuals"           value="$(arg files_residuals)"/>     
-        <param name="scenario_name"             value="$(arg map_file)"/>     
-
-        <!-- For Grid3D -->
-        <param name="map_path"                  value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
-        <param name="map_path_trav"             value="$(find marsupial_optimizer)/maps/$(arg map_file)_traversability.bt"/>
-        <param name="map_path_obst"             value="$(find marsupial_optimizer)/maps/$(arg map_file)_obstacles.bt"/>
-        <param name="global_frame_id"           value="map"/>
-        <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
-    </node>    
-   
+    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
+        <param name="base_frame_id" value="$(arg uav_frame)"/>
+        <param name="model" value="circle"/> 
+        <param name="radius" value="0.6"/> 
+        <param name="color" value="0.5"/> 
+        <param name="color_r" value="0.8"/> 
+        <param name="color_g" value="0.4"/> 
+        <param name="color_b" value="0.0"/> 
+        <param name="scale_x" value="0.2"/> 
+        <param name="scale_y" value="0.2"/> 
+        <param name="scale_z" value="0.2"/> 
+        <param name="scale" value="1.0"/>
+    </node>
 
 </launch>

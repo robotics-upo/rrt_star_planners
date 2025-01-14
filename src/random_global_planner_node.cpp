@@ -24,5 +24,7 @@ int main(int argc, char **argv)
 
         loop_rate.sleep();
     }
+
+    RandomStarGP.exportStats("rrt_stats.txt"); // Exports the catenary and rrt stats
     return 0;
 }

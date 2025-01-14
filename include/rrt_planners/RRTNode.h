@@ -37,10 +37,6 @@ public:
 class RRTNode
 {
 public:
-	RRTNode() {
-		p_cat.reserve(10000);
-	}
-
 	// NodeState st;
 	DiscretePosition point;
 	DiscretePosition point_uav;
@@ -54,11 +50,7 @@ public:
 	double min_dist_obs_ugv;	//Minimun distance from UGV node to obstacle
 	double min_dist_obs_uav;	//Minimun distance from UAV node to obstacle
 	double cost;	// Refer to the cost in the node without consider the catenary
-	double cost_takeoff;	//refer to the cost only in the nodes which the drone can take off	
-	double param_cat_x0;
-	double param_cat_y0;
-	double param_cat_a ;
-	float dist;
+	double cost_takeoff;	//refer to the cost only in the nodes which the drone can take off
 	std::vector<geometry_msgs::Point> p_cat;
 	// double h_cost;
 	RRTNode *parentNode;

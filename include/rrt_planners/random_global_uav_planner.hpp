@@ -173,7 +173,7 @@ namespace PathPlanners
     geometry_msgs::PoseStamped goalPoseStamped;
     geometry_msgs::Vector3Stamped goal;
     geometry_msgs::Vector3 start_rpy;
-    geometry_msgs::Point pos_reel_ugv;
+    geometry_msgs::Vector3 pos_reel_ugv;
 
     //Publishers and Subscribers
     ros::Publisher replan_status_pub, fullRayPublisher, rayCastFreePublisher,
@@ -250,7 +250,7 @@ namespace PathPlanners
     double length_tether_max, radius_near_nodes, step_steer;
     int n_iter, n_loop, samp_goal_rate;
     double goal_gap_m;
-    double distance_obstacle_uav, distance_obstacle_ugv, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UAV
+    double distance_obstacle_uav, distance_catenary_obstacle; //Safe distance to obstacle to accept a point valid for UAV
     bool get_catenary_data_, optimize;
             
     double min_distance_add_new_point;
