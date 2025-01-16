@@ -1035,7 +1035,7 @@ void RandomUAVPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _
     pos_r.y = _p_reel.y;
     pos_r.z = _p_reel.z;
 
-	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
+	rrtgm.configGraphMarkers(frame_id, step, n_iter, pos_reel_ugv);
 	ccm->init(grid_3D, distance_catenary_obstacle, 0.0, distance_obstacle_uav,
 	          length_tether_max, ws_z_min, step, use_parabola, use_distance_function, pos_r,
 			  false, !use_parabola);

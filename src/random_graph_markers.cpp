@@ -6,11 +6,10 @@ PlannerGraphMarkers::PlannerGraphMarkers()
 
 }
 
-void PlannerGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv_)
+void PlannerGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv_)
 {
     frame_id = frame_id_;
     step = step_;
-    is_coupled = is_coupled_;
     n_iter = n_iter_;
 	pos_reel_ugv = pos_reel_ugv_;
 }
@@ -42,33 +41,31 @@ void PlannerGraphMarkers::getGraphMarker(RRTNode* nodes_tree_, int count, ros::P
     pointTreeMarkerUGV.markers[count].color.a=1.0; 
     tree_rrt_star_ugv_pub_.publish(pointTreeMarkerUGV);
 
-	if(!is_coupled){
-		pointTreeMarkerUAV.markers.resize(count+1);
+	pointTreeMarkerUAV.markers.resize(count+1);
 
-		pointTreeMarkerUAV.markers[count].header.frame_id = frame_id;
-		pointTreeMarkerUAV.markers[count].header.stamp = ros::Time::now();
-		pointTreeMarkerUAV.markers[count].ns = "tree_RRTStar_uav";
-		pointTreeMarkerUAV.markers[count].id = nodes_tree_->id_uav;
-		pointTreeMarkerUAV.markers[count].action = visualization_msgs::Marker::ADD;
-		pointTreeMarkerUAV.markers[count].type = visualization_msgs::Marker::SPHERE;
-		pointTreeMarkerUAV.markers[count].lifetime = ros::Duration(0);
-		pointTreeMarkerUAV.markers[count].pose.position.x = nodes_tree_->point_uav.x * step; 
-		pointTreeMarkerUAV.markers[count].pose.position.y = nodes_tree_->point_uav.y * step; 
-		pointTreeMarkerUAV.markers[count].pose.position.z = nodes_tree_->point_uav.z * step;
-		pointTreeMarkerUAV.markers[count].pose.orientation.x = 0.0;
-		pointTreeMarkerUAV.markers[count].pose.orientation.y = 0.0;
-		pointTreeMarkerUAV.markers[count].pose.orientation.z = 0.0;
-		pointTreeMarkerUAV.markers[count].pose.orientation.w = 1.0;
-		pointTreeMarkerUAV.markers[count].scale.x = 0.1;
-		pointTreeMarkerUAV.markers[count].scale.y = 0.1;
-		pointTreeMarkerUAV.markers[count].scale.z = 0.1;
-		pointTreeMarkerUAV.markers[count].color.r=0.2;
-		pointTreeMarkerUAV.markers[count].color.g=0.2;
-		pointTreeMarkerUAV.markers[count].color.b=1.0;
-		pointTreeMarkerUAV.markers[count].color.a=1.0; 
+	pointTreeMarkerUAV.markers[count].header.frame_id = frame_id;
+	pointTreeMarkerUAV.markers[count].header.stamp = ros::Time::now();
+	pointTreeMarkerUAV.markers[count].ns = "tree_RRTStar_uav";
+	pointTreeMarkerUAV.markers[count].id = nodes_tree_->id_uav;
+	pointTreeMarkerUAV.markers[count].action = visualization_msgs::Marker::ADD;
+	pointTreeMarkerUAV.markers[count].type = visualization_msgs::Marker::SPHERE;
+	pointTreeMarkerUAV.markers[count].lifetime = ros::Duration(0);
+	pointTreeMarkerUAV.markers[count].pose.position.x = nodes_tree_->point_uav.x * step; 
+	pointTreeMarkerUAV.markers[count].pose.position.y = nodes_tree_->point_uav.y * step; 
+	pointTreeMarkerUAV.markers[count].pose.position.z = nodes_tree_->point_uav.z * step;
+	pointTreeMarkerUAV.markers[count].pose.orientation.x = 0.0;
+	pointTreeMarkerUAV.markers[count].pose.orientation.y = 0.0;
+	pointTreeMarkerUAV.markers[count].pose.orientation.z = 0.0;
+	pointTreeMarkerUAV.markers[count].pose.orientation.w = 1.0;
+	pointTreeMarkerUAV.markers[count].scale.x = 0.1;
+	pointTreeMarkerUAV.markers[count].scale.y = 0.1;
+	pointTreeMarkerUAV.markers[count].scale.z = 0.1;
+	pointTreeMarkerUAV.markers[count].color.r=0.2;
+	pointTreeMarkerUAV.markers[count].color.g=0.2;
+	pointTreeMarkerUAV.markers[count].color.b=1.0;
+	pointTreeMarkerUAV.markers[count].color.a=1.0; 
 
-		tree_rrt_star_uav_pub_.publish(pointTreeMarkerUAV);
-	}
+	tree_rrt_star_uav_pub_.publish(pointTreeMarkerUAV);
 }
 
 void PlannerGraphMarkers::publishUAVMarker(RRTNode* nodes_tree_, int count, ros::Publisher tree_rrt_star_uav_pub_)
@@ -172,43 +169,41 @@ void PlannerGraphMarkers::getPathMarker(std::list<RRTNode*> pt_, ros::Publisher 
 	}
 	lines_ugv_marker_pub_.publish(lines_ugv_marker);
 
-	if(!is_coupled){
-		lines_uav_marker.markers.resize(pt_.size()-1);
-		i_ = 0;
+	lines_uav_marker.markers.resize(pt_.size()-1);
+	i_ = 0;
 
-		for (auto p_:pt_){
-			_p2.x = p_->point_uav.x*step;
-			_p2.y = p_->point_uav.y*step;
-			_p2.z = p_->point_uav.z*step;
-			if (i_ > 0){
-				lines_uav_marker.markers[i_-1].header.frame_id = frame_id;
-				lines_uav_marker.markers[i_-1].header.stamp = ros::Time::now();
-				lines_uav_marker.markers[i_-1].ns = "Line_uav_RRTStar_Path";
-				lines_uav_marker.markers[i_-1].id = i_ + pt_.size();
-				lines_uav_marker.markers[i_-1].action = visualization_msgs::Marker::ADD;
-				lines_uav_marker.markers[i_-1].type = visualization_msgs::Marker::LINE_STRIP;
-				lines_uav_marker.markers[i_-1].lifetime = ros::Duration(0);
-				lines_uav_marker.markers[i_-1].points.push_back(_p1);
-				lines_uav_marker.markers[i_-1].points.push_back(_p2);
-				lines_uav_marker.markers[i_-1].pose.orientation.x = 0.0;
-				lines_uav_marker.markers[i_-1].pose.orientation.y = 0.0;
-				lines_uav_marker.markers[i_-1].pose.orientation.z = 0.0;
-				lines_uav_marker.markers[i_-1].pose.orientation.w = 1.0;
-				lines_uav_marker.markers[i_-1].scale.x = 0.1;
-				// lines_uav_marker.markers[i].scale.y = 0.3;
-				// lines_uav_marker.markers[i].scale.z = 0.1;
-				lines_uav_marker.markers[i_-1].color.a = 1.0;
-				lines_uav_marker.markers[i_-1].color.r = 0.0;
-				lines_uav_marker.markers[i_-1].color.g = 0.0;
-				lines_uav_marker.markers[i_-1].color.b = 0.0;
-			}
-			_p1.x = p_->point_uav.x*step;
-			_p1.y = p_->point_uav.y*step;
-			_p1.z = p_->point_uav.z*step;
-			i_++;
+	for (auto p_:pt_){
+		_p2.x = p_->point_uav.x*step;
+		_p2.y = p_->point_uav.y*step;
+		_p2.z = p_->point_uav.z*step;
+		if (i_ > 0){
+			lines_uav_marker.markers[i_-1].header.frame_id = frame_id;
+			lines_uav_marker.markers[i_-1].header.stamp = ros::Time::now();
+			lines_uav_marker.markers[i_-1].ns = "Line_uav_RRTStar_Path";
+			lines_uav_marker.markers[i_-1].id = i_ + pt_.size();
+			lines_uav_marker.markers[i_-1].action = visualization_msgs::Marker::ADD;
+			lines_uav_marker.markers[i_-1].type = visualization_msgs::Marker::LINE_STRIP;
+			lines_uav_marker.markers[i_-1].lifetime = ros::Duration(0);
+			lines_uav_marker.markers[i_-1].points.push_back(_p1);
+			lines_uav_marker.markers[i_-1].points.push_back(_p2);
+			lines_uav_marker.markers[i_-1].pose.orientation.x = 0.0;
+			lines_uav_marker.markers[i_-1].pose.orientation.y = 0.0;
+			lines_uav_marker.markers[i_-1].pose.orientation.z = 0.0;
+			lines_uav_marker.markers[i_-1].pose.orientation.w = 1.0;
+			lines_uav_marker.markers[i_-1].scale.x = 0.1;
+			// lines_uav_marker.markers[i].scale.y = 0.3;
+			// lines_uav_marker.markers[i].scale.z = 0.1;
+			lines_uav_marker.markers[i_-1].color.a = 1.0;
+			lines_uav_marker.markers[i_-1].color.r = 0.0;
+			lines_uav_marker.markers[i_-1].color.g = 0.0;
+			lines_uav_marker.markers[i_-1].color.b = 0.0;
 		}
-		lines_uav_marker_pub_.publish(lines_uav_marker);
+		_p1.x = p_->point_uav.x*step;
+		_p1.y = p_->point_uav.y*step;
+		_p1.z = p_->point_uav.z*step;
+		i_++;
 	}
+	lines_uav_marker_pub_.publish(lines_uav_marker);
 }
 
 void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory mt_, std::vector<double> ct_, ros::Publisher lines_ugv_marker_pub_, ros::Publisher lines_uav_marker_pub_, ros::Publisher catenary_marker_pub_)

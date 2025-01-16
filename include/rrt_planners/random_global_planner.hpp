@@ -257,7 +257,7 @@ namespace PathPlanners
     bool do_steer_ugv; //able with sample_mode = 1 to steer ugv position in case to get ugv random position when is not able catenary
     double w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth;
 
-    bool coupled, get_catenary_data_;
+    bool get_catenary_data_;
             
     double min_distance_add_new_point;
     std::vector<double> length_catenary;

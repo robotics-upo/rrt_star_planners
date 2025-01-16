@@ -76,7 +76,6 @@ namespace PathPlanners
 
     nh->param("sample_mode", sample_mode, (int)0);
     nh->param("do_steer_ugv", do_steer_ugv, (bool)true);
-    nh->param("coupled", coupled, (bool)false);
     nh->param("samp_goal_rate", samp_goal_rate, (int)10);
     nh->param("debug_rrt", debug_rrt, (bool)true);
     nh->param("nodes_marker_debug", nodes_marker_debug, (bool)true);
@@ -335,10 +334,7 @@ namespace PathPlanners
         // Path calculation
         clock_gettime(CLOCK_REALTIME, &start);
            
-        if (coupled)
-          number_of_points = randPlanner.computeTreeCoupled();
-        else
-          number_of_points = randPlanner.computeTreesIndependent();
+        number_of_points = randPlanner.computeTrees();
 
         clock_gettime(CLOCK_REALTIME, &finish);
         ros::Duration(2.0).sleep();
@@ -692,13 +688,13 @@ namespace PathPlanners
     rot_ugv_ = getRobotPoseUGV().transform.rotation;
     reel_ = getLocalPoseReel();
     pos_reel_ugv = reel_.transform.translation;
-    randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, 
+    randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, n_iter, n_loop, 
                                     radius_near_nodes, step_steer, samp_goal_rate, sample_mode, min_l_steer_ugv, w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth);
 
-    rrtgm.configGraphMarkers(world_frame, map_resolution, coupled, n_iter, pos_reel_ugv);
+    rrtgm.configGraphMarkers(world_frame, map_resolution, n_iter, pos_reel_ugv);
 
    	ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  length_tether_max: %f , sample_mode=%i !!", length_tether_max, sample_mode);
-    ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  is_coupled=[%s] debug_rrt=[%s] debug_msgs=[%s]", coupled? "true" : "false", debug_rrt? "true" : "false", debug? "true" : "false");
+    ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  debug_rrt=[%s] debug_msgs=[%s]", debug_rrt? "true" : "false", debug? "true" : "false");
 
   }
 

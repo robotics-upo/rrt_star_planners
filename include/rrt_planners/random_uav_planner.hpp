@@ -514,7 +514,6 @@ p		  occupation matrix nodes that have to be inflated
 	int Lx, Ly, Lz;												 // Inflated WorkSpace lenghts and theirs pre-computed inverses
 	float Lx_inv, Ly_inv, Lz_inv;
 	std::string frame_id;
-	bool is_coupled; 
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
 	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value

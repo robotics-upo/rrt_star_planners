@@ -121,8 +121,7 @@ public:
 
   	~RandomPlanner();
   
-  	virtual int computeTreeCoupled();      
-  	virtual int computeTreesIndependent();      
+  	virtual int computeTrees();      
 
   	float getYawFromQuaternion(RRTNode n_, bool is_uav_);
 	// float getYawFromQuat(Quaternion quat);
@@ -141,7 +140,6 @@ public:
 			@return false if is outside the workspace
 		**/
 	bool setInitialPosition(DiscretePosition p_);
-	bool setInitialPositionCoupled(RRTNode n_);
 	bool setInitialPositionIndependent(RRTNode n_);
 	bool setInitialPosition(Vector3 p);
 
@@ -162,44 +160,25 @@ public:
 
 	inline bool setValidInitialPositionMarsupial(RRTNode n_)
 	{
-		if (is_coupled){
-			if (setInitialPositionCoupled(n_))
+		if(setInitialPositionIndependent(n_)) {
+			if (!isInitialPositionUGVOccupied())
 			{
-				if (!isInitialPositionUGVOccupied())
-				{
-					ROS_INFO("RandomPlanner: Initial discrete position UGV Coupled[%d, %d, %d] set correctly", n_.point.x, n_.point.y, n_.point.z);
+				if(!isInitialPositionUAVOccupied()){
+					ROS_INFO("RandomPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
+							n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
 					return true;
+				}
+				else{
+					ROS_WARN("RandomPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
 				}
 			}
 			else
-			{
-				ROS_WARN("RandomPlanner: Initial position UGV Coupled outside the workspace attempt!!");
-			}
+				ROS_WARN("RandomPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
+		}		
+		else
+			ROS_WARN("RandomPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
 
-			return false;
-		}
-		else{
-				if(setInitialPositionIndependent(n_))
-				{
-					if (!isInitialPositionUGVOccupied())
-					{
-						if(!isInitialPositionUAVOccupied()){
-							ROS_INFO("RandomPlanner: Initial Marsupial discrete position UGV [%d, %d, %d] and UAV [%d, %d, %d] set correctly", 
-									n_.point.x, n_.point.y, n_.point.z, n_.point_uav.x, n_.point_uav.y, n_.point_uav.z);
-							return true;
-						}
-						else{
-							ROS_WARN("RandomPlanner: Initial position UAV Marsupial independent configuration outside of the workspace attempt!!");
-						}
-					}
-					else
-						ROS_WARN("RandomPlanner: Initial position UGV Marsupial independent configuration outside of the workspace attempt!!");
-				}		
-				else
-					ROS_WARN("RandomPlanner: Initial position Marsupial independent configuration outside of the workspace attempt!!");
-
-			return false;
-		}
+		return false;
 	}
 
 	inline bool setValidInitialPositionMarsupial(Vector3 p1,Vector3 p2, Quaternion q1, Quaternion q2)
@@ -291,8 +270,8 @@ public:
 	// virtual void publishOccupationMarkersMap();
 	
 	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
-							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
-							double w_n_ugv_, double w_n_uav_, double w_n_smooth_);
+							 int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
+							 double w_n_ugv_, double w_n_uav_, double w_n_smooth_);
 	/** 
 	   Receive segmented PointCloud2 for UGV traversability
 	**/
@@ -605,7 +584,6 @@ protected:
 	int Lx, Ly, Lz;												 // Inflated WorkSpace lenghts and theirs pre-computed inverses
 	float Lx_inv, Ly_inv, Lz_inv;
 	std::string frame_id, planner_type;
-	bool is_coupled; 
 	bool markers_debug, nodes_marker_debug;
 	double length_tether_max, radius_near_nodes, step_steer;
 	double min_dist_for_steer_ugv; // min distance UGV-UAV to steer a new position of UGV. Oblide to steer wheen legth cable is longer thant this value

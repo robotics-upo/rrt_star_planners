@@ -616,7 +616,7 @@ void RandomGlobalUAVPlanner::configRandomPlanner()
   randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv, pos_ugv_, n_iter, n_loop, 
                                   radius_near_nodes, step_steer, samp_goal_rate);
 
-  rrtgm.configGraphMarkers(world_frame, map_resolution, true, n_iter, pos_reel_ugv);
+  rrtgm.configGraphMarkers(world_frame, map_resolution, n_iter, pos_reel_ugv);
 
   ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  length_tether_max: %f !!", length_tether_max);
 	ROS_INFO(PRINTF_GREEN"Global Planner  configRandomPlanner() :  debug_rrt=[%s] debug_msgs=[%s]",
