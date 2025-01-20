@@ -174,7 +174,7 @@ int RandomPlanner::computeTrees()
 
 	while (count_loop < n_iter) { // n_iter Max. number of nodes to expand for each round
 		// printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\n",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
-		// printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
+		printf("\t\t-----  Planner (%s) :: computeTreeIndependent: iter=[%i/%i] , loop=[%i/%i] , total_node_save[%lu/%i]-----\r",planner_type.c_str(), count_loop+1, n_iter, count_total_loop+1, n_loop, nodes_tree.size(), (count_loop+1)+(500*count_total_loop));
 		
 		RRTNode q_rand;
 		
@@ -214,10 +214,9 @@ int RandomPlanner::computeTrees()
 			if (debug_rrt)   
 				printf("\tPrinting the Path Nodes obteinded through planner (%s) : \n",planner_type.c_str());
 			for (auto pt_: rrt_path){
-				if (debug_rrt) 
-					printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f    cost=%.3f\n", i_, rrt_path.size(),
-						   pt_->point.x*step, pt_->point.y*step, pt_->point.z*step, pt_->rot_ugv.x, pt_->rot_ugv.y, pt_->rot_ugv.z, pt_->rot_ugv.w, pt_->point_uav.x*step, 
-						   pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, pt_->cost);
+				printf("\tRandom_planner_node[%i/%lu] :  ugv=[%.4f %.4f %.4f / %.3f %.3f %.3f %.3f]  uav=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f/%.3f   cost=%.3f  params=[%.3f %.3f %.3f]\n", i_, rrt_path.size(),
+				pt_->point.x*step, pt_->point.y*step, pt_->point.z*step, pt_->rot_ugv.x, pt_->rot_ugv.y, pt_->rot_ugv.z, pt_->rot_ugv.w, pt_->point_uav.x*step, 
+				pt_->point_uav.y*step, pt_->point_uav.z*step, pt_->rot_uav.x, pt_->rot_uav.y, pt_->rot_uav.z, pt_->rot_uav.w, pt_->length_cat, pt_->dist, pt_->cost, pt_->param_cat_x0, pt_->param_cat_y0, pt_->param_cat_a);
 				i_++;
 			}
 			rrtgm.getPathMarker(rrt_path, lines_ugv_marker_pub_, lines_uav_marker_pub_);
@@ -1380,12 +1379,21 @@ bool RandomPlanner::checkCatenary(RRTNode &q_init_, vector<geometry_msgs::Point>
 	p_final_.z = q_init_.point_uav.z * step ;   
 
 	bool found_catenary = ccm->searchCatenary(p_reel_, p_final_, points_catenary_);
+
+	float diff_x_ = p_reel_.x-p_final_.x;
+	float diff_y_ = p_reel_.y-p_final_.y;
+	float diff_z_ = p_reel_.z-p_final_.z;
+	float dist_ = sqrt(diff_x_*diff_x_ + diff_y_*diff_y_ + diff_z_*diff_z_);
+
 	if(found_catenary){
-		// printf("\t RandomPlanner::checkCatenary: points_catenary_=%lu\n",points_catenary_.size());
 		q_init_.p_cat = points_catenary_;
 		q_init_.min_dist_obs_cat = ccm->min_dist_obs_cat;
 		q_init_.length_cat = ccm->length_cat_final;
 		q_init_.catenary = found_catenary;
+		q_init_.param_cat_x0 = ccm->param_cat_x0;
+		q_init_.param_cat_y0 = ccm->param_cat_y0;
+		q_init_.param_cat_a  = ccm->param_cat_a ;
+		q_init_.dist = dist_;
 	}
 	return found_catenary;
 }
@@ -1592,6 +1600,20 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 		trajectory.points.push_back(traj_marsupial_);
 	}
 	return true;
+}
+
+void RandomPlanner::getParamsCatenary(std::vector<Vector3> &v_params_)
+{
+	v_params_.clear();
+	geometry_msgs::Vector3 param_;
+
+	for(auto nt_ : rrt_path){
+		param_.x = nt_->param_cat_x0;
+		param_.y = nt_->param_cat_y0;
+		param_.z = nt_->param_cat_a;
+		
+		v_params_.push_back(param_);
+	}
 }
 
 void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel ,

@@ -52,6 +52,10 @@ public:
 	double cost;	// Refer to the cost in the node without consider the catenary
 	double cost_takeoff;	//refer to the cost only in the nodes which the drone can take off
 	std::vector<geometry_msgs::Point> p_cat;
+	double param_cat_x0;
+	double param_cat_y0;
+	double param_cat_a ;
+	float dist;
 	// double h_cost;
 	RRTNode *parentNode;
 	RRTNodeLink3D *nodeInWorld; // pointer to link from this node to its parent

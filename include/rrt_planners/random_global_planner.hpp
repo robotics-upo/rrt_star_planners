@@ -140,6 +140,8 @@ namespace PathPlanners
     void deleteNodesMarkersCallBack(const std_msgs::BoolConstPtr &msg);
     void deleteCatenaryGPCallBack(const std_msgs::BoolConstPtr &msg);
     void pointsSub(const PointCloud::ConstPtr &points);
+    bool randomMarsupialStatus(geometry_msgs::Point p_ , geometry_msgs::Point p1_, int i_, string s_, geometry_msgs::Point &pf_);
+    bool getTetherLengthParams(geometry_msgs::Vector3 tp1_ , geometry_msgs::Quaternion tq1_, geometry_msgs::Vector3 tp2_, double &length_);
     /*
       @brief: 
     */
@@ -235,6 +237,9 @@ namespace PathPlanners
     PlannerGraphMarkers rrtgm;
 
     octomap_msgs::OctomapConstPtr map;
+    std::vector<geometry_msgs::Point> v_p_catenary;
+    vector<int> v_pos_coll_tether;
+    double param_cat_x0, param_cat_y0, param_cat_a ;
 
     double ws_x_max; // 32.2
     double ws_y_max; // 32.2
@@ -261,7 +266,7 @@ namespace PathPlanners
             
     double min_distance_add_new_point;
     std::vector<double> length_catenary;
-    std::vector<Catenary> v_catenary;
+    vector<Vector3> v_params_catenary;
 
     bool get_catenary_data, use_parabola, use_both;
     std::string planner_type, catenary_file, catenary_analysis_file;

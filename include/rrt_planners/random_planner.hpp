@@ -130,6 +130,8 @@ public:
   	// std::list<RRTNode *> nodes_tree_ugv, nodes_tree_uav; // TODO: single tree planners
   	std::list<RRTNode*> take_off_nodes; // TODO: single 
 
+	void getParamsCatenary(std::vector<Vector3> &v_params_);
+
   	virtual void clearStatus();
 	bool getGlobalPath(Trajectory &trajectory);
 

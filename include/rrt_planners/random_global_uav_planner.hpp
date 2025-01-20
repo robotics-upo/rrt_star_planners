@@ -36,7 +36,6 @@ Global Planner Class using RANDOM Algorithms (RRT, RRT*, biRRT)
 
 //Dynamic reconfigure auto generated libraries
 #include <dynamic_reconfigure/server.h>
-#include <theta_star_2d/GlobalPlannerConfig.h>
 
 #include <time.h>
 #include <sys/timeb.h>
