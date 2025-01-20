@@ -6,7 +6,7 @@ PlannerGraphMarkers::PlannerGraphMarkers()
 
 }
 
-void PlannerGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Vector3 pos_reel_ugv_)
+void PlannerGraphMarkers::configGraphMarkers(std::string frame_id_, float step_, bool is_coupled_, int n_iter_, geometry_msgs::Point pos_reel_ugv_)
 {
     frame_id = frame_id_;
     step = step_;
@@ -272,7 +272,7 @@ void PlannerGraphMarkers::getPathMarker(trajectory_msgs::MultiDOFJointTrajectory
 		len_cat_ = ct_[i];
 
 		points_catenary_.clear();
-		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, false);
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
 		bc.getPointCatenary3D(points_catenary_);
 
 		int id_ = i;
@@ -391,8 +391,7 @@ void PlannerGraphMarkers::getCatenaryPathMarker(std::list<RRTNode*> ct_, ros::Pu
 		z_uav_ = nt_->point_uav.z*step; 
 		len_cat_ = nt_->length_cat;
 
-		bc.readDataForCollisionAnalisys(g_3D_ , bound_obst_, octotree_full_, trav_kdT_, trav_pc_);
-		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_, true);
+		bool just_one_axe = bc.configBisection(len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
 		bc.getPointCatenary3D(points_catenary_, false);
 		// printf("Catenary[%i]: L=[%f] reel=[%f %f %f] uav=[%f %f %f] \n",count, len_cat_, x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_);
 		// for (int i=0 ; i < bc.dist_obst_cat.size() ;  i++){
@@ -464,7 +463,7 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
 		p_uav_.z = nt_->point_uav.z*step;
 		double l_cat_ = nt_->length_cat;
 
-		bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z, false);
+		bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, p_uav_.x, p_uav_.y, p_uav_.z);
 		bc.getPointCatenary3D(points_catenary_);
 
 
@@ -514,7 +513,7 @@ void PlannerGraphMarkers::getAllCatenaryMarker(std::list<RRTNode*> nodes_tree_, 
 	}
 }
 
-void PlannerGraphMarkers::goalPointMarker(geometry_msgs::Vector3 final_position_, ros::Publisher goal_point_pub_)
+void PlannerGraphMarkers::goalPointMarker(geometry_msgs::Point final_position_, ros::Publisher goal_point_pub_)
 {
 	visualization_msgs::Marker marker_;
 	marker_.header.frame_id = frame_id;

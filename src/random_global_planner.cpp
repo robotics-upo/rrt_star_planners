@@ -103,8 +103,9 @@ void RandomGlobalPlanner::configRRTStar()
                     map_file, path, get_catenary_data, catenary_analysis_file, use_parable);
     configRandomPlanner();
 
-
-    CheckCM->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, map_resolution, use_parable, use_distance_function);
+    geometry_msgs::TransformStamped p_reel_ = getLocalPoseReel();
+    CheckCM->Init(grid_3D, distance_catenary_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, map_resolution, 
+	use_parable, use_distance_function, p_reel_.transform.translation , false, true);
 
 }
 
@@ -660,13 +661,17 @@ geometry_msgs::Point RandomGlobalPlanner::getReelNode( double x_, double y_, dou
 void RandomGlobalPlanner::configRandomPlanner()
 {
 
-    geometry_msgs::Vector3 pos_ugv_;
+    geometry_msgs::Point pos_ugv_;
     geometry_msgs::Quaternion rot_ugv_;
     geometry_msgs::TransformStamped reel_;
-    pos_ugv_ = getRobotPoseUGV().transform.translation;
+    pos_ugv_.x = getRobotPoseUGV().transform.translation.x;
+    pos_ugv_.y = getRobotPoseUGV().transform.translation.y;
+    pos_ugv_.z = getRobotPoseUGV().transform.translation.z;
     rot_ugv_ = getRobotPoseUGV().transform.rotation;
     reel_ = getLocalPoseReel();
-    pos_reel_ugv = reel_.transform.translation;
+    pos_reel_ugv.x = reel_.transform.translation.x;
+    pos_reel_ugv.y = reel_.transform.translation.y;
+    pos_reel_ugv.z = reel_.transform.translation.z;
     randPlanner.configRRTParameters(length_tether_max, pos_reel_ugv , pos_ugv_, rot_ugv_, coupled , n_iter, n_loop, 
                                     radius_near_nodes, step_steer, samp_goal_rate, sample_mode, min_l_steer_ugv, w_nearest_ugv ,w_nearest_uav ,w_nearest_smooth);
 

@@ -1384,11 +1384,11 @@ void RandomPlanner::getParamsNode(RRTNode &node_, bool is_init_)
 	obs_near_ugv_ = nn_obs_ugv.nearestObstacleMarsupial(nn_obs_ugv.kdtree, point_node_, nn_obs_ugv.obs_points);
 	double dist_obs_ugv = (point_node_ - obs_near_ugv_).norm();
 
-	geometry_msgs::Vector3 p_node_uav_;
+	geometry_msgs::Point p_node_uav_;
 	p_node_uav_.x = node_.point_uav.x * step;
 	p_node_uav_.y = node_.point_uav.y * step;
 	p_node_uav_.z = node_.point_uav.z * step;
-	double dist_obs_uav = ccm->getPointDistanceFullMap(use_distance_function, p_node_uav_);
+	double dist_obs_uav = ccm->getPointDistanceObstaclesMap(use_distance_function, p_node_uav_);
 	// Eigen::Vector3d obs_near_uav_;
 	// point_node_.x() = node_.point_uav.x * step;
 	// point_node_.y() = node_.point_uav.y * step;
@@ -1488,12 +1488,12 @@ bool RandomPlanner::checkNodeFeasibility(const RRTNode pf_ , bool check_uav_)
 		// printf("step[%f] pf_ : [%f %f %f]\n", step, pf_.point_uav.x*step, pf_.point_uav.y*step, pf_.point_uav.z*step);
 		if (isInside(pf_.point_uav.x,pf_.point_uav.y,pf_.point_uav.z)){
 			// Eigen::Vector3d obs_to_uav, pos_uav;
-			geometry_msgs::Vector3 obs_to_uav, pos_uav; 
+			geometry_msgs::Point obs_to_uav, pos_uav; 
 			pos_uav.x =pf_.point_uav.x * step ;
 			pos_uav.y =pf_.point_uav.y * step ; 
 			pos_uav.z =pf_.point_uav.z * step ; 
-			d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
-			// printf("getPointDistanceFullMap= %f , distance_obstacle_uav= %f\n",d_, distance_obstacle_uav);
+			d_ = ccm->getPointDistanceObstaclesMap(use_distance_function, pos_uav);
+			// printf("getPointDistanceObstaclesMap= %f , distance_obstacle_uav= %f\n",d_, distance_obstacle_uav);
 			if (d_ == -1.0)
 				return false;
 
@@ -1520,11 +1520,11 @@ bool RandomPlanner::checkPointsCatenaryFeasibility(const RRTNode pf_)
 	bool ret;
 	double d_;
 
-	geometry_msgs::Vector3 obs_to_uav, pos_uav; 
+	geometry_msgs::Point obs_to_uav, pos_uav; 
 	pos_uav.x =pf_.point.x * step ;
 	pos_uav.y =pf_.point.y * step ; 
 	pos_uav.z =pf_.point.z * step ; 
-	d_ = ccm->getPointDistanceFullMap(use_distance_function, pos_uav);
+	d_ = ccm->getPointDistanceObstaclesMap(use_distance_function, pos_uav);
 	if (d_ == -1.0){
 		// printf("d_=%f , point=[%f %f %f]\n",d_,pos_uav.x,pos_uav.y,pos_uav.z);
 		return false;
@@ -1737,7 +1737,7 @@ std::list<RRTNode*> RandomPlanner::getPath()
 
 void RandomPlanner::isGoal(const RRTNode st_) 
 {
-	geometry_msgs::Vector3 point_;
+	geometry_msgs::Point point_;
 
 	if (is_coupled){
 		point_.x = st_.point.x;
@@ -1816,14 +1816,12 @@ bool RandomPlanner::getGlobalPath(Trajectory &trajectory)
 	return true;
 }
 
-void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv, 
+void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Point _p_reel , geometry_msgs::Point _p_ugv, geometry_msgs::Quaternion _r_ugv, 
 									bool coupled_, int n_iter_ , int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
 									double w_n_ugv_, double w_n_uav_, double w_n_smooth_)
 {
 	length_tether_max = _l_m;
-	pos_reel_ugv.x = _p_reel.x;
-	pos_reel_ugv.y = _p_reel.y;
-	pos_reel_ugv.z = _p_reel.z;
+	pos_reel_ugv = _p_reel;
 	pos_tf_ugv.x = _p_ugv.x;
 	pos_tf_ugv.y = _p_ugv.y;
 	pos_tf_ugv.z = _p_ugv.z;
@@ -1846,7 +1844,12 @@ void RandomPlanner::configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_r
 	w_nearest_smooth = w_n_smooth_ ;
 
 	rrtgm.configGraphMarkers(frame_id, step, is_coupled, n_iter, pos_reel_ugv);
-	ccm->Init(distance_catenary_obstacle, length_tether_max, ws_z_min, step, use_parable, use_distance_function);
+	Vector3 p_reel_ugv_;
+	p_reel_ugv_.x = pos_reel_ugv.x;
+	p_reel_ugv_.y = pos_reel_ugv.y;
+	p_reel_ugv_.z = pos_reel_ugv.z;
+	ccm->Init(grid_3D, distance_catenary_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
+	use_parable, use_distance_function, p_reel_ugv_, false, true);
 }
 
 bool RandomPlanner::setInitialPositionCoupled(RRTNode n_)
@@ -2159,7 +2162,7 @@ octomap::OcTree RandomPlanner::checkTraversablePointInsideCircle(Vector3 point_)
 	return map_circle;
 }
 
-// double RandomPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
+// double RandomPlanner::getPointDistanceObstaclesMap(bool use_dist_func_, geometry_msgs::Point p_)
 // {
 // 	double dist;
 // 	Eigen::Vector3d obs_, pos_;

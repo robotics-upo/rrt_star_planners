@@ -171,7 +171,7 @@ namespace PathPlanners
             geometry_msgs::PoseStamped goalPoseStamped;
             geometry_msgs::Vector3Stamped goal;
             geometry_msgs::Vector3 start_rpy;
-            geometry_msgs::Vector3 pos_reel_ugv;
+            geometry_msgs::Point pos_reel_ugv;
 
             //Publishers and Subscribers
             ros::Publisher replan_status_pub, fullRayPublisher, rayCastFreePublisher, rayCastFreeReducedPublisher, rayCastCollPublisher; 

@@ -289,7 +289,7 @@ public:
 		**/
 	// virtual void publishOccupationMarkersMap();
 	
-	void configRRTParameters(double _l_m, geometry_msgs::Vector3 _p_reel , geometry_msgs::Vector3 _p_ugv, geometry_msgs::Quaternion _r_ugv,
+	void configRRTParameters(double _l_m, geometry_msgs::Point _p_reel , geometry_msgs::Point _p_ugv, geometry_msgs::Quaternion _r_ugv,
 							bool coupled_, int n_iter_, int n_loop_, double r_nn_, double s_s_, int s_g_r_, int sample_m_, double min_l_steer_ugv_,
 							double w_n_ugv_, double w_n_uav_, double w_n_smooth_);
 	/** 
@@ -312,7 +312,7 @@ public:
 	void clearNodesMarker();
 	void clearCatenaryGPMarker();
 	void clearLinesGPMarker();
-	double getPointDistanceFullMap(bool use_distance_function, geometry_msgs::Vector3 p_);
+	double getPointDistanceFullMap(bool use_distance_function, geometry_msgs::Point p_);
 
 	CatenaryCheckerManager *ccm;
 
@@ -321,9 +321,9 @@ public:
 	float step_inv;
 
 	//Shearching Pyramid parameters
-	geometry_msgs::Vector3 pos_reel_ugv , pos_tf_ugv;
+	geometry_msgs::Point pos_reel_ugv , pos_tf_ugv;
 	geometry_msgs::Quaternion rot_tf_ugv;
-	geometry_msgs::Vector3 new_start, new_goal;
+	geometry_msgs::Point new_start, new_goal;
 	Eigen::Matrix3f base_sp;
 	double angle_square_pyramid, max_theta_axe_reduced, sweep_range;
 	double phi_min, phi_max, theta_min, theta_max ;
@@ -400,7 +400,7 @@ protected:
 	bool checkPointsCatenaryFeasibility(const RRTNode pf_);
 	bool checkCatenary(RRTNode &q_init_, int mode_, vector<geometry_msgs::Point> &points_catenary_);
 	geometry_msgs::Point getReelNode(const RRTNode node_);
-	geometry_msgs::Vector3 getReelTfInNode(const RRTNode &q_init_);
+	geometry_msgs::Point getReelTfInNode(const RRTNode &q_init_);
 	void updateKdtreeNode(const RRTNode ukT_);
 	void updateKdtreeUGV(const RRTNode ukT_);
 	void updateKdtreeUAV(const RRTNode ukT_);
@@ -580,7 +580,7 @@ protected:
   	ros::Publisher goal_point_pub_, rand_point_pub_, one_catenary_marker_pub_ , points_marker_pub_, new_point_pub_, nearest_point_pub_, reel1_point_pub_, reel2_point_pub_;
 	ros::Publisher new_catenary_marker_pub_, nearest_catenary_marker_pub_, reducedMapPublisher;
 
-	Vector3 initial_position_ugv, initial_position_uav, final_position;   // Continuous
+	geometry_msgs::Point initial_position_ugv, initial_position_uav, final_position;   // Continuous
 	double goal_gap_m;
 
 	std::list<RRTNode*> rrt_path;
