@@ -109,7 +109,7 @@
         <!-- Local Planner: Optimizer Ceres-->
     <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen">#  launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
-        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number)_ws.yaml"/>
+        <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <remap from="/Navigation" to="Navigation"/>
         <remap from="/octomap_binary_local" to="/octomap_binary"/>
@@ -194,7 +194,6 @@
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
-        <param name="scenario_number"    value="$(arg scenario_number)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="path"   value="/home/$(arg pc_user_name)/"/>     
         <param name="pc_user_name"  value="$(arg pc_user_name)"/>     
@@ -203,40 +202,11 @@
         <param name="files_residuals"   value="$(arg files_residuals)"/>     
 
         <!-- For Grid3D -->
-        <param name="map_path"   value="$(find marsupial_optimizer)/maps/stage_$(arg scenario_number).bt"/>
+        <param name="map_path"   value="$(find marsupial_optimizer)/maps/map_file.bt"/>
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>
    
-    <!-- Robot Marker -->
-    <node pkg="upo_markers" type="siar_marker_node" name="siar_marker_node" output="screen">
-        <param name="frame_id" value="$(arg ugv_frame)"/>
-        <param name="scale" value="2.0"/>
-    </node>
 
-     <!-- Robot Marker -->
-    <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="m100"/> <!-- m600 or m100 -->
-        <param name="color" value="0.0"/> 
-        <param name="color_r" value="0.0"/> 
-        <param name="color_g" value="0.0"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale" value="1.5"/>
-    </node>
-
-    <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen">
-        <param name="base_frame_id" value="$(arg uav_frame)"/>
-        <param name="model" value="circle"/> 
-        <param name="radius" value="0.6"/> 
-        <param name="color" value="0.5"/> 
-        <param name="color_r" value="0.8"/> 
-        <param name="color_g" value="0.4"/> 
-        <param name="color_b" value="0.0"/> 
-        <param name="scale_x" value="0.2"/> 
-        <param name="scale_y" value="0.2"/> 
-        <param name="scale_z" value="0.2"/> 
-        <param name="scale" value="1.0"/>
-    </node>
 
 </launch>
